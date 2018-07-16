@@ -6,6 +6,7 @@
 #include <iomanip> // Printing variables in hex format
 #include "main.hpp"
 #include "emu.cpp"
+  // Compile using: g++ main.cpp -std=c++11 -lSDL2
   // TODO: Put in function headers for all of the opcodes
 
   // wrapper to allow two 8 bit registers to be used as a single 16 bit register
@@ -62,8 +63,6 @@ namespace CPU
 
 namespace RAM
 {
-
-    // how the fuck does the memory even work !!!!??!?!?!?!?
     std::vector<u8> rom(0x8000, 0); // I have no idea what the size should be
     std::vector<u8> vRam(0xA000 - 0x8000, 0);  
     std::vector<u8> iRam(0xC000 - 0xA000, 0);
@@ -73,7 +72,6 @@ namespace RAM
     std::vector<u8> i2Ram(0xFFFF - 0xFF80, 0); // more internal ram
     std::vector<u8> bootRom =  {0x31, 0xfe, 0xff, 0xaf, 0x21, 0xff, 0x9f, 0x32, 0xcb, 0x7c, 0x20, 0xfb, 0x21, 0x26, 0xff, 0x0e, 0x11, 0x3e, 0x80, 0x32, 0xe2, 0x0c, 0x3e, 0xf3, 0xe2, 0x32, 0x3e, 0x77, 0x77, 0x3e, 0xfc, 0xe0, 0x47, 0x11, 0x04, 0x01, 0x21, 0x10, 0x80, 0x1a, 0xcd, 0x95, 0x00, 0xcd, 0x96, 0x00, 0x13, 0x7b, 0xfe, 0x34, 0x20, 0xf3, 0x11, 0xd8, 0x00, 0x06, 0x08, 0x1a, 0x13, 0x22, 0x23, 0x05, 0x20, 0xf9, 0x3e, 0x19, 0xea, 0x10, 0x99, 0x21, 0x2f, 0x99, 0x0e, 0x0c, 0x3d, 0x28, 0x08, 0x32, 0x0d, 0x20, 0xf9, 0x2e, 0x0f, 0x18, 0xf3, 0x67, 0x3e, 0x64, 0x57, 0xe0, 0x42, 0x3e, 0x91, 0xe0, 0x40, 0x04, 0x1e, 0x02, 0x0e, 0x0c, 0xf0, 0x44, 0xfe, 0x90, 0x20, 0xfa, 0x0d, 0x20, 0xf7, 0x1d, 0x20, 0xf2, 0x0e, 0x13, 0x24, 0x7c, 0x1e, 0x83, 0xfe, 0x62, 0x28, 0x06, 0x1e, 0xc1, 0xfe, 0x64, 0x20, 0x06, 0x7b, 0xe2, 0x0c, 0x3e, 0x87, 0xe2, 0xf0, 0x42, 0x90, 0xe0, 0x42, 0x15, 0x20, 0xd2, 0x05, 0x20, 0x4f, 0x16, 0x20, 0x18, 0xcb, 0x4f, 0x06, 0x04, 0xc5, 0xcb, 0x11, 0x17, 0xc1, 0xcb, 0x11, 0x17, 0x05, 0x20, 0xf5, 0x22, 0x23, 0x22, 0x23, 0xc9, 0xce, 0xed, 0x66, 0x66, 0xcc, 0x0d, 0x00, 0x0b, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0c, 0x00, 0x0d, 0x00, 0x08, 0x11, 0x1f, 0x88, 0x89, 0x00, 0x0e, 0xdc, 0xcc, 0x6e, 0xe6, 0xdd, 0xdd, 0xd9, 0x99, 0xbb, 0xbb, 0x67, 0x63, 0x6e, 0x0e, 0xec, 0xcc, 0xdd, 0xdc, 0x99, 0x9f, 0xbb, 0xb9, 0x33, 0x3e, 0x3c, 0x42, 0xb9, 0xa5, 0xb9, 0xa5, 0x42, 0x3c, 0x21, 0x04, 0x01, 0x11, 0xa8, 0x00, 0x1a, 0x13, 0xbe, 0x20, 0xfe, 0x23, 0x7d, 0xfe, 0x34, 0x20, 0xf5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xfb, 0x86, 0x20, 0xfe, 0x3e, 0x01, 0xe0, 0x50};
     std::vector<u8> moreRam(0xFF80 - 0xFEA0, 0); //TODO: needs a better name
-    // We'll handle memory properly later
     u8 readAt(u16 addr)
     {
           // we'll be assuming 32kB cartridge for now and add swapping in later
@@ -99,7 +97,7 @@ namespace RAM
 
     void write(u8 val, u16 addr)
     {
-        if (addr < 0x8000)                        { std::cout<< "Tried writing to the ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; }//rom.at(addr) = val; }
+        if (addr < 0x8000)                        { std::cout<< "Tried writing to ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; }//rom.at(addr) = val; }
         else if(addr < 0xA000)                    { vRam.at(addr - 0x8000) = val; }
         else if(addr < 0xC000)                    { sRam.at(addr - 0xA000) = val; }
         else if(addr < 0xE000)                    { iRam.at(addr - 0xC000) = val; }
@@ -146,12 +144,12 @@ namespace RAM
         // exit(0);
     }
 
-    void init(){
+    void init() {
         FILE* rom_file;
         FILE* boot;
         char buffer [100];
-        rom_file = fopen("Tetris.gb", "rb");
-        // rom_file = fopen("Tetris.gb", "rb");
+        rom_file = fopen("Dr. Mario.gb", "rb");
+        //rom_file = fopen("Tetris.gb", "rb");
         boot = fopen("boot.rom", "rb");
 
         int c;
@@ -175,6 +173,15 @@ namespace RAM
             std::cout << std::hex << unsigned(addr + i) << ": " << std::hex << unsigned(byte) << std::endl;
         }
     }
+
+//    void dump_mem(int in, int en){
+//        u16 addr = in;
+//        u8 byte;
+//        while(in <= en){
+//            byte = readAt(byte + i);
+//            std::cout << std::hex << unsigned(addr + i) << ": " << std::hex << unsigned(byte) << std::endl;
+//        }
+//    }
 
     void d_vram() {
         // print ram from 8000 to (idk what)
@@ -229,7 +236,7 @@ namespace LCD
     }
 
     void update(){
-         // -- Display Stuff -- //
+         // -- Display -- //
         u8 IF = RAM::readAt(0xFFFF);
         
         // we need to check that the LCD is turned on
@@ -293,9 +300,7 @@ namespace LCD
                 //CPU::STAT();
                 //std::cout << "LY = LYC interrupt" << std::endl;
             }
-
         }
-
     }
 
     void v_blank(){
@@ -310,7 +315,7 @@ namespace LCD
         CPU::SP--;
         RAM::write((CPU::PC & 0xF0) >> 8, CPU::SP);
         CPU::PC = 0x0040;
-        flag = 1;
+        flag = 0;
 
         // now get rid of request flag IF
         RUPS::IF = RAM::readAt(0xFF0F);
@@ -323,7 +328,6 @@ namespace LCD
 
     
     void draw_BG(){
-
         // figure out where the tileset is located for the background
         u8 LCDC_ = RAM::readAt(LCDC);
         u16 addr, tile_addr;
@@ -508,7 +512,7 @@ namespace LCD
             u8 charcode = RAM::readAt(addr + 2);
             std::cout << "addr:" << std::hex << unsigned(addr) << std::endl;
             std::cout << "OBJcode: " << std::hex << unsigned(charcode) << std::endl;
-            exit(0);
+            //exit(0);
             u8 attrib = RAM::readAt(addr + 3);
 
             if ((attrib & 0b00010000) == 0) {
@@ -518,7 +522,7 @@ namespace LCD
             }
 
             std::cout << "palette:" << std::bitset<8>(palette) << std::endl;
-            exit(0);
+            //exit(0);
 
             // Sprites are all stored in v-ram from 0x8000-0x8BFF
             // TODO: add in the other parameters for drawing characters, such as the palette and the orientation
@@ -619,7 +623,6 @@ int main(){
     RAM::init();
     EMU::init();
     LCD::draw_BG();
-
     EMU::drawFrame();
     EMU::delay(1000);
     
@@ -642,8 +645,7 @@ int main(){
             }
         }
 
-        if( CPU::PC == 0x00FE)
-        {
+        if( CPU::PC == 0x00FE){
             std::cout << "--BOOT COMPLETE--\n\n";
             
             LCD::draw_BG();
@@ -653,26 +655,22 @@ int main(){
             //EMU::delay(2000);
             //exit(0);
         }
-
-        if ( CPU::PC == 0x522){
-            //EMU::delay(1000);
-        }
-
         
         // If no halt, we read and run an instruction
         if (!CPU::halt){
+            debug = CPU::PC;
             opcode = RAM::read();
             CPU::runOPCode(opcode);
         }
         
-        if ( flag == 1 || CPU::PC >= 0x100 ){
-            debug = CPU::PC;
-            flag = 1;
-            std::cout << "PC:" << std::hex << unsigned(debug) << std::endl;
-            std::cout << "Opcode:" << std::hex << unsigned(opcode) << std::endl << std::endl;
-        }
+        // prints out opcodes for debugging
+    //    if ( flag == 1 || CPU::PC >= 0x100 ){
+    //        flag = 1;
+    //        std::cout << "PC:" << std::hex << unsigned(debug) << std::endl;
+    //        std::cout << "Opcode:" << std::hex << unsigned(opcode) << std::endl << std::endl;
+    //    }
 
-        // Interrupts and DMA and shit //
+        // Interrupts and DMA //
         LCD::update();
         
         // Timer stuff
