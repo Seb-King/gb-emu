@@ -60,7 +60,6 @@ namespace EMU {
 			exit(0);
 		}
 
-
 		shade = r + g + b + alph;
 
 		setPixel(Surface, x, y, shade);

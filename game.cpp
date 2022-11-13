@@ -2710,7 +2710,7 @@ namespace RAM
 
     void dump_oam() {
         u16 addr = 0xFE00;
-        u8 byte;
+        u8 byte = 0;
         for (int i = 0; i < 0xF1; i++) {
             byte = readAt(byte + i);
             std::cout << std::hex << unsigned(addr + i) << ": " << std::hex << unsigned(byte) << std::endl;

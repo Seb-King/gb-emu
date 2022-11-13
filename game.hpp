@@ -3,13 +3,10 @@
 #include <stdint.h>
 #include <vector>
 #include <cstring>
-//#include "common.cpp"
 
 typedef  uint8_t   u8;
 typedef   int8_t   s8;
 typedef uint16_t  u16;
-
-
 
 void game_loop();
 
