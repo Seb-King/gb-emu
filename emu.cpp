@@ -1,10 +1,12 @@
-#include <SDL2/SDL.h>
 #include <iostream>
 #include <vector>
-typedef  uint8_t   u8;
+#include "emu.hpp"
 
-namespace EMU
-{
+typedef  uint8_t   u8;
+typedef   int8_t   s8;
+typedef uint16_t  u16;
+
+namespace EMU {
 	const int SCREEN_WIDTH = 160;
 	const int SCREEN_HEIGHT = 144;
 
@@ -12,18 +14,11 @@ namespace EMU
 	SDL_Window* Window = NULL;
 	SDL_Surface* Surface = NULL;
 
-	void setPixel(SDL_Surface*, int, int, Uint32);
-	bool init();
-	void close();
-	void drawFrame();
-	void setPix(int, int, int); // x, y, colour = 0,1,2 or 3 in order from lightest to darkest (or reversed idk)
-	void delay(int time);
-	void inputs();
 	bool quit = false;
 
 	void inputs(){
-		while( SDL_PollEvent( &e ) != 0) {
-			if( e.type == SDL_QUIT ){
+		while(SDL_PollEvent( &e ) != 0) {
+			if(e.type == SDL_QUIT){
             	quit = true;
         	}
     	}
@@ -79,11 +74,11 @@ namespace EMU
 		*((Uint32*)pixel) = Color;
 	}
 
-	bool init(){
+	bool init() {
 	    bool success = true;
 		    
 			// Initialise SDL
-			if ( SDL_Init( SDL_INIT_VIDEO ) < 0)
+			if (SDL_Init(SDL_INIT_VIDEO) < 0)
 			{
 				std::cout << "Could not initialise SDL\n" << SDL_GetError();
 				success = false;
@@ -91,18 +86,18 @@ namespace EMU
 		    else
 		    {
 		        // Create window
-		        Window = SDL_CreateWindow("Sebu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+		        Window = SDL_CreateWindow("gb emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
 		        
-		        if ( Window == NULL )
+		        if (Window == NULL)
 		        {
 					std::cout << "Window could not be created" << SDL_GetError();
 		            success = false;
 		        }
 		        else
 				{
-					Surface = SDL_GetWindowSurface( Window );
-					SDL_FillRect( Surface, NULL, SDL_MapRGB( Surface->format, 0xA0, 0xBF, 0xA0 ) );
-					SDL_UpdateWindowSurface( Window );
+					Surface = SDL_GetWindowSurface(Window);
+					SDL_FillRect(Surface, NULL, SDL_MapRGB( Surface->format, 0xA0, 0xBF, 0xA0));
+					SDL_UpdateWindowSurface(Window);
 		        }
 		    }
 		return success;
@@ -110,11 +105,11 @@ namespace EMU
 
 	void close(){
 	    //Deallocate surface
-	    SDL_FreeSurface( Surface );
+	    SDL_FreeSurface(Surface);
 	    Surface = NULL;
 	    
 	    //Destroy window
-	    SDL_DestroyWindow( Window );
+	    SDL_DestroyWindow(Window);
 	    Window = NULL;
 	    
 	    //Quit SDL subsystems
@@ -122,7 +117,7 @@ namespace EMU
 	}
 
 	void drawFrame(){
-		SDL_UpdateWindowSurface( Window);
+		SDL_UpdateWindowSurface(Window);
 	}
 
 	void delay(int time){
