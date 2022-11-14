@@ -4,7 +4,7 @@
 #include <vector>
 #include <bitset>
 #include <iomanip>
-#include "emu.hpp"
+#include "render.hpp"
 #include "game.hpp"
 #include "file_handling.hpp"
 
@@ -2758,7 +2758,7 @@ namespace LCD
 
                     x = 7 - k + 8 * (tile_num % 20);
                     //std::cout << "Colour " <<  colour << std::endl;
-                    EMU::setPix(x, y, colour);
+                    RENDER::setPix(x, y, colour);
                 }
             }
         }
@@ -2807,8 +2807,8 @@ namespace LCD
 
                 }
 
-                EMU::drawFrame();
-                EMU::delay(5);
+                RENDER::drawFrame();
+                RENDER::delay(5);
 
             }
             else if (line > 153) {
@@ -2945,7 +2945,7 @@ namespace LCD
                 x = (7 - k + 8 * (tile_num % 32) - scrollX) % 256;
 
                 if (x >= 0 && x < 160 && y >= 0 && y < 144) {
-                    EMU::setPix(x, y, colour);
+                    RENDER::setPix(x, y, colour);
                 }
             }
         }
@@ -3034,7 +3034,7 @@ namespace LCD
                     else if (colour == 3) {
                         colour = (palette & 0b11000000) >> 6;
                     }
-                    EMU::setPix(x, y, colour);
+                    RENDER::setPix(x, y, colour);
                 }
             }
         }
@@ -3166,9 +3166,9 @@ void game_loop(std::string rom_path) {
     CPU::init_opcodes();
     CPU::init_decoder();
     RAM::init_ram(rom_path);
-    EMU::init();
+    RENDER::init();
     LCD::draw_BG();
-    EMU::drawFrame();
+    RENDER::drawFrame();
 
     u16 debug = 0;
 
@@ -3176,13 +3176,13 @@ void game_loop(std::string rom_path) {
 
     int inp_time = 0;
 
-    while (!EMU::getQuit()) {
+    while (!RENDER::getQuit()) {
         inp_time++;
 
         if (inp_time == 100000) {
             inp_time = 0;
             for (int i = 0; i < 50; i++) {
-                EMU::inputs();
+                RENDER::inputs();
             }
         }
 
@@ -3191,7 +3191,7 @@ void game_loop(std::string rom_path) {
 
             LCD::draw_BG();
 
-            EMU::drawFrame();
+            RENDER::drawFrame();
         }
 
         if (!CPU::halt) {

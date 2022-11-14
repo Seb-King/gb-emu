@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL.h>
 
-namespace EMU {
+namespace RENDER {
 	bool getQuit();
 	void setPixel(SDL_Surface*, int, int, Uint32);
 	bool init();
