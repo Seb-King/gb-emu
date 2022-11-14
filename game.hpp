@@ -1,16 +1,11 @@
-#include <SDL.h>
 #include <iostream>
 #include <stdint.h>
 #include <vector>
 #include <cstring>
+#include "typedefs.h"
 
-typedef  uint8_t   u8;
-typedef   int8_t   s8;
-typedef uint16_t  u16;
+void game_loop(std::string rom_path);
 
-void game_loop();
-
-void dump_vram();
 // void draw_chars();
 
 class reg {
@@ -44,7 +39,6 @@ namespace LCD {
     void draw_BGTile(int, u8, u8, u16, u8 palette);
     void render_sprite(u8, u8, u8, u8);
     void draw_Window();
-    void draw_WindowTile();
     void  update();
     void v_blank();
 }
@@ -55,7 +49,7 @@ namespace RAM {
     u8 readAt(u16);
     u8 read();              // look at the next byte and return it?
     void write(u8, u16);
-    void init();
+    void init_ram(std::string rom_path);
     void dump_oam();
     void DMA_routine();
     void d_vram();
@@ -124,7 +118,7 @@ namespace CPU {
     void LDrr_le();
     void LDrr_lh();
     void LDrr_lHL();
-    void LDrr_HLa();
+   // void LDrr_HLa();
     void LDrr_HLb();
     void LDrr_HLc();
     void LDrr_HLd();

@@ -2,10 +2,6 @@
 #include <vector>
 #include "emu.hpp"
 
-typedef  uint8_t   u8;
-typedef   int8_t   s8;
-typedef uint16_t  u16;
-
 namespace EMU {
 	const int SCREEN_WIDTH = 160;
 	const int SCREEN_HEIGHT = 144;
@@ -22,6 +18,10 @@ namespace EMU {
             	quit = true;
         	}
     	}
+	}
+
+	bool getQuit() {
+		return quit;
 	}
 
 	// Tile_type = 0 for BG, = 1 for window, = 2 for Chars

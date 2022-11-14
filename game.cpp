@@ -6,6 +6,7 @@
 #include <iomanip>
 #include "emu.hpp"
 #include "game.hpp"
+#include "file_handling.hpp"
 
 int flag = 0;
 const int clockrate = 4194304;
@@ -63,7 +64,7 @@ namespace CPU
     // F is the the flag register Z N H C 0 0 0 0, Z - zero flag, N - subtract flag, H - half carry, C - carry flag
     reg AF, BC, DE, HL;
 
-    int interrupt_disable = 0;
+    int interrupt_mode = 0;
 
     int cycles = 4;
     int timing = 0;
@@ -104,24 +105,24 @@ namespace CPU
     void runOPCode(u8 op_code) {
         op_codes[op_code]();
 
-        if (interrupt_disable > 0) {
-            if (interrupt_disable == 1)
+        if (interrupt_mode > 0) {
+            if (interrupt_mode == 1)
             {
                 IME = 0;
-                interrupt_disable = 0;
+                interrupt_mode = 0;
                 //std::cout << "Interrupts Disabled. PC: " << std::hex << PC << std::endl << std::endl;
             }
-            else if (interrupt_disable == 2) {
-                interrupt_disable--;
+            else if (interrupt_mode == 2) {
+                interrupt_mode--;
             }
 
-            if (interrupt_disable == 3) {
+            if (interrupt_mode == 3) {
                 IME = 1;
                 //std::cout << "Interrupts Enabled. PC: " << std::hex << PC << std::endl << std::endl;
-                interrupt_disable = 0;
+                interrupt_mode = 0;
             }
-            else if (interrupt_disable == 4) {
-                interrupt_disable--;
+            else if (interrupt_mode == 4) {
+                interrupt_mode--;
             }
         }
     }
@@ -2235,12 +2236,12 @@ namespace CPU
     }
 
     void DI() {
-        interrupt_disable = 2;
+        interrupt_mode = 2;
         cycles = 4;
     }
 
     void EI() {
-        interrupt_disable = 4;
+        interrupt_mode = 4;
         cycles = 4;
     }
 
@@ -2687,24 +2688,9 @@ namespace RAM
         // exit(0);
     }
 
-    void init() {
-        FILE* rom_file;
-        FILE* boot;
-        char buffer[100];
-        rom_file = fopen("Tetris.gb", "rb");
-        //rom_file = fopen("Tetris.gb", "rb");
-        boot = fopen("boot.rom", "rb");
-
-        int c;
-        int i = 0;
-        while ((c = std::fgetc(rom_file)) != EOF) {
-            RAM::rom[i] = c;
-            ++i;
-        }
-
-        u8 d = RAM::readAt(0x147);
-        // std::cout << std::hex << unsigned(d) << std::endl;
-        // exit(0);
+    void init_ram(std::string rom_path) {
+        //FILE* boot = fopen("boot.rom", "rb");
+        RAM::rom = readFile(rom_path);
     }
 
 
@@ -3174,16 +3160,15 @@ namespace RUPS {
     }
 }
 
-void game_loop() {
+void game_loop(std::string rom_path) {
     std::cout << std::endl;
 
     CPU::init_opcodes();
     CPU::init_decoder();
-    RAM::init();
+    RAM::init_ram(rom_path);
     EMU::init();
     LCD::draw_BG();
     EMU::drawFrame();
-    EMU::delay(1000);
 
     u16 debug = 0;
 
@@ -3191,7 +3176,7 @@ void game_loop() {
 
     int inp_time = 0;
 
-    while (!EMU::quit) {
+    while (!EMU::getQuit()) {
         inp_time++;
 
         if (inp_time == 100000) {
