@@ -7,6 +7,8 @@
 #include "render.hpp"
 #include "game.hpp"
 #include "file_handling.hpp"
+#include "input.hpp"
+#include "utils.h"
 
 int flag = 0;
 const int clockrate = 4194304;
@@ -2727,9 +2729,7 @@ namespace RAM
     }
 }
 
-namespace LCD
-{
-    void dump_vram();
+namespace LCD {
     void dump_vram() {
         //    u16 addr = 0x8010;
         u16 addr = 0x9000;
@@ -2741,7 +2741,7 @@ namespace LCD
         s8 point = 0;
         u8 line1, line2;
 
-        // Now we shuffle through each line and find each pixel along the way, let's just do the first tiel to begin with
+        // Now we shuffle through each line and find each pixel along the way, let's just do the first tile to begin with
         // the tile is 8x8, so we have to read 16 bytes (2 for each line) and there are 8 pixels in each horizontal line
 
         for (tile_num = 0; tile_num < 40; tile_num++) {
@@ -2754,7 +2754,7 @@ namespace LCD
 
                 // now we have to loop through each bit in the lines, extracting the colours and the x and y position
                 for (int k = 0; k < 8; k++) {
-                    colour = 2 * ((line1 >> k) & 0b1) + ((line2 >> k) & 0b1); // can make this a lot shorter but this way preserve readability (for me)
+                    colour = 2 * ((line1 >> k) & 0b1) + ((line2 >> k) & 0b1); // can make this a lot shorter but this way preserve readability
 
                     x = 7 - k + 8 * (tile_num % 20);
                     //std::cout << "Colour " <<  colour << std::endl;
@@ -2853,7 +2853,7 @@ namespace LCD
         RAM::write(RUPS::IF, 0xFF0F);
 
         std::cout << "PC:" << std::hex << unsigned(CPU::PC) << std::endl;
-        std::cout << "OPCODOE:" << std::hex << unsigned(RAM::rom[0x40]) << std::endl << std::endl;
+        std::cout << "OPCODE:" << std::hex << unsigned(RAM::rom[0x40]) << std::endl << std::endl;
     }
 
 
@@ -3160,9 +3160,7 @@ namespace RUPS {
     }
 }
 
-void game_loop(std::string rom_path) {
-    std::cout << std::endl;
-
+void game_loop(std::string rom_path, mode mode) {
     CPU::init_opcodes();
     CPU::init_decoder();
     RAM::init_ram(rom_path);
@@ -3171,23 +3169,22 @@ void game_loop(std::string rom_path) {
     RENDER::drawFrame();
 
     u16 debug = 0;
-
     u8 opcode = 0;
 
     int inp_time = 0;
 
-    while (!RENDER::getQuit()) {
+    while (!INPUTS::getQuit()) {
         inp_time++;
 
         if (inp_time == 100000) {
             inp_time = 0;
             for (int i = 0; i < 50; i++) {
-                RENDER::inputs();
+                INPUTS::readInputs();
             }
         }
 
         if (CPU::PC == 0x00FE) {
-            std::cout << "--BOOT COMPLETE--\n\n";
+            println("--BOOT COMPLETE--\n");
 
             LCD::draw_BG();
 

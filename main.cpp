@@ -1,6 +1,11 @@
 #include "game.hpp"
 
+std::string getRomPath() {
+	return "C:\\emulator\\n64-roms\\mario.gb";
+}
+
 int main(int argc, char* argv[]) {
-	std::string rom_path = "C:\\emulator\\n64-roms\\mario.gb";
-	game_loop(rom_path);
+	std::string rom_path = getRomPath();
+
+	game_loop(rom_path, DEBUG);
 }

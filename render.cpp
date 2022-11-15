@@ -9,25 +9,9 @@ namespace RENDER {
 	const int SCREEN_WIDTH = GB_WIDTH * 2;
 	const int SCREEN_HEIGHT = 144;
 
-	SDL_Event e;
 	SDL_Window* Window = NULL;
 	SDL_Surface* WindowSurface = NULL;
 	SDL_Surface* GbSurface = NULL;
-
-
-	bool quit = false;
-
-	void inputs(){
-		while(SDL_PollEvent( &e ) != 0) {
-			if(e.type == SDL_QUIT){
-            	quit = true;
-        	}
-    	}
-	}
-
-	bool getQuit() {
-		return quit;
-	}
 
 	// Tile_type = 0 for BG, = 1 for window, = 2 for Chars
 	void setPix(int x, int y, int colour) {
@@ -92,19 +76,6 @@ namespace RENDER {
 		return true;
 	}
 
-	void close() {
-	    //Deallocate surface
-	    SDL_FreeSurface(WindowSurface);
-		WindowSurface = NULL;
-	    
-	    //Destroy window
-	    SDL_DestroyWindow(Window);
-	    Window = NULL;
-	    
-	    //Quit SDL subsystems
-	    SDL_Quit();
-	}
-
 	void drawFrame() {
 		SDL_Rect rect = {};
 		rect.x = 0;
@@ -116,7 +87,17 @@ namespace RENDER {
 		SDL_UpdateWindowSurface(Window);
 	}
 
-	void delay(int time){
+	void delay(int time) {
 		SDL_Delay(time);
+	}
+
+	void close() {
+	    SDL_FreeSurface(WindowSurface);
+		WindowSurface = NULL;
+	    
+	    SDL_DestroyWindow(Window);
+	    Window = NULL;
+	    
+	    SDL_Quit();
 	}	
 }

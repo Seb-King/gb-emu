@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include "typedefs.h"
+#include "typedefs.hpp"
 
 std::vector<u8> readFile(std::string fileName) {
 	std::ifstream file(fileName, std::ios::binary);

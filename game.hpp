@@ -2,11 +2,14 @@
 #include <stdint.h>
 #include <vector>
 #include <cstring>
-#include "typedefs.h"
+#include "typedefs.hpp"
 
-void game_loop(std::string rom_path);
+enum mode {
+    NORMAL,
+    DEBUG,
+};
 
-// void draw_chars();
+void game_loop(std::string rom_path, mode mode);
 
 class reg {
 public:
