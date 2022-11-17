@@ -51,7 +51,7 @@ void draw_sprite(int spriteNum) {
         for (int x = 0; x < 8; x++) {
             int pixelColour = ((line1 >> x) & 1) + 2 * ((line2 >> x) & 1);
 
-            RENDER::setSpriteDisplayPixel(x + xOffset, y + yOffset, pixelColour);
+            RENDER::setSpriteDisplayPixel(7 - x + xOffset, y + yOffset, pixelColour);
         }
     }
 }
