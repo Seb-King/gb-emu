@@ -52,7 +52,9 @@ namespace RAM {
     }
 
     void write(u8 val, u16 addr) {
-        if (addr < 0x8000) { std::cout << "Tried writing to ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; }
+        if (addr < 0x8000) { 
+            std::cout << "Tried writing to ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; 
+        }
         else if (addr < 0xA000) { vRam.at(addr - 0x8000) = val; }
         else if (addr < 0xC000) { sRam.at(addr - 0xA000) = val; }
         else if (addr < 0xE000) { iRam.at(addr - 0xC000) = val; }
@@ -86,7 +88,6 @@ namespace RAM {
     }
 
     void init_ram(std::string rom_path) {
-        //FILE* boot = fopen("boot.rom", "rb");
         RAM::rom = readFile(rom_path);
     }
 
@@ -110,7 +111,6 @@ namespace RAM {
     //    }
 
     void d_vram() {
-        // print ram from 8000 to (idk what)
         std::cout << "BGP :" << std::bitset<8>(readAt(BGP)) << std::endl;
         std::cout << "LCDC :" << std::bitset<8>(readAt(LCDC)) << std::endl;
         // BG map

@@ -12,7 +12,6 @@ const int clockrate = 4194304;
 // wrapper to allow two 8 bit registers to be used as a single 16 bit register
 u16 reg::val() { return lo + (hi << 8); }
 
-
 namespace RUPS {
     u8 IF = 0;
     u8 IE = 0;
@@ -38,7 +37,6 @@ namespace CPU {
     std::vector<std::string> decoder(256);
     std::vector<void (*)()> op_codes(256, op_not_imp);
     std::vector<void (*)()> cb_codes(256, cb_not_imp);
-
 
     bool halt = false;
     u8 IME = 0;
@@ -2380,6 +2378,11 @@ namespace CPU {
     void DAA() {
         std::cout << "What is this: opcode 0x27, DAA" << std::endl;
         exit(0);
+    }
+
+    void init() {
+        init_opcodes();
+        init_decoder();
     }
 
     void init_decoder() {

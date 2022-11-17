@@ -5,7 +5,5 @@ std::string getRomPath() {
 }
 
 int main(int argc, char* argv[]) {
-	std::string rom_path = getRomPath();
-
-	game_loop(rom_path, DEBUG);
+	game_loop(getRomPath(), DEBUG);
 }

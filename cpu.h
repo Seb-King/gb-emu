@@ -46,6 +46,9 @@ namespace CPU {
     void write(u8 val, u16 addr);
     u8 read();
     void init_opcodes();
+    void init_decoder();
+    void init();
+
     int getCyles();
     int getTiming();
     void DMA_routine();
@@ -53,7 +56,6 @@ namespace CPU {
     // void handle_interrupts();
     void cb_not_imp();
     void op_not_imp();
-    void init_decoder();
     void STAT();
 
     void run_cb(u8);

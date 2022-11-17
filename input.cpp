@@ -2,6 +2,8 @@
 #include <iostream>
 #include "utils.h"
 
+// $FF00h
+
 namespace INPUTS {
 	bool quit = false;
 	SDL_Event e;

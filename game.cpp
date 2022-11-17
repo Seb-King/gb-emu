@@ -11,6 +11,7 @@
 #include "utils.h"
 #include "ram.hpp"
 #include "cpu.h"
+#include "sprite_renderer.h"
 
 namespace LCD {
     int scanline_count = 456;
@@ -43,7 +44,7 @@ namespace LCD {
 
                     x = 7 - k + 8 * (tile_num % 20);
                     //std::cout << "Colour " <<  colour << std::endl;
-                    RENDER::setPix(x, y, colour);
+                    RENDER::setGameBoyPixel(x, y, colour);
                 }
             }
         }
@@ -87,6 +88,8 @@ namespace LCD {
                     // Sprites
                     if ((LCDC_ & 2) == 2) {
                         draw_sprites();
+                        display_sprites();
+                        
                         std::cout << "we got here\n";
                     }
 
@@ -143,10 +146,6 @@ namespace LCD {
         u8 LCDC_ = RAM::readAt(LCDC);
         u16 addr, tile_addr;
 
-        // TODO: investigate why this only works when ==1 (I thought it should be the other way around)
-        // I think it's possible that the BG tilemap always takes the addresses that the window doesn't use
-        // because i think that the 
-
         // this figures where the BG tilemap is 
         if (((LCDC_ & 0b00001000) >> 3) == 0) {
             addr = 0x9800;
@@ -199,7 +198,6 @@ namespace LCD {
         u8 line1, line2;
         int x, y, colour;
 
-
         for (int j = 0; j < 8; j++) {
             y = (j + 8 * (tile_num / 32) - scrollY) % 256;
             line1 = RAM::readAt(addr);
@@ -226,7 +224,7 @@ namespace LCD {
                 x = (7 - k + 8 * (tile_num % 32) - scrollX) % 256;
 
                 if (x >= 0 && x < 160 && y >= 0 && y < 144) {
-                    RENDER::setPix(x, y, colour);
+                    RENDER::setGameBoyPixel(x, y, colour);
                 }
             }
         }
@@ -283,7 +281,6 @@ namespace LCD {
     }
 
     // we can probably merge this and draw_BGTile into the same function with another parameter in the arguments
-
     void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette) {
         u8 scrollY = RAM::readAt(0xFF42);
         u8 scrollX = RAM::readAt(0xFF43);
@@ -315,7 +312,7 @@ namespace LCD {
                     else if (colour == 3) {
                         colour = (palette & 0b11000000) >> 6;
                     }
-                    RENDER::setPix(x, y, colour);
+                    RENDER::setGameBoyPixel(x, y, colour);
                 }
             }
         }
@@ -333,26 +330,20 @@ namespace LCD {
             u8 y = RAM::readAt(addr);
             u8 x = RAM::readAt(addr + 1);
             u8 charcode = RAM::readAt(addr + 2);
-            std::cout << "addr:" << std::hex << unsigned(addr) << std::endl;
-            std::cout << "OBJcode: " << std::hex << unsigned(charcode) << std::endl;
-            //exit(0);
+
             u8 attrib = RAM::readAt(addr + 3);
 
             if ((attrib & 0b00010000) == 0) {
                 palette = RAM::readAt(0xFF48);
-            }
-            else {
+            } else {
                 palette = RAM::readAt(0xFF49);
             }
 
-            std::cout << "palette:" << std::bitset<8>(palette) << std::endl;
-
             // Sprites are all stored in v-ram from 0x8000-0x8BFF
-            // TODO: add in the other parameters for drawing characters, such as the palette and the orientation
-            std::cout << "x: " << std::hex << unsigned(x) << " y: " << std::hex << unsigned(y) << std::endl;
+            // std::cout << "x: " << std::hex << unsigned(x) << " y: " << std::hex << unsigned(y) << std::endl;
             if (y > 0 && y < 160 && x > 0 && x < 168) {
 
-                std::cout << "x: " << x << " y: " << y << std::endl;
+                // std::cout << "x: " << x << " y: " << y << std::endl;
                 // exit(0);
                 render_sprite(x, y, charcode, palette);
             }
@@ -424,7 +415,6 @@ namespace TIMER {
 }
 
 bool handle_interrupts() {
-    // check that IME is set to 1
     if (CPU::IME == 0) {
         return false;
     }
@@ -440,12 +430,15 @@ bool handle_interrupts() {
 }
 
 void game_loop(std::string rom_path, mode mode) {
-    CPU::init_opcodes();
-    CPU::init_decoder();
+    CPU::init();
     RAM::init_ram(rom_path);
     RENDER::init();
     LCD::draw_BG();
     RENDER::drawFrame();
+
+    if (mode == DEBUG) {
+        RAM::write(0xFF, 0xFF00);
+    }
 
     u16 debug = 0;
     u8 opcode = 0;

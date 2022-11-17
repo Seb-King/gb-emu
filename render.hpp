@@ -2,10 +2,11 @@
 #include <SDL.h>
 
 namespace RENDER {
-	void setPixel(SDL_Surface*, int, int, Uint32);
+	void setPixel(SDL_Surface* surface, int x, int y, Uint32 Color);
 	bool init();
 	void close();
 	void drawFrame();
-	void setPix(int, int, int); // x, y, colour = 0,1,2 or 3 in order from lightest to darkest (or reversed idk)
 	void delay(int time);
+	void setGameBoyPixel(int x, int y, int colour);
+	void setSpriteDisplayPixel(int x, int y, int colour);
 }

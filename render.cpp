@@ -6,15 +6,19 @@ namespace RENDER {
 	const int GB_WIDTH = 160;
 	const int GB_HEIGHT = 144;
 
-	const int SCREEN_WIDTH = GB_WIDTH * 2;
-	const int SCREEN_HEIGHT = 144;
+	const int SPRITE_WIDTH = 256;
+	const int SPRITE_HEIGHT = 256;
+
+	const int SCREEN_WIDTH = GB_WIDTH + SPRITE_WIDTH;
+	const int SCREEN_HEIGHT = SPRITE_HEIGHT;
 
 	SDL_Window* Window = NULL;
 	SDL_Surface* WindowSurface = NULL;
 	SDL_Surface* GbSurface = NULL;
+	SDL_Surface* SpriteSurface = NULL;
 
 	// Tile_type = 0 for BG, = 1 for window, = 2 for Chars
-	void setPix(int x, int y, int colour) {
+	void setPix(SDL_Surface* surface, int x, int y, int colour) {
 		Uint32 alph = 0xFF000000, r = 0x00, g = 0x00, b = 0x00, shade;
 
 		if (colour == 0) {
@@ -46,12 +50,20 @@ namespace RENDER {
 
 		shade = r + g + b + alph;
 
-		setPixel(GbSurface, x, y, shade);
+		setPixel(surface, x, y, shade);
 	}
 
-	void setPixel(SDL_Surface* surface, int X, int Y, Uint32 Color) {
+	void setGameBoyPixel(int x, int y, int colour) {
+		setPix(GbSurface, x, y, colour);
+	}
+
+	void setSpriteDisplayPixel(int x, int y, int colour) {
+		setPix(SpriteSurface, x, y, colour);
+	}
+
+	void setPixel(SDL_Surface* surface, int x, int y, Uint32 Color) {
 		Uint8* pixel = (Uint8*)surface->pixels;
-		pixel += (Y * surface->pitch) + (X * sizeof(Uint32));
+		pixel += (y * surface->pitch) + (x * sizeof(Uint32));
 		*((Uint32*)pixel) = Color;
 	}
 
@@ -70,6 +82,7 @@ namespace RENDER {
 
 		WindowSurface = SDL_GetWindowSurface(Window);
 		GbSurface = SDL_CreateRGBSurface(0, GB_WIDTH, GB_HEIGHT, 32, 0, 0, 0, 0);
+		SpriteSurface = SDL_CreateRGBSurface(0, SPRITE_WIDTH, SPRITE_HEIGHT, 32, 0, 0, 0, 0);
 		SDL_FillRect(WindowSurface, NULL, SDL_MapRGB(WindowSurface->format, 0xA0, 0xBF, 0xA0));
 		SDL_UpdateWindowSurface(Window);
 
@@ -77,14 +90,22 @@ namespace RENDER {
 	}
 
 	void drawFrame() {
-		SDL_Rect rect = {};
-		rect.x = 0;
-		rect.y = 0;
-		rect.w = GB_WIDTH;
-		rect.h = GB_HEIGHT;
+		SDL_Rect GB_rect = {};
+		GB_rect.x = 0;
+		GB_rect.y = 0;
+		GB_rect.w = GB_WIDTH;
+		GB_rect.h = GB_HEIGHT;
 
-		SDL_BlitSurface(GbSurface, NULL, WindowSurface, &rect);
+		SDL_Rect SpriteRect = {};
+		SpriteRect.x = GB_WIDTH;
+		SpriteRect.y = 0;
+		SpriteRect.w = SPRITE_WIDTH;
+		SpriteRect.h = SPRITE_HEIGHT;
+
+		SDL_BlitSurface(SpriteSurface, NULL, WindowSurface, &SpriteRect);
+		SDL_BlitSurface(GbSurface, NULL, WindowSurface, &GB_rect);
 		SDL_UpdateWindowSurface(Window);
+
 	}
 
 	void delay(int time) {
