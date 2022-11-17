@@ -57,7 +57,7 @@ void draw_sprite(int spriteNum) {
 }
 
 void display_sprites() {
-    for (int spriteNum = 0; spriteNum < 256; spriteNum++) {
+    for (int spriteNum = 0; spriteNum < 384; spriteNum++) {
         draw_sprite(spriteNum);
     }
 }

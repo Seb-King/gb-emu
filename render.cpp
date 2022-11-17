@@ -12,12 +12,13 @@ namespace RENDER {
 	const int SCREEN_WIDTH = GB_WIDTH + SPRITE_WIDTH;
 	const int SCREEN_HEIGHT = SPRITE_HEIGHT;
 
+	const int RENDER_SCALE = 3;
+
 	SDL_Window* Window = NULL;
 	SDL_Surface* WindowSurface = NULL;
 	SDL_Surface* GbSurface = NULL;
 	SDL_Surface* SpriteSurface = NULL;
 
-	// Tile_type = 0 for BG, = 1 for window, = 2 for Chars
 	void setPix(SDL_Surface* surface, int x, int y, int colour) {
 		Uint32 alph = 0xFF000000, r = 0x00, g = 0x00, b = 0x00, shade;
 
@@ -48,9 +49,12 @@ namespace RENDER {
 			exit(0);
 		}
 
-		shade = r + g + b + alph;
+		//shade = r + g + b + alph;
 
-		setPixel(surface, x, y, shade);
+
+		Uint32 pixelColour = SDL_MapRGBA(WindowSurface->format, r, r, r, alph);
+
+		setPixel(surface, x, y, pixelColour);
 	}
 
 	void setGameBoyPixel(int x, int y, int colour) {
@@ -62,9 +66,13 @@ namespace RENDER {
 	}
 
 	void setPixel(SDL_Surface* surface, int x, int y, Uint32 Color) {
-		Uint8* pixel = (Uint8*)surface->pixels;
-		pixel += (y * surface->pitch) + (x * sizeof(Uint32));
-		*((Uint32*)pixel) = Color;
+		SDL_Rect GB_rect = {};
+		GB_rect.x = x * RENDER_SCALE;
+		GB_rect.y = y * RENDER_SCALE;
+		GB_rect.w = RENDER_SCALE;
+		GB_rect.h = RENDER_SCALE;
+
+		SDL_FillRect(surface, &GB_rect, Color);
 	}
 
 	bool init() {
@@ -73,7 +81,7 @@ namespace RENDER {
 			return false;
 		} 
 
-		Window = SDL_CreateWindow("gb emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+		Window = SDL_CreateWindow("gb emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH * RENDER_SCALE, SCREEN_HEIGHT * RENDER_SCALE, SDL_WINDOW_RESIZABLE);
 
 		if (Window == NULL) {
 			std::cout << "Window could not be created" << SDL_GetError();
@@ -81,8 +89,8 @@ namespace RENDER {
 		}
 
 		WindowSurface = SDL_GetWindowSurface(Window);
-		GbSurface = SDL_CreateRGBSurface(0, GB_WIDTH, GB_HEIGHT, 32, 0, 0, 0, 0);
-		SpriteSurface = SDL_CreateRGBSurface(0, SPRITE_WIDTH, SPRITE_HEIGHT, 32, 0, 0, 0, 0);
+		GbSurface = SDL_CreateRGBSurface(0, GB_WIDTH * RENDER_SCALE, GB_HEIGHT * RENDER_SCALE, 32, 0, 0, 0, 0);
+		SpriteSurface = SDL_CreateRGBSurface(0, SPRITE_WIDTH * RENDER_SCALE, SPRITE_HEIGHT * RENDER_SCALE, 32, 0, 0, 0, 0);
 		SDL_FillRect(WindowSurface, NULL, SDL_MapRGB(WindowSurface->format, 0xA0, 0xBF, 0xA0));
 		SDL_UpdateWindowSurface(Window);
 
@@ -93,14 +101,14 @@ namespace RENDER {
 		SDL_Rect GB_rect = {};
 		GB_rect.x = 0;
 		GB_rect.y = 0;
-		GB_rect.w = GB_WIDTH;
-		GB_rect.h = GB_HEIGHT;
+		GB_rect.w = GB_WIDTH * RENDER_SCALE;
+		GB_rect.h = GB_HEIGHT * RENDER_SCALE;
 
 		SDL_Rect SpriteRect = {};
-		SpriteRect.x = GB_WIDTH;
+		SpriteRect.x = GB_WIDTH * RENDER_SCALE;
 		SpriteRect.y = 0;
-		SpriteRect.w = SPRITE_WIDTH;
-		SpriteRect.h = SPRITE_HEIGHT;
+		SpriteRect.w = SPRITE_WIDTH * RENDER_SCALE;
+		SpriteRect.h = SPRITE_HEIGHT * RENDER_SCALE;
 
 		SDL_BlitSurface(SpriteSurface, NULL, WindowSurface, &SpriteRect);
 		SDL_BlitSurface(GbSurface, NULL, WindowSurface, &GB_rect);
