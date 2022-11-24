@@ -34,19 +34,16 @@ void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette) {
     }
 }
 
-void draw_sprite(int spriteNum) {
-    int xOffset = (spriteNum % 32) * 8;
-    int yOffset = (spriteNum / 32) * 8;
+void draw_sprite(int spriteNum, int xOffset, int yOffset) {
     u16 spriteSheetStart = 0x8000;
 
     u16 spriteStart = spriteSheetStart + (spriteNum * 0x10);
-
 
     u8 line1, line2;
 
     for (int y = 0; y < 8; y++) {
         line1 = RAM::readAt(spriteStart + y * 2);
-        line2 = RAM::readAt(spriteStart + y * 2 + 2);
+        line2 = RAM::readAt(spriteStart + y * 2 + 1);
 
         for (int x = 0; x < 8; x++) {
             int pixelColour = ((line1 >> x) & 1) + 2 * ((line2 >> x) & 1);
@@ -58,7 +55,27 @@ void draw_sprite(int spriteNum) {
 
 void display_sprites() {
     for (int spriteNum = 0; spriteNum < 384; spriteNum++) {
-        draw_sprite(spriteNum);
+        int xOffset = (spriteNum % 16) * 8;
+        int yOffset = (spriteNum / 16) * 8;
+        draw_sprite(spriteNum, xOffset, yOffset);
+    }
+}
+
+void drawObject(int objectNum) {
+    u16 objectStartAddr = 0xFE00;
+    u16 objectAddr = objectStartAddr + (objectNum * 0x04);
+
+    u8 tileIndex = RAM::readAt(objectAddr);
+
+    int xOffset = (objectNum % 16) * 8 + 128;
+    int yOffset = (objectNum / 16) * 8;
+
+    draw_sprite(tileIndex, xOffset, yOffset);
+}
+
+void displayObjects() {
+    for (int objectNum = 0; objectNum < 40; objectNum++) {
+        drawObject(objectNum);
     }
 }
 

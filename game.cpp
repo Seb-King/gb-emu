@@ -43,7 +43,7 @@ namespace LCD {
                     colour = 2 * ((line1 >> k) & 0b1) + ((line2 >> k) & 0b1); // can make this a lot shorter but this way preserve readability
 
                     x = 7 - k + 8 * (tile_num % 20);
-                    //std::cout << "Colour " <<  colour << std::endl;
+
                     RENDER::setGameBoyPixel(x, y, colour);
                 }
             }
@@ -76,7 +76,7 @@ namespace LCD {
                 u8 thing = RAM::readAt(0xFF40);
 
                 u8 LCDC_ = RAM::readAt(LCDC);
-                //std::cout << "LCDC:" << std::bitset<8>(LCDC) << std::endl << std::endl;
+
                 if (LCDC_ >> 7 == 1) {
                     if ((LCDC_ & 1) == 1) {
                         draw_BG();
@@ -89,12 +89,12 @@ namespace LCD {
                     if ((LCDC_ & 2) == 2) {
                         draw_sprites();
                         display_sprites();
-                        
-                        std::cout << "we got here\n";
+                        displayObjects();
                     }
 
                 }
 
+                RENDER::drawText();
                 RENDER::drawFrame();
                 RENDER::delay(5);
 
@@ -122,8 +122,6 @@ namespace LCD {
     }
 
     void v_blank() {
-        std::cout << "V-Blank Time!\n\n";
-
         u8 STAT = RAM::readAt(0xFF41);
         STAT |= 0b00000001;
         STAT &= 0b11111101;

@@ -26,8 +26,8 @@ u16 LCDC = 0xFF40;
 u16 STAT = 0xFF41;  // LCDC status (interrupts and memory access)
 u16 SCY = 0xFF42; 	// - Scroll Y
 u16 SCX = 0xFF43; 	// - Scroll X
-u16 LY = 0xFF44;		//0xFF44 - LCDC Y-Coordinate (the vertical line to which present data is transferred to the LCD driver)
-u16 LYC = 0xFF45;		//0xFF45 - LY Compare : Compares itself with the LY. If the values ar ethe same, set the coincedent flag 
+u16 LY = 0xFF44;	//   0xFF44 - LCDC Y-Coordinate (the vertical line to which present data is transferred to the LCD driver)
+u16 LYC = 0xFF45;	//   0xFF45 - LY Compare : Compares itself with the LY. If the values ar ethe same, set the coincedent flag 
 // That is Bit 6 of STAT
 
 u16 DMA = 0xFF46; 	//0xFF46 - Direct Memory Access Transfer
@@ -73,11 +73,6 @@ namespace CPU {
     }
 
     void DMA_routine() {
-        // the source of the DMA transfer is determined by the value written to the register, starting at XX00 where XX is the value in hex
-        // the original gameboy could only take xx to be from 0x00-F1.
-
-        std::cout << "DMA Time.\n\n";
-
         u16 source = (RAM::readAt(DMA) << 8);
         u8 data;
         for (int idx = 0; idx < 0xF1; idx++) {
@@ -88,7 +83,7 @@ namespace CPU {
             write(data, 0xFE00 + idx);
         }
 
-        RAM::dump_oam();
+        //RAM::dump_oam();
     }
 
     void STAT() {

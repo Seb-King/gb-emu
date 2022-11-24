@@ -63,6 +63,12 @@ namespace RAM {
         else if (addr < 0xFF80) { moreRam.at(addr - 0xFEA0) = val; }
         else if (addr < 0xFFFF) { i2Ram.at(addr - 0xFF80) = val; }
         else if (addr == 0xFFFF) { ie = val; }
+
+
+        if (addr == 0xFF46) {
+
+            DMA_routine();
+        }
     }
 
     //could just make this a function call in CPU
@@ -71,8 +77,6 @@ namespace RAM {
     void DMA_routine() {
         // the source of the DMA transfer is determined by the value written to the register, starting at XX00 where XX is the value in hex
         // the original gameboy could only take xx to be from 0x00-F1.
-
-        std::cout << "DMA Time.\n\n";
 
         u16 source = (readAt(DMA) << 8);
         u8 data;
@@ -84,7 +88,7 @@ namespace RAM {
             write(data, 0xFE00 + idx);
         }
 
-        dump_oam();
+        //dump_oam();
     }
 
     void init_ram(std::string rom_path) {
