@@ -3,7 +3,7 @@
 TTF_Font* font = NULL;
 
 void loadFont() {
-	font = TTF_OpenFont("Cascadia.ttf", 20);
+	font = TTF_OpenFont("Cascadia.ttf", 16);
 }
 
 void closeFont() {

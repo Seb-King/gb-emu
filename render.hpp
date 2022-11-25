@@ -9,4 +9,6 @@ namespace RENDER {
 	void delay(int time);
 	void setGameBoyPixel(int x, int y, int colour);
 	void setSpriteDisplayPixel(int x, int y, int colour);
+	void drawText();
+	void drawDebugText(std::string textureText, int x, int y);
 }
