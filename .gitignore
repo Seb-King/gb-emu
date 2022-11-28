@@ -1,0 +1,11 @@
+CppProperties.json
+*.rom
+*.gb
+
+*.sln
+*.vcxproj*
+*.obj
+
+/x64
+/.vs
+/packages
