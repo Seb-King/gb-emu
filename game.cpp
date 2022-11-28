@@ -12,6 +12,7 @@
 #include "ram.hpp"
 #include "cpu.h"
 #include "sprite_renderer.h"
+#include "debug_display.hpp"
 
 namespace LCD {
     int scanline_count = 456;
@@ -94,7 +95,7 @@ namespace LCD {
 
                 }
 
-                RENDER::drawText();
+                drawAtStackPointer();
                 RENDER::drawFrame();
                 RENDER::delay(5);
 

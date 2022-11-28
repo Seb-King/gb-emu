@@ -144,30 +144,8 @@ namespace RENDER {
 		SDL_UpdateWindowSurface(Window);
 	}
 
-	void drawText() {
-		Text foo;
-
-		SDL_Color black;
-		black.r = 255;
-		black.g = 255;
-		black.b = 255;
-		black.a = 255;
-
-		if (!foo.loadFromRenderedText("banana", black, debugRenderer)) {
-			printf("Could not load text");
-		}
-
-		foo.render(2, 0, debugRenderer);
-
-
-		if (!foo.loadFromRenderedText("banana", black, debugRenderer)) {
-			printf("Could not load text");
-		}
-
-		foo.render(20, 80, debugRenderer);
-
-
-		foo.free();
+	void clearDebugDisplay() {
+		SDL_RenderClear(debugRenderer);
 	}
 
 	void drawDebugText(std::string textureText, int x, int y) {
