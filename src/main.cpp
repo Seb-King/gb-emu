@@ -1,7 +1,7 @@
 #include "game.hpp"
 
 std::string getRomPath() {
-	return "C:\\emulator\\n64-roms\\mario.gb";
+	return "/Users/sebking/dev/gb-emu/roms/dr-mario.gb";
 }
 
 int main(int argc, char* argv[]) {

@@ -1,7 +1,7 @@
-#include "debug_display.hpp";
-#include "render.hpp";
-#include "ram.hpp";
-#include "cpu.h";
+#include "debug_display.hpp"
+#include "render.hpp"
+#include "ram.hpp"
+#include "cpu.h"
 #include <sstream>
 
 void drawAtStackPointer() {

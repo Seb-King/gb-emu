@@ -9,3 +9,6 @@ CppProperties.json
 /x64
 /.vs
 /packages
+
+/build/
+/roms/

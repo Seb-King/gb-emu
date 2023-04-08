@@ -1,5 +1,4 @@
-#pragma once
-#include "SDL_ttf.h"
+#include <SDL2_ttf/SDL_ttf.h>
 #include <string>
 
 extern TTF_Font* font;
@@ -17,7 +16,7 @@ public:
 
 	bool loadFromRenderedText(std::string textureText, SDL_Color textColor, SDL_Renderer* renderer);
 
-	void render(int x, int y, SDL_Renderer* renderer, SDL_Rect* clip = NULL, double angle = NULL, SDL_Point* center = NULL);
+	void render(int x, int y, SDL_Renderer* renderer, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL);
 
 private:
 	SDL_Texture* texture;
