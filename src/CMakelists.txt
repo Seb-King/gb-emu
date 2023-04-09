@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 
+if (WIN32)
+  set(SDL2_DIR C:/Users/sebas/cpp-libs/SDL2-2.24.2/cmake)
+  set(SDL2_ttf_DIR C:/Users/sebas/cpp-libs/SDL2_ttf-2.20.1/cmake)
+endif (WIN32)
+
 project(emulator)
 
 find_package(SDL2 REQUIRED)
@@ -21,6 +26,6 @@ add_executable(
   utils.cpp
 )
 
-set_property(TARGET emulator PROPERTY CXX_STANDARD 11)
+set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(emulator ${SDL2_LIBRARIES} ${SDL2_ttf_LIBRARIES})
