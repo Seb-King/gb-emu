@@ -31,6 +31,11 @@ namespace RAM {
 
     u8 readAt(u16 addr) {
         // we'll be assuming 32kB cartridge for now and add swapping in later
+
+        if (addr == 0xFF44) {
+            return 0x90;
+        }
+        
         if (addr < 0x8000) {
             if (addr < 0x0100) {
                 if (moreRam[0xFF50 - 0xFEA0] == 0) // if the bootrom is enabled (which it is by default)
@@ -53,7 +58,7 @@ namespace RAM {
 
     void write(u8 val, u16 addr) {
         if (addr < 0x8000) { 
-            std::cout << "Tried writing to ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; 
+            // std::cout << "Tried writing to ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; 
         }
         else if (addr < 0xA000) { vRam.at(addr - 0x8000) = val; }
         else if (addr < 0xC000) { sRam.at(addr - 0xA000) = val; }
@@ -101,7 +106,7 @@ namespace RAM {
         u8 byte = 0;
         for (int i = 0; i < 0xF1; i++) {
             byte = readAt(byte + i);
-            std::cout << std::hex << unsigned(addr + i) << ": " << std::hex << unsigned(byte) << std::endl;
+            // std::cout << std::hex << unsigned(addr + i) << ": " << std::hex << unsigned(byte) << std::endl;
         }
     }
 

@@ -4,12 +4,12 @@
 #include <cstring>
 #include "typedefs.hpp"
 
-enum mode {
+enum Mode {
     NORMAL,
     DEBUG,
 };
 
-void game_loop(std::string rom_path, mode mode);
+void game_loop(std::string rom_path, Mode mode);
 
 namespace TIMER {
     void inc(int);

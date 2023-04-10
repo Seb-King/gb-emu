@@ -428,9 +428,12 @@ bool handle_interrupts() {
     return true;
 }
 
-void game_loop(std::string rom_path, mode mode) {
+void game_loop(std::string rom_path, Mode mode) {
     CPU::init();
     RAM::init_ram(rom_path);
+    CPU::init_registers();
+    CPU::print_registers();
+
     RENDER::init();
     LCD::draw_BG();
     RENDER::drawFrame();
@@ -455,7 +458,7 @@ void game_loop(std::string rom_path, mode mode) {
         }
 
         if (CPU::PC == 0x00FE) {
-            println("--BOOT COMPLETE--\n");
+            // println("--BOOT COMPLETE--\n");
 
             LCD::draw_BG(); 
 
@@ -466,6 +469,7 @@ void game_loop(std::string rom_path, mode mode) {
             debug = CPU::PC;
             opcode = CPU::read();
             CPU::runOPCode(opcode);
+            CPU::print_registers();
         }
 
         LCD::update();

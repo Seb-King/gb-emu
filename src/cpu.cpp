@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include "typedefs.hpp"
 #include <vector>
@@ -58,6 +59,41 @@ namespace CPU {
     int getCyles() { return cycles; }
     int getTiming() { return timing; }
 
+    void init_registers() {
+        PC = 0x0100;
+        SP = 0xFFFE;
+        AF.set(0x01B0);
+        BC.set(0x0013);
+        DE.set(0x00D8);
+        HL.set(0x014D);
+        init_opcodes();
+        init_decoder();
+    }
+    void print_registers() {
+        std::cout << "A:";
+        std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(AF.hi);
+        std::cout << " F:" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(AF.lo);
+
+        std::cout << " B:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(BC.hi);
+        std::cout << " C:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(BC.lo);
+
+        std::cout << " D:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(DE.hi);
+        std::cout << " E:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(DE.lo);
+
+        std::cout << " H:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << std::uppercase << int(HL.hi);
+        std::cout << " L:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(HL.lo);
+
+        std::cout << " SP:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(SP);
+        std::cout << " PC:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(PC);
+
+        std::cout << " PCMEM:";
+        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC)); 
+        std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 1));
+        std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 2));
+        std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 3));
+
+        std::cout << std::endl;
+    }
     void write(u8 val, u16 addr) {
         RAM::write(val, addr);
 
@@ -100,15 +136,15 @@ namespace CPU {
 
     void op_not_imp() {
         u8 opcode = RAM::readAt(PC - 1);
-        std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
-        std::cout << "PC:" << std::hex << unsigned(PC) << std::endl;
+        // std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
+        // std::cout << "PC:" << std::hex << unsigned(PC) << std::endl;
         exit(0);
     }
 
 
     void cb_not_imp() {
         u8 opcode = RAM::readAt(PC - 1);
-        std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
+        // std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
         exit(0);
     }
 
@@ -616,7 +652,7 @@ namespace CPU {
     void CB() {
         u8 opcode = read();
         switch (opcode) {
-        default: std::cout << "CB opcode not implemented: " << std::hex << unsigned(opcode) << std::endl;
+        // default: std::cout << "CB opcode not implemented: " << std::hex << unsigned(opcode) << std::endl;
         }
     }
 
@@ -1957,7 +1993,7 @@ namespace CPU {
     void INC_e()
     {
         u8 loNib = DE.lo & 0x0F;
-        ++AF.hi;
+        ++DE.lo;
         if (DE.lo == 0) { AF.lo |= 0b10000000; }
         else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
@@ -2371,7 +2407,7 @@ namespace CPU {
     }
 
     void DAA() {
-        std::cout << "What is this: opcode 0x27, DAA" << std::endl;
+        // std::cout << "What is this: opcode 0x27, DAA" << std::endl;
         exit(0);
     }
 

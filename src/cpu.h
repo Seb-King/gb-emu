@@ -31,9 +31,7 @@ extern u16 LYC;
 extern u16 DMA;
 extern u16 BGP;
 
-namespace CPU {
-
-   
+namespace CPU {   
     extern u16 PC;
     extern u16 SP;
     extern u8 IME;
@@ -42,6 +40,8 @@ namespace CPU {
     extern int timing;
 
     void runOPCode(u8 op_code);
+    void init_registers();
+    void print_registers();
 
     void write(u8 val, u16 addr);
     u8 read();
