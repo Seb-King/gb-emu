@@ -1110,7 +1110,6 @@ namespace CPU {
 
     void CALL_nn()
     {
-
         u8 n1 = read();
         u8 n2 = read();
 
@@ -1129,10 +1128,9 @@ namespace CPU {
     void CALL_NZ() {
         u8 F = AF.lo;
         u8 Z = (F & 0b10000000) >> 7;
+        u8 n1 = read();
+        u8 n2 = read();
         if (Z == 0) {
-            u8 n1 = read();
-            u8 n2 = read();
-
             u8 loNib = PC & 0xFF;
             u8 hiNib = (PC >> 8) & 0xFF;
 
@@ -1148,10 +1146,9 @@ namespace CPU {
     void CALL_Z() {
         u8 F = AF.lo;
         u8 Z = (F & 0b10000000) >> 7;
+        u8 n1 = read();
+        u8 n2 = read();
         if (Z == 1) {
-            u8 n1 = read();
-            u8 n2 = read();
-
             u8 loNib = PC & 0xFF;
             u8 hiNib = (PC >> 8) & 0xFF;
 
@@ -1167,10 +1164,9 @@ namespace CPU {
     void CALL_NC() {
         u8 F = AF.lo;
         u8 C = (F & 0b00010000) >> 7;
+        u8 n1 = read();
+        u8 n2 = read();
         if (C == 0) {
-            u8 n1 = read();
-            u8 n2 = read();
-
             u8 loNib = PC & 0xFF;
             u8 hiNib = (PC >> 8) & 0xFF;
 
@@ -1186,10 +1182,9 @@ namespace CPU {
     void CALL_C() {
         u8 F = AF.lo;
         u8 C = (F & 0b00010000) >> 7;
+        u8 n1 = read();
+        u8 n2 = read();
         if (C == 1) {
-            u8 n1 = read();
-            u8 n2 = read();
-
             u8 loNib = PC & 0xFF;
             u8 hiNib = (PC >> 8) & 0xFF;
 
