@@ -2055,93 +2055,78 @@ namespace CPU {
 
     void DEC_a()
     {
-        u8 loNib = AF.hi & 0x0F;
-        --AF.hi;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib >= (AF.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        u8 lowerNib = AF.hi & 0x0F;
+        u8 newValue = --AF.hi;
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 4;
     }
     void DEC_b()
     {
-        u8 loNib = BC.hi & 0x0F;
-        --BC.hi;
-        if (BC.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib >= (BC.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        u8 lowerNib = BC.hi & 0x0F;
+        u8 newValue = --BC.hi;
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 4;
     }
     void DEC_c() {
         u8 lowerNib = BC.lo & 0x0F;
-        --BC.lo;
+        u8 newValue = --BC.lo;
         setN(true);
-        setZ(BC.lo == 0);
+        setZ(newValue == 0);
         setH(lowerNib == 0x00);
-
         cycles = 4;
     }
     void DEC_d()
     {
-        u8 loNib = DE.hi & 0x0F;
-        --DE.hi;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib >= (DE.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        u8 lowerNib = DE.hi & 0x0F;
+        u8 newValue = --DE.hi;
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 4;
     }
     void DEC_e()
     {
-        u8 loNib = DE.lo & 0x0F;
-        --DE.lo;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib >= (DE.lo & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        u8 lowerNib = DE.lo & 0x0F;
+        u8 newValue = --DE.lo;
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 4;
     }
     void DEC_h()
     {
-        u8 loNib = HL.hi & 0x0F;
-        --HL.hi;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib >= (HL.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        u8 lowerNib = HL.hi & 0x0F;
+        u8 newValue = --HL.hi;
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 4;
     }
     void DEC_l()
     {
-        u8 loNib = HL.lo & 0x0F;
-        HL.lo--;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib > (HL.lo & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        u8 lowerNib = HL.lo & 0x0F;
+        u8 newValue = HL.lo--;
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 4;
     }
     void DEC_HLad()
     {
         u8 x = RAM::readAt(HL.val());
-        u8 loNib = x & 0x0F;
-        x--;
+        u8 lowerNib = x & 0x0F;
+        u8 newValue = x--;
         write(x, HL.val());
-        if (x == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        AF.lo |= 0b01000000;
-        if (loNib > (x & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+    
+        setN(true);
+        setZ(newValue == 0);
+        setH(lowerNib == 0x00);
         cycles = 12;
     }
-
 
     void HALT() {
         halt = true;
