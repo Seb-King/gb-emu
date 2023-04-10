@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "render.hpp"
+#include "text.hpp"
 
 namespace RENDER {
 	const int GB_WIDTH = 160;
@@ -24,6 +25,8 @@ namespace RENDER {
 	SDL_Surface* DebugSurface = NULL;
 
 	SDL_Renderer* debugRenderer = NULL;
+
+	Text text;
 
 	void setPix(SDL_Surface* surface, int x, int y, int colour) {
 		Uint32 alph = 0xFF000000, r = 0x00, g = 0x00, b = 0x00, shade;
@@ -91,6 +94,14 @@ namespace RENDER {
 			return false;
 		}
 
+		if (TTF_Init() == -1) {
+			printf("Could not initialise SDL_TTF");
+			return false;
+		}
+
+		loadFont();
+
+
 		WindowSurface = SDL_GetWindowSurface(Window);
 		GbSurface = SDL_CreateRGBSurface(0, GB_WIDTH * RENDER_SCALE, GB_HEIGHT * RENDER_SCALE, 32, 0, 0, 0, 0);
 		SpriteSurface = SDL_CreateRGBSurface(0, SPRITE_WIDTH * RENDER_SCALE, SPRITE_HEIGHT * RENDER_SCALE, 32, 0, 0, 0, 0);
@@ -100,6 +111,8 @@ namespace RENDER {
 
 		SDL_FillRect(WindowSurface, NULL, SDL_MapRGB(WindowSurface->format, 0xA0, 0xBF, 0xA0));
 		SDL_UpdateWindowSurface(Window);
+
+		loadFont();
 
 		return true;
 	}
@@ -136,7 +149,21 @@ namespace RENDER {
 	}
 
 	void drawDebugText(std::string textureText, int x, int y) {
-		printf("Unimplemented");
+		Text foo;
+
+		SDL_Color black;
+		black.r = 255;
+		black.g = 255;
+		black.b = 255;
+		black.a = 255;
+
+		if (!foo.loadFromRenderedText(textureText, black, debugRenderer)) {
+			printf("Could not load text");
+		}
+
+		foo.render(x, y, debugRenderer);
+
+		foo.free();
 	}
 
 	void delay(int time) {
@@ -144,15 +171,17 @@ namespace RENDER {
 	}
 
 	void close() {
-		SDL_FreeSurface(WindowSurface);
+		closeFont();
+
+	    SDL_FreeSurface(WindowSurface);
 		WindowSurface = NULL;
 	    
-		SDL_DestroyWindow(Window);
-		Window = NULL;
+	    SDL_DestroyWindow(Window);
+	    Window = NULL;
 
 		SDL_DestroyRenderer(debugRenderer);
 		debugRenderer = NULL;
 	    
-		SDL_Quit();
+	    SDL_Quit();
 	}	
 }
