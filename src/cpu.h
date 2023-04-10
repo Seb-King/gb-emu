@@ -38,6 +38,7 @@ namespace CPU {
     extern bool halt;
     extern int cycles;
     extern int timing;
+    extern int count;
 
     void runOPCode(u8 op_code);
     void init_registers();

@@ -53,6 +53,9 @@ namespace CPU {
 
     int interrupt_mode = 0;
 
+    int count = 1;
+
+
     int cycles = 4;
     int timing = 0;
 
@@ -69,6 +72,27 @@ namespace CPU {
         init_opcodes();
         init_decoder();
     }
+
+    void setZ(bool x) {
+        if (x) AF.lo |= 0x80;
+        else AF.lo &= 0x70;
+    }
+
+    void setN(bool x) {
+        if (x) AF.lo |= 0x40;
+        else AF.lo &= 0xBF;
+    }
+
+    void setH(bool x) {
+        if (x) AF.lo |= 0x20;
+        else AF.lo &= 0xDF;
+    }
+
+    void setC(bool x) {
+        if (x) AF.lo |= 0x10;
+        else AF.lo &= 0xEF;
+    }
+
     void print_registers() {
         std::cout << "A:";
         std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(AF.hi);
@@ -94,6 +118,7 @@ namespace CPU {
 
         std::cout << std::endl;
     }
+
     void write(u8 val, u16 addr) {
         RAM::write(val, addr);
 
@@ -2059,15 +2084,13 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void DEC_c()
-    {
-        u8 loNib = BC.lo & 0x0F;
+    void DEC_c() {
+        u8 lowerNib = BC.lo & 0x0F;
         --BC.lo;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; } // Z set if the result is zero
-        AF.lo |= 0b01000000;
-        if (loNib >= (BC.lo & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        setN(true);
+        setZ(BC.lo == 0);
+        setH(lowerNib == 0x00);
+
         cycles = 4;
     }
     void DEC_d()
