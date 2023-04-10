@@ -1956,18 +1956,14 @@ namespace CPU {
         cycles = 8;
     }
 
-    void CP_hash()
-    {
+    void CP_hash() {
         u8 x = read();
         u8 loNib = AF.hi & 0x0F;
         u8 z = AF.hi - x;
-        if (z == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; } // set Z = 1 if result is == 0
-        AF.lo |= 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; }// Set CY if whole thing does not underflo underflos
+        setZ(z == 0);
+        setN(true);
+        setH((AF.hi & 0x0F) - (x & 0x0F) < 0);
+        setC(AF.hi < x);
         cycles = 8;
     }
 
