@@ -93,6 +93,8 @@ namespace CPU {
         else AF.lo &= 0xEF;
     }
 
+    bool getC() { return (AF.lo & 0x10) == 0x10; }
+
     void print_registers() {
         std::cout << "A:";
         std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(AF.hi);
@@ -161,15 +163,15 @@ namespace CPU {
 
     void op_not_imp() {
         u8 opcode = RAM::readAt(PC - 1);
-        // std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
-        // std::cout << "PC:" << std::hex << unsigned(PC) << std::endl;
+        std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
+        std::cout << "PC:" << std::hex << unsigned(PC) << std::endl;
         exit(0);
     }
 
 
     void cb_not_imp() {
         u8 opcode = RAM::readAt(PC - 1);
-        // std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
+        std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
         exit(0);
     }
 
@@ -201,394 +203,218 @@ namespace CPU {
         }
     }
 
-    void init_opcodes() {
-        op_codes[0x00] = NOP;
-        op_codes[0x06] = LDb_n; // load 
-        op_codes[0x0E] = LDc_n;              // how do we even handle what n is? Where should it  
-        op_codes[0x16] = LDd_n;
-        op_codes[0x1E] = LDe_n;
-        op_codes[0x26] = LDh_n;
-        op_codes[0x2E] = LDl_n;
-        // Load  LD r1r2, load r2 into r1
-        op_codes[0x7F] = op_not_imp; // loads A into A which is pointless and we should get aw 
-        // although it does take 4 cpu cycles anyway, so maybe things break without it
-        op_codes[0x78] = LDrr_ab;
-        op_codes[0x79] = LDrr_ac;
-        op_codes[0x7A] = LDrr_ad;
-        op_codes[0x7B] = LDrr_ae;
-        op_codes[0x7C] = LDrr_ah;
-        op_codes[0x7D] = LDrr_al;
-        op_codes[0x7E] = LDrr_aHL;
-        op_codes[0x0A] = LDrr_aBC;
-        op_codes[0x1A] = LDrr_aDE;
-        op_codes[0xFA] = LDrr_ann;
-        op_codes[0x3E] = LDrr_a_hash; // what the fuck is this op shiposed  
-        op_codes[0x40] = op_not_imp; // 
-        op_codes[0x41] = LDrr_bc;
-        op_codes[0x42] = LDrr_bd;
-        op_codes[0x43] = LDrr_be;
-        op_codes[0x44] = LDrr_bh;
-        op_codes[0x45] = LDrr_bl;
-        op_codes[0x46] = LDrr_bHL; // now i'm wondering where is the A into 
-        op_codes[0x47] = LDrr_ba;
-        op_codes[0x48] = LDrr_cb;
-        op_codes[0x49] = op_not_imp;
-        op_codes[0x4A] = LDrr_cd;
-        op_codes[0x4B] = LDrr_ce;
-        op_codes[0x4C] = LDrr_ch;
-        op_codes[0x4D] = LDrr_cl;
-        op_codes[0x4E] = LDrr_cHL;
-        op_codes[0x4F] = LDrr_ca;
-        op_codes[0x50] = LDrr_db;
-        op_codes[0x51] = LDrr_dc;
-        op_codes[0x52] = op_not_imp;
-        op_codes[0x53] = LDrr_de;
-        op_codes[0x54] = LDrr_dh;
-        op_codes[0x55] = LDrr_dl;
-        op_codes[0x56] = LDrr_dHL;
-        op_codes[0x57] = LDrr_da;
-        op_codes[0x58] = LDrr_eb;
-        op_codes[0x59] = LDrr_ec;
-        op_codes[0x5A] = LDrr_ed;
-        op_codes[0x5B] = op_not_imp;
-        op_codes[0x5C] = LDrr_eh;
-        op_codes[0x5D] = LDrr_el;
-        op_codes[0x5E] = LDrr_eHL;
-        op_codes[0x5F] = LDrr_ea;
-        op_codes[0x60] = LDrr_hb;
-        op_codes[0x61] = LDrr_hc;
-        op_codes[0x62] = LDrr_hd;
-        op_codes[0x63] = LDrr_he;
-        op_codes[0x64] = op_not_imp;
-        op_codes[0x65] = LDrr_hl;
-        op_codes[0x66] = LDrr_hHL;
-        op_codes[0x67] = LDrr_ha;
-        op_codes[0x68] = LDrr_lb;
-        op_codes[0x69] = LDrr_lc;
-        op_codes[0x6A] = LDrr_ld;
-        op_codes[0x6B] = LDrr_le;
-        op_codes[0x6C] = LDrr_lh;
-        op_codes[0x6D] = op_not_imp;
-        op_codes[0x6E] = LDrr_lHL;
-        op_codes[0x6F] = LDrr_la;
-        op_codes[0x70] = LDrr_HLb;
-        op_codes[0x71] = LDrr_HLc;
-        op_codes[0x72] = LDrr_HLd;
-        op_codes[0x73] = LDrr_HLe;
-        op_codes[0x74] = LDrr_HLh;
-        op_codes[0x75] = LDrr_HLl;
-        op_codes[0x36] = LDrr_HLn;
+    void SRL_A() {
+        u8 oldValue = AF.hi;
+        u8 newValue = oldValue >> 1;
+        AF.hi = newValue;
 
-        op_codes[0xF2] = LDa_c; // put value at address 0xFF00 + reg 
-        op_codes[0xE2] = LDc_a; // put A into address (0xFF00 + reg C)
-        op_codes[0x3A] = LDDaHL; // put value at address HL into A th 
-        op_codes[0x32] = LDDHLa; // Put A into memory address HL th 
-        op_codes[0x2A] = LDI_aHL; // Put value at address HL into A then increment HL
-        op_codes[0x22] = LDI_HLa; // put A into mem address . 
-        op_codes[0xE0] = LDH_nA; // Put A into memory address 0xFF00 + n
-        op_codes[0xF0] = LDH_a_ffn; // Put memory address 0xFF00 + 
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
+    void SRL_B() {
+        u8 oldValue = BC.hi;
+        u8 newValue = oldValue >> 1;
+        BC.hi = newValue;
 
-        // --------- 16-Bit Loads --------- //
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-          // LDnn,n put value nn into n
-        op_codes[0x01] = LD_nn_BC;
-        op_codes[0x11] = LD_nn_DE;
-        op_codes[0x21] = LD_nn_HL;
-        op_codes[0x31] = LD_nn_SP;
+     void SRL_C() {
+        u8 oldValue = BC.lo;
+        u8 newValue = oldValue >> 1;
+        BC.lo = newValue;
 
-        // LD SP,HL put HL into SP
-        op_codes[0xF9] = LD_SPHL;
-        op_codes[0xF8] = LDHL_SPn; // Put SP+n effective address into HL, n is signed, fla 
-        op_codes[0x08] = LD_nnSP; //nn two byte immediate address, Put SP at address n
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // Push register pair nn onto stack decrement SP twice
-        op_codes[0xF5] = PUSH_AF;
-        op_codes[0xC5] = PUSH_BC;
-        op_codes[0xD5] = PUSH_DE;
-        op_codes[0xE5] = PUSH_HL;
+    void SRL_D() {
+        u8 oldValue = DE.hi;
+        u8 newValue = oldValue >> 1;
+        DE.hi = newValue;
 
-        // Pop nn, pop two bytes off stack into register pair nn, increment Stack pointer twice
-        op_codes[0xF1] = POP_AF;
-        op_codes[0xC1] = POP_BC;
-        op_codes[0xD1] = POP_DE;
-        op_codes[0xE1] = POP_HL;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // 8-Bit ALU
-        // ADD A,n -- add n to A
+    void SRL_E() {
+        u8 oldValue = DE.lo;
+        u8 newValue = oldValue >> 1;
+        DE.lo = newValue;
 
-        op_codes[0x87] = ADD_aa;
-        op_codes[0x80] = ADD_ab;
-        op_codes[0x81] = ADD_ac;
-        op_codes[0x82] = ADD_ad;
-        op_codes[0x83] = ADD_ae;
-        op_codes[0x84] = ADD_ah;
-        op_codes[0x85] = ADD_al;
-        op_codes[0x86] = ADD_aH;
-        op_codes[0xC6] = ADD_a_hash;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // ADC A,n -- add n + carry flag to A
-        op_codes[0x8f] = ADC_aa;
-        op_codes[0x88] = ADC_ab;
-        op_codes[0x89] = ADC_ac;
-        op_codes[0x8A] = ADC_ad;
-        op_codes[0x8B] = ADC_ae;
-        op_codes[0x8C] = ADC_ah;
-        op_codes[0x8D] = ADC_al;
-        op_codes[0x8E] = ADC_aHL;
-        op_codes[0xCE] = ADC_a_hash;
+    void SRL_H() {
+        u8 oldValue = HL.hi;
+        u8 newValue = oldValue >> 1;
+        HL.hi = newValue;
 
-        // SUB n, subtract n from A
-        op_codes[0x97] = SUB_a;
-        op_codes[0x90] = SUB_b;
-        op_codes[0x91] = SUB_c;
-        op_codes[0x92] = SUB_d;
-        op_codes[0x93] = SUB_e;
-        op_codes[0x94] = SUB_h;
-        op_codes[0x95] = SUB_l;
-        op_codes[0x96] = SUB_HL;
-        op_codes[0xD6] = SUB_hash;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        op_codes[0x9F] = SBC_a;
-        op_codes[0x98] = SBC_b;
-        op_codes[0x99] = SBC_c;
-        op_codes[0x9A] = SBC_d;
-        op_codes[0x9B] = SBC_e;
-        op_codes[0x9C] = SBC_h;
-        op_codes[0x9D] = SBC_l;
-        op_codes[0x9E] = SBC_HL;
+    void SRL_L() {
+        u8 oldValue = HL.lo;
+        u8 newValue = oldValue >> 1;
+        HL.lo = newValue;
 
-        // ------ Logical Operations ------ //
-        // Check flags in each operation
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // AND n, logically AND n with A, result in A
-        op_codes[0xA7] = AND_a;
-        op_codes[0xA0] = AND_b;
-        op_codes[0xA1] = AND_c;
-        op_codes[0xA2] = AND_d;
-        op_codes[0xA3] = AND_e;
-        op_codes[0xA4] = AND_h;
-        op_codes[0xA5] = AND_l;
-        op_codes[0xA6] = AND_HL;
-        op_codes[0xE6] = AND_hash;
+    void SRL_HL() {
+        u8 oldValue = RAM::readAt(HL.val());
+        u8 newValue = oldValue >> 1;
+        RAM::write(newValue, HL.val());
 
-        // Logical OR with register A, result in A
-        op_codes[0xB7] = OR_a;
-        op_codes[0xB0] = OR_b;
-        op_codes[0xB1] = OR_c;
-        op_codes[0xB2] = OR_d;
-        op_codes[0xB3] = OR_e;
-        op_codes[0xB4] = OR_h;
-        op_codes[0xB5] = OR_l;
-        op_codes[0xB6] = OR_HL;
-        op_codes[0xF6] = OR_hash;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // Logical exclusive OR n with register A, result in A
+    void RR_A() {
+        u8 oldValue = AF.hi;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        AF.hi = newValue;
 
-        op_codes[0xAF] = XOR_a;
-        op_codes[0xA8] = XOR_b;
-        op_codes[0xA9] = XOR_c;
-        op_codes[0xAA] = XOR_d;
-        op_codes[0xAB] = XOR_e;
-        op_codes[0xAC] = XOR_h;
-        op_codes[0xAD] = XOR_l;
-        op_codes[0xAE] = XOR_HL;
-        op_codes[0xEE] = XOR_hash;
+        setC(oldValue & 0b00000001);
+        setZ(false);
+        setN(false);
+        setH(false);
+    }
 
-        // Copmare A with n. Basically an A - n subtraction instruct but no results
-        // I think the point is to set flags here 
-        op_codes[0xBF] = CP_a;
-        op_codes[0xB8] = CP_b;
-        op_codes[0xB9] = CP_c;
-        op_codes[0xBA] = CP_d;
-        op_codes[0xBB] = CP_e;
-        op_codes[0xBC] = CP_h;
-        op_codes[0xBD] = CP_l;
-        op_codes[0xBE] = CP_HL;
-        op_codes[0xFE] = CP_hash;
+    void CB_RR_A() {
+        u8 oldValue = AF.hi;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        AF.hi = newValue;
 
-        // increment, pretty self explanatory
-        op_codes[0x3C] = INC_a;
-        op_codes[0x04] = INC_b;
-        op_codes[0x0C] = INC_c;
-        op_codes[0x14] = INC_d;
-        op_codes[0x1C] = INC_e;
-        op_codes[0x24] = INC_h;
-        op_codes[0x2C] = INC_l;
-        op_codes[0x34] = INC_HLad;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        op_codes[0x3D] = DEC_a;
-        op_codes[0x05] = DEC_b;
-        op_codes[0x0D] = DEC_c;
-        op_codes[0x15] = DEC_d;
-        op_codes[0x1D] = DEC_e;
-        op_codes[0x25] = DEC_h;
-        op_codes[0x2D] = DEC_l;
-        op_codes[0x35] = DEC_HLad;
+    void RR_B() {
+        u8 oldValue = BC.hi;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        BC.hi = newValue;
 
-        // --16-bit arith-- //
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // add n to HL and set some flags
-        op_codes[0x09] = ADD_BC;
-        op_codes[0x19] = ADD_DE;
-        op_codes[0x29] = ADD_HL;
-        op_codes[0x39] = ADD_SP;
+    void RR_C() {
+        u8 oldValue = BC.lo;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        BC.lo = newValue;
 
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        // -------------------------------//
-        // In this section i'm just going to implement opcodes until I can get the boot process of the gb going
-        op_codes[0xC7] = RST_00;
-        op_codes[0xCF] = RST_08;
-        op_codes[0xD7] = RST_10;
-        op_codes[0xDF] = RST_18;
-        op_codes[0xE7] = RST_20;
-        op_codes[0xEF] = RST_28;
-        op_codes[0xF7] = RST_30;
-        op_codes[0xFF] = RST_38;
+    void RR_D() {
+        u8 oldValue = DE.hi;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        DE.hi = newValue;
 
-        op_codes[0xCB] = run_cb;
-        op_codes[0x20] = JR_NZ;
-        op_codes[0x28] = JR_Z;
-        op_codes[0x18] = JR_n;
-        op_codes[0xC3] = JP;
-        op_codes[0xC2] = JP_NZ;
-        op_codes[0xCA] = JP_Z;
-        op_codes[0xD2] = JP_NC;
-        op_codes[0xDA] = JP_C;
-        op_codes[0xE9] = JP_HL;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
+    void RR_E() {
+        u8 oldValue = DE.lo;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        DE.lo = newValue;
 
-        op_codes[0x77] = LD_HL_a;
-        op_codes[0x02] = LD_BC_a;
-        op_codes[0x12] = LD_DE_a;
-        op_codes[0xE0] = LDad_n_a;
-        op_codes[0xCD] = CALL_nn;
-        op_codes[0xC4] = CALL_NZ;
-        op_codes[0xCC] = CALL_Z;
-        op_codes[0xD4] = CALL_NC;
-        op_codes[0xDc] = CALL_C;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        op_codes[0xEA] = LD_nn_a; // put value A into the address nn 
-        op_codes[0xC9] = RET;
-        op_codes[0xC0] = RET_NZ;
-        op_codes[0xC8] = RET_Z;
-        op_codes[0xD0] = RET_NC;
-        op_codes[0xD8] = RET_C;
-        op_codes[0xD9] = RETI;
-        op_codes[0x17] = RLA;
-        op_codes[0x07] = RLCA;
-        op_codes[0x0F] = RRCA;
-        op_codes[0xF3] = DI; // TODO: Disable interrupts after the next  instruction
-        op_codes[0xFB] = EI;
-        op_codes[0xE8] = ADD_n_SP;
-        op_codes[0x03] = INC_BC;
-        op_codes[0x13] = INC_DE;
-        op_codes[0x23] = INC_HL;
-        op_codes[0x33] = INC_SP;
-        op_codes[0x0B] = DEC_BC;
-        op_codes[0x1B] = DEC_DE;
-        op_codes[0x2B] = DEC_HL;
-        op_codes[0x3B] = DEC_SP;
-        op_codes[0x76] = HALT;
-        op_codes[0x27] = DAA;
-        op_codes[0x2F] = CPL;
-        op_codes[0x3F] = CCF;
-        op_codes[0x37] = SCF;
+    void RR_H() {
+        u8 oldValue = HL.hi;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        HL.hi = newValue;
 
-        cb_codes[0x00] = RLC_B;
-        cb_codes[0x01] = RLC_C;
-        cb_codes[0x02] = RLC_D;
-        cb_codes[0x03] = RLC_E;
-        cb_codes[0x04] = RLC_H;
-        cb_codes[0x05] = RLC_L;
-        cb_codes[0x06] = RLC_HL;
-        cb_codes[0x07] = RLC_A;
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        cb_codes[0x40] = BIT_0B;
-        cb_codes[0x41] = BIT_0C;
-        cb_codes[0x42] = BIT_0D;
-        cb_codes[0x43] = BIT_0E;
-        cb_codes[0x44] = BIT_0H;
-        cb_codes[0x45] = BIT_0L;
-        //cb_codes[0x46] = BIT_0HL;
-        cb_codes[0x48] = BIT_1B;
-        cb_codes[0x49] = BIT_1C;
-        cb_codes[0x4A] = BIT_1D;
-        cb_codes[0x4B] = BIT_1E;
-        cb_codes[0x4C] = BIT_1H;
-        cb_codes[0x4D] = BIT_1L;
-        //cb_codes[0x4E] = BIT_1HL;
-        cb_codes[0x4F] = BIT_2A;
-        cb_codes[0x50] = BIT_2B;
-        cb_codes[0x51] = BIT_2C;
-        cb_codes[0x52] = BIT_2D;
-        cb_codes[0x53] = BIT_2E;
-        cb_codes[0x54] = BIT_2H;
-        cb_codes[0x55] = BIT_2L;
-        //cb_codes[0x56] = BIT_2HL;
-        cb_codes[0x57] = BIT_3A;
-        cb_codes[0x58] = BIT_3B;
-        cb_codes[0x59] = BIT_3C;
-        cb_codes[0x5A] = BIT_3D;
-        cb_codes[0x5B] = BIT_3E;
-        cb_codes[0x5C] = BIT_3H;
-        cb_codes[0x5D] = BIT_3L;
-        //cb_codes[0x5E] = BIT_3HL;
-        cb_codes[0x5F] = BIT_4A;
-        cb_codes[0x60] = BIT_4B;
-        cb_codes[0x61] = BIT_4C;
-        cb_codes[0x62] = BIT_4D;
-        cb_codes[0x63] = BIT_4E;
-        cb_codes[0x64] = BIT_4H;
-        cb_codes[0x65] = BIT_4L;
-        //cb_codes[0x66] = BIT_4HL;
-        cb_codes[0x67] = BIT_5A;
-        cb_codes[0x68] = BIT_5B;
-        cb_codes[0x69] = BIT_5C;
-        cb_codes[0x6A] = BIT_5D;
-        cb_codes[0x6B] = BIT_5E;
-        cb_codes[0x6C] = BIT_5H;
-        cb_codes[0x6D] = BIT_5L;
-        //cb_codes[0x6E] = BIT_5HL;
-        cb_codes[0x6F] = BIT_6A;
-        cb_codes[0x70] = BIT_6B;
-        cb_codes[0x71] = BIT_6C;
-        cb_codes[0x72] = BIT_6D;
-        cb_codes[0x73] = BIT_6E;
-        cb_codes[0x74] = BIT_6H;
-        cb_codes[0x75] = BIT_6L;
-        //cb_codes[0x76] = BIT_6HL;
-        cb_codes[0x77] = BIT_7A;
-        cb_codes[0x78] = BIT_7B;
-        cb_codes[0x79] = BIT_7C;
-        cb_codes[0x7A] = BIT_7D;
-        cb_codes[0x7B] = BIT_7E;
-        cb_codes[0x7C] = BIT_7H;
-        cb_codes[0x7D] = BIT_7L;
-        //cb_codes[0x7E] = BIT_7HL;
-        cb_codes[0x7F] = BIT_7A;
+    void RR_L() {
+        u8 oldValue = HL.lo;
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        HL.lo = newValue;
 
-        //cb_codes[0x7c] = BIT_7H; 
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
+    }
 
-        cb_codes[0x17] = RL_A;
-        cb_codes[0x10] = RL_B;
-        cb_codes[0x11] = RL_C;
-        cb_codes[0x12] = RL_D;
-        cb_codes[0x13] = RL_E;
-        cb_codes[0x14] = RL_H;
-        cb_codes[0x15] = RL_L;
-        cb_codes[0x16] = RL_addr_HL;
-        cb_codes[0x37] = SWAP_a;
-        cb_codes[0x30] = SWAP_b;
-        cb_codes[0x31] = SWAP_c;
-        cb_codes[0x32] = SWAP_d;
-        cb_codes[0x33] = SWAP_e;
-        cb_codes[0x34] = SWAP_h;
-        cb_codes[0x35] = SWAP_l;
-        cb_codes[0x36] = SWAP_HL;
+    void RR_HL() {
+        u8 oldValue = RAM::readAt(HL.val());
+        u8 newValue = (oldValue >> 1);
+        if (getC()) {
+            newValue |= 0b10000000;
+        }
+        RAM::write(newValue, HL.val());
 
-        cb_codes[0x87] = RES_0_a;
-
+        setC(oldValue & 0b00000001);
+        setZ(newValue == 0);
+        setN(false);
+        setH(false);
     }
 
     void CCF() {
@@ -1565,106 +1391,89 @@ namespace CPU {
 
     // TODO:: for the CY flag, have to figure out whether it is a <= or a < in the if statement
 
-    void SUB_a()
-    {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= AF.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= x) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi <= loNib) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+    void SUB_a() {
+        setZ(true);
+        setN(true);
+        setH(false);
+        setC(false);
+
+        AF.hi = 0;
         cycles = 4;
     }
-    void SUB_b()
-    {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= BC.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi <= BC.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo
+    void SUB_b() {
+        u8 x = BC.hi;
+        u8 oldValue = AF.hi;
+        AF.hi -= x;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
     void SUB_c()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= BC.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi < BC.lo) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+        u8 x = BC.lo;
+        u8 oldValue = AF.hi;
+        AF.hi -= x;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
-    void SUB_d()
-    {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= DE.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi < DE.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+    void SUB_d() {
+        u8 x = DE.hi;
+        u8 oldValue = AF.hi;
+        AF.hi -= x;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
-    void SUB_e()
-    {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= DE.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi < DE.lo) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+    void SUB_e() {
+        u8 x = DE.lo;
+        u8 oldValue = AF.hi;
+        AF.hi -= x;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
-    void SUB_h()
-    {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= HL.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi < HL.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+    void SUB_h() {
+        u8 x = HL.hi;
+        u8 oldValue = AF.hi;
+        AF.hi -= x;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
-    void SUB_l()
-    {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi -= HL.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi < HL.lo) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+    void SUB_l() {
+        u8 x = HL.lo;
+        u8 oldValue = AF.hi;
+        AF.hi -= x;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
-    void SUB_HL()
-    {
+    void SUB_HL() {
         u8 x = RAM::readAt(HL.val());
         u8 loNib = AF.hi & 0x0F;
         AF.hi -= x;
@@ -1677,18 +1486,16 @@ namespace CPU {
         else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
         cycles = 8;
     }
-    void SUB_hash()
-    {
+    void SUB_hash() {
         u8 x = read();
-        u8 loNib = AF.hi & 0x0F;
+        u8 oldValue = AF.hi;
         AF.hi -= x;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi <= x) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
 
@@ -2655,5 +2462,414 @@ namespace CPU {
         decoder[0xE8] = "ADD_n_SP";
         decoder[0x33] = "INC_SP";
         decoder[0x3B] = "DEC_SP";
+    }
+
+    void init_opcodes() {
+        op_codes[0x00] = NOP;
+        op_codes[0x06] = LDb_n; // load 
+        op_codes[0x0E] = LDc_n;              // how do we even handle what n is? Where should it  
+        op_codes[0x16] = LDd_n;
+        op_codes[0x1E] = LDe_n;
+        op_codes[0x26] = LDh_n;
+        op_codes[0x2E] = LDl_n;
+        // Load  LD r1r2, load r2 into r1
+        op_codes[0x7F] = op_not_imp; // loads A into A which is pointless and we should get aw 
+        // although it does take 4 cpu cycles anyway, so maybe things break without it
+        op_codes[0x78] = LDrr_ab;
+        op_codes[0x79] = LDrr_ac;
+        op_codes[0x7A] = LDrr_ad;
+        op_codes[0x7B] = LDrr_ae;
+        op_codes[0x7C] = LDrr_ah;
+        op_codes[0x7D] = LDrr_al;
+        op_codes[0x7E] = LDrr_aHL;
+        op_codes[0x0A] = LDrr_aBC;
+        op_codes[0x1A] = LDrr_aDE;
+        op_codes[0xFA] = LDrr_ann;
+        op_codes[0x3E] = LDrr_a_hash; // what the fuck is this op shiposed  
+        op_codes[0x40] = op_not_imp; // 
+        op_codes[0x41] = LDrr_bc;
+        op_codes[0x42] = LDrr_bd;
+        op_codes[0x43] = LDrr_be;
+        op_codes[0x44] = LDrr_bh;
+        op_codes[0x45] = LDrr_bl;
+        op_codes[0x46] = LDrr_bHL; // now i'm wondering where is the A into 
+        op_codes[0x47] = LDrr_ba;
+        op_codes[0x48] = LDrr_cb;
+        op_codes[0x49] = op_not_imp;
+        op_codes[0x4A] = LDrr_cd;
+        op_codes[0x4B] = LDrr_ce;
+        op_codes[0x4C] = LDrr_ch;
+        op_codes[0x4D] = LDrr_cl;
+        op_codes[0x4E] = LDrr_cHL;
+        op_codes[0x4F] = LDrr_ca;
+        op_codes[0x50] = LDrr_db;
+        op_codes[0x51] = LDrr_dc;
+        op_codes[0x52] = op_not_imp;
+        op_codes[0x53] = LDrr_de;
+        op_codes[0x54] = LDrr_dh;
+        op_codes[0x55] = LDrr_dl;
+        op_codes[0x56] = LDrr_dHL;
+        op_codes[0x57] = LDrr_da;
+        op_codes[0x58] = LDrr_eb;
+        op_codes[0x59] = LDrr_ec;
+        op_codes[0x5A] = LDrr_ed;
+        op_codes[0x5B] = op_not_imp;
+        op_codes[0x5C] = LDrr_eh;
+        op_codes[0x5D] = LDrr_el;
+        op_codes[0x5E] = LDrr_eHL;
+        op_codes[0x5F] = LDrr_ea;
+        op_codes[0x60] = LDrr_hb;
+        op_codes[0x61] = LDrr_hc;
+        op_codes[0x62] = LDrr_hd;
+        op_codes[0x63] = LDrr_he;
+        op_codes[0x64] = op_not_imp;
+        op_codes[0x65] = LDrr_hl;
+        op_codes[0x66] = LDrr_hHL;
+        op_codes[0x67] = LDrr_ha;
+        op_codes[0x68] = LDrr_lb;
+        op_codes[0x69] = LDrr_lc;
+        op_codes[0x6A] = LDrr_ld;
+        op_codes[0x6B] = LDrr_le;
+        op_codes[0x6C] = LDrr_lh;
+        op_codes[0x6D] = op_not_imp;
+        op_codes[0x6E] = LDrr_lHL;
+        op_codes[0x6F] = LDrr_la;
+        op_codes[0x70] = LDrr_HLb;
+        op_codes[0x71] = LDrr_HLc;
+        op_codes[0x72] = LDrr_HLd;
+        op_codes[0x73] = LDrr_HLe;
+        op_codes[0x74] = LDrr_HLh;
+        op_codes[0x75] = LDrr_HLl;
+        op_codes[0x36] = LDrr_HLn;
+
+        op_codes[0xF2] = LDa_c; // put value at address 0xFF00 + reg 
+        op_codes[0xE2] = LDc_a; // put A into address (0xFF00 + reg C)
+        op_codes[0x3A] = LDDaHL; // put value at address HL into A th 
+        op_codes[0x32] = LDDHLa; // Put A into memory address HL th 
+        op_codes[0x2A] = LDI_aHL; // Put value at address HL into A then increment HL
+        op_codes[0x22] = LDI_HLa; // put A into mem address . 
+        op_codes[0xE0] = LDH_nA; // Put A into memory address 0xFF00 + n
+        op_codes[0xF0] = LDH_a_ffn; // Put memory address 0xFF00 + 
+
+
+        // --------- 16-Bit Loads --------- //
+
+          // LDnn,n put value nn into n
+        op_codes[0x01] = LD_nn_BC;
+        op_codes[0x11] = LD_nn_DE;
+        op_codes[0x21] = LD_nn_HL;
+        op_codes[0x31] = LD_nn_SP;
+
+        // LD SP,HL put HL into SP
+        op_codes[0xF9] = LD_SPHL;
+        op_codes[0xF8] = LDHL_SPn; // Put SP+n effective address into HL, n is signed, fla 
+        op_codes[0x08] = LD_nnSP; //nn two byte immediate address, Put SP at address n
+
+        // Push register pair nn onto stack decrement SP twice
+        op_codes[0xF5] = PUSH_AF;
+        op_codes[0xC5] = PUSH_BC;
+        op_codes[0xD5] = PUSH_DE;
+        op_codes[0xE5] = PUSH_HL;
+
+        // Pop nn, pop two bytes off stack into register pair nn, increment Stack pointer twice
+        op_codes[0xF1] = POP_AF;
+        op_codes[0xC1] = POP_BC;
+        op_codes[0xD1] = POP_DE;
+        op_codes[0xE1] = POP_HL;
+
+        // 8-Bit ALU
+        // ADD A,n -- add n to A
+
+        op_codes[0x87] = ADD_aa;
+        op_codes[0x80] = ADD_ab;
+        op_codes[0x81] = ADD_ac;
+        op_codes[0x82] = ADD_ad;
+        op_codes[0x83] = ADD_ae;
+        op_codes[0x84] = ADD_ah;
+        op_codes[0x85] = ADD_al;
+        op_codes[0x86] = ADD_aH;
+        op_codes[0xC6] = ADD_a_hash;
+
+        // ADC A,n -- add n + carry flag to A
+        op_codes[0x8f] = ADC_aa;
+        op_codes[0x88] = ADC_ab;
+        op_codes[0x89] = ADC_ac;
+        op_codes[0x8A] = ADC_ad;
+        op_codes[0x8B] = ADC_ae;
+        op_codes[0x8C] = ADC_ah;
+        op_codes[0x8D] = ADC_al;
+        op_codes[0x8E] = ADC_aHL;
+        op_codes[0xCE] = ADC_a_hash;
+
+        // SUB n, subtract n from A
+        op_codes[0x97] = SUB_a;
+        op_codes[0x90] = SUB_b;
+        op_codes[0x91] = SUB_c;
+        op_codes[0x92] = SUB_d;
+        op_codes[0x93] = SUB_e;
+        op_codes[0x94] = SUB_h;
+        op_codes[0x95] = SUB_l;
+        op_codes[0x96] = SUB_HL;
+        op_codes[0xD6] = SUB_hash;
+
+        op_codes[0x9F] = SBC_a;
+        op_codes[0x98] = SBC_b;
+        op_codes[0x99] = SBC_c;
+        op_codes[0x9A] = SBC_d;
+        op_codes[0x9B] = SBC_e;
+        op_codes[0x9C] = SBC_h;
+        op_codes[0x9D] = SBC_l;
+        op_codes[0x9E] = SBC_HL;
+
+        // ------ Logical Operations ------ //
+        // Check flags in each operation
+
+        // AND n, logically AND n with A, result in A
+        op_codes[0xA7] = AND_a;
+        op_codes[0xA0] = AND_b;
+        op_codes[0xA1] = AND_c;
+        op_codes[0xA2] = AND_d;
+        op_codes[0xA3] = AND_e;
+        op_codes[0xA4] = AND_h;
+        op_codes[0xA5] = AND_l;
+        op_codes[0xA6] = AND_HL;
+        op_codes[0xE6] = AND_hash;
+
+        // Logical OR with register A, result in A
+        op_codes[0xB7] = OR_a;
+        op_codes[0xB0] = OR_b;
+        op_codes[0xB1] = OR_c;
+        op_codes[0xB2] = OR_d;
+        op_codes[0xB3] = OR_e;
+        op_codes[0xB4] = OR_h;
+        op_codes[0xB5] = OR_l;
+        op_codes[0xB6] = OR_HL;
+        op_codes[0xF6] = OR_hash;
+
+        // Logical exclusive OR n with register A, result in A
+
+        op_codes[0xAF] = XOR_a;
+        op_codes[0xA8] = XOR_b;
+        op_codes[0xA9] = XOR_c;
+        op_codes[0xAA] = XOR_d;
+        op_codes[0xAB] = XOR_e;
+        op_codes[0xAC] = XOR_h;
+        op_codes[0xAD] = XOR_l;
+        op_codes[0xAE] = XOR_HL;
+        op_codes[0xEE] = XOR_hash;
+
+        // Copmare A with n. Basically an A - n subtraction instruct but no results
+        // I think the point is to set flags here 
+        op_codes[0xBF] = CP_a;
+        op_codes[0xB8] = CP_b;
+        op_codes[0xB9] = CP_c;
+        op_codes[0xBA] = CP_d;
+        op_codes[0xBB] = CP_e;
+        op_codes[0xBC] = CP_h;
+        op_codes[0xBD] = CP_l;
+        op_codes[0xBE] = CP_HL;
+        op_codes[0xFE] = CP_hash;
+
+        // increment, pretty self explanatory
+        op_codes[0x3C] = INC_a;
+        op_codes[0x04] = INC_b;
+        op_codes[0x0C] = INC_c;
+        op_codes[0x14] = INC_d;
+        op_codes[0x1C] = INC_e;
+        op_codes[0x24] = INC_h;
+        op_codes[0x2C] = INC_l;
+        op_codes[0x34] = INC_HLad;
+
+        op_codes[0x3D] = DEC_a;
+        op_codes[0x05] = DEC_b;
+        op_codes[0x0D] = DEC_c;
+        op_codes[0x15] = DEC_d;
+        op_codes[0x1D] = DEC_e;
+        op_codes[0x25] = DEC_h;
+        op_codes[0x2D] = DEC_l;
+        op_codes[0x35] = DEC_HLad;
+
+        // --16-bit arith-- //
+
+        // add n to HL and set some flags
+        op_codes[0x09] = ADD_BC;
+        op_codes[0x19] = ADD_DE;
+        op_codes[0x29] = ADD_HL;
+        op_codes[0x39] = ADD_SP;
+
+
+        // -------------------------------//
+        // In this section i'm just going to implement opcodes until I can get the boot process of the gb going
+        op_codes[0xC7] = RST_00;
+        op_codes[0xCF] = RST_08;
+        op_codes[0xD7] = RST_10;
+        op_codes[0xDF] = RST_18;
+        op_codes[0xE7] = RST_20;
+        op_codes[0xEF] = RST_28;
+        op_codes[0xF7] = RST_30;
+        op_codes[0xFF] = RST_38;
+
+        op_codes[0xCB] = run_cb;
+        op_codes[0x20] = JR_NZ;
+        op_codes[0x28] = JR_Z;
+        op_codes[0x18] = JR_n;
+        op_codes[0xC3] = JP;
+        op_codes[0xC2] = JP_NZ;
+        op_codes[0xCA] = JP_Z;
+        op_codes[0xD2] = JP_NC;
+        op_codes[0xDA] = JP_C;
+        op_codes[0xE9] = JP_HL;
+
+
+        op_codes[0x77] = LD_HL_a;
+        op_codes[0x02] = LD_BC_a;
+        op_codes[0x12] = LD_DE_a;
+        op_codes[0xE0] = LDad_n_a;
+        op_codes[0xCD] = CALL_nn;
+        op_codes[0xC4] = CALL_NZ;
+        op_codes[0xCC] = CALL_Z;
+        op_codes[0xD4] = CALL_NC;
+        op_codes[0xDc] = CALL_C;
+
+        op_codes[0xEA] = LD_nn_a; // put value A into the address nn 
+        op_codes[0xC9] = RET;
+        op_codes[0xC0] = RET_NZ;
+        op_codes[0xC8] = RET_Z;
+        op_codes[0xD0] = RET_NC;
+        op_codes[0xD8] = RET_C;
+        op_codes[0xD9] = RETI;
+        op_codes[0x17] = RLA;
+        op_codes[0x07] = RLCA;
+        op_codes[0x0F] = RRCA;
+        op_codes[0xF3] = DI; // TODO: Disable interrupts after the next  instruction
+        op_codes[0xFB] = EI;
+        op_codes[0xE8] = ADD_n_SP;
+        op_codes[0x03] = INC_BC;
+        op_codes[0x13] = INC_DE;
+        op_codes[0x23] = INC_HL;
+        op_codes[0x33] = INC_SP;
+        op_codes[0x0B] = DEC_BC;
+        op_codes[0x1B] = DEC_DE;
+        op_codes[0x2B] = DEC_HL;
+        op_codes[0x3B] = DEC_SP;
+        op_codes[0x76] = HALT;
+        op_codes[0x27] = DAA;
+        op_codes[0x2F] = CPL;
+        op_codes[0x3F] = CCF;
+        op_codes[0x37] = SCF;
+
+        op_codes[0x1F] = RR_A;
+
+        cb_codes[0x00] = RLC_B;
+        cb_codes[0x01] = RLC_C;
+        cb_codes[0x02] = RLC_D;
+        cb_codes[0x03] = RLC_E;
+        cb_codes[0x04] = RLC_H;
+        cb_codes[0x05] = RLC_L;
+        cb_codes[0x06] = RLC_HL;
+        cb_codes[0x07] = RLC_A;
+
+        cb_codes[0x40] = BIT_0B;
+        cb_codes[0x41] = BIT_0C;
+        cb_codes[0x42] = BIT_0D;
+        cb_codes[0x43] = BIT_0E;
+        cb_codes[0x44] = BIT_0H;
+        cb_codes[0x45] = BIT_0L;
+        //cb_codes[0x46] = BIT_0HL;
+        cb_codes[0x48] = BIT_1B;
+        cb_codes[0x49] = BIT_1C;
+        cb_codes[0x4A] = BIT_1D;
+        cb_codes[0x4B] = BIT_1E;
+        cb_codes[0x4C] = BIT_1H;
+        cb_codes[0x4D] = BIT_1L;
+        //cb_codes[0x4E] = BIT_1HL;
+        cb_codes[0x4F] = BIT_2A;
+        cb_codes[0x50] = BIT_2B;
+        cb_codes[0x51] = BIT_2C;
+        cb_codes[0x52] = BIT_2D;
+        cb_codes[0x53] = BIT_2E;
+        cb_codes[0x54] = BIT_2H;
+        cb_codes[0x55] = BIT_2L;
+        //cb_codes[0x56] = BIT_2HL;
+        cb_codes[0x57] = BIT_3A;
+        cb_codes[0x58] = BIT_3B;
+        cb_codes[0x59] = BIT_3C;
+        cb_codes[0x5A] = BIT_3D;
+        cb_codes[0x5B] = BIT_3E;
+        cb_codes[0x5C] = BIT_3H;
+        cb_codes[0x5D] = BIT_3L;
+        //cb_codes[0x5E] = BIT_3HL;
+        cb_codes[0x5F] = BIT_4A;
+        cb_codes[0x60] = BIT_4B;
+        cb_codes[0x61] = BIT_4C;
+        cb_codes[0x62] = BIT_4D;
+        cb_codes[0x63] = BIT_4E;
+        cb_codes[0x64] = BIT_4H;
+        cb_codes[0x65] = BIT_4L;
+        //cb_codes[0x66] = BIT_4HL;
+        cb_codes[0x67] = BIT_5A;
+        cb_codes[0x68] = BIT_5B;
+        cb_codes[0x69] = BIT_5C;
+        cb_codes[0x6A] = BIT_5D;
+        cb_codes[0x6B] = BIT_5E;
+        cb_codes[0x6C] = BIT_5H;
+        cb_codes[0x6D] = BIT_5L;
+        //cb_codes[0x6E] = BIT_5HL;
+        cb_codes[0x6F] = BIT_6A;
+        cb_codes[0x70] = BIT_6B;
+        cb_codes[0x71] = BIT_6C;
+        cb_codes[0x72] = BIT_6D;
+        cb_codes[0x73] = BIT_6E;
+        cb_codes[0x74] = BIT_6H;
+        cb_codes[0x75] = BIT_6L;
+        //cb_codes[0x76] = BIT_6HL;
+        cb_codes[0x77] = BIT_7A;
+        cb_codes[0x78] = BIT_7B;
+        cb_codes[0x79] = BIT_7C;
+        cb_codes[0x7A] = BIT_7D;
+        cb_codes[0x7B] = BIT_7E;
+        cb_codes[0x7C] = BIT_7H;
+        cb_codes[0x7D] = BIT_7L;
+        //cb_codes[0x7E] = BIT_7HL;
+        cb_codes[0x7F] = BIT_7A;
+
+        //cb_codes[0x7c] = BIT_7H; 
+
+        cb_codes[0x17] = RL_A;
+        cb_codes[0x10] = RL_B;
+        cb_codes[0x11] = RL_C;
+        cb_codes[0x12] = RL_D;
+        cb_codes[0x13] = RL_E;
+        cb_codes[0x14] = RL_H;
+        cb_codes[0x15] = RL_L;
+        cb_codes[0x16] = RL_addr_HL;
+        cb_codes[0x37] = SWAP_a;
+        cb_codes[0x30] = SWAP_b;
+        cb_codes[0x31] = SWAP_c;
+        cb_codes[0x32] = SWAP_d;
+        cb_codes[0x33] = SWAP_e;
+        cb_codes[0x34] = SWAP_h;
+        cb_codes[0x35] = SWAP_l;
+        cb_codes[0x36] = SWAP_HL;
+
+        cb_codes[0x87] = RES_0_a;
+
+        cb_codes[0x38] = SRL_B;
+        cb_codes[0x39] = SRL_C;
+        cb_codes[0x3A] = SRL_D;
+        cb_codes[0x3B] = SRL_E;
+        cb_codes[0x3C] = SRL_H;
+        cb_codes[0x3D] = SRL_L;
+        cb_codes[0x38] = SRL_B;
+        cb_codes[0x3F] = SRL_A;
+
+        cb_codes[0x1F] = CB_RR_A;
+        cb_codes[0x18] = RR_B;
+        cb_codes[0x19] = RR_C;
+        cb_codes[0x1A] = RR_D;
+        cb_codes[0x1B] = RR_E;
+        cb_codes[0x1C] = RR_H;
+        cb_codes[0x1D] = RR_L;
+        cb_codes[0x1E] = RR_HL;
     }
 }
