@@ -1193,7 +1193,7 @@ namespace CPU {
         SP--; 
         write(AF.hi, SP); 
         SP--; 
-        write(AF.lo, SP); 
+        write(AF.lo & 0xF0, SP); 
         cycles = 16; 
     }
     void PUSH_BC() { SP--; write(BC.hi, SP); SP--; write(BC.lo, SP); cycles = 16; }
