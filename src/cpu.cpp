@@ -1189,13 +1189,28 @@ namespace CPU {
     // Push register pair nn onto stack, decrement SP twice
     // TODO: figure out whether to set the value first or decrement SP first 
     // TODO: check that the endianess is correct (does it even matter??)
-    void PUSH_AF() { SP--; write(AF.hi, SP); SP--; write(AF.lo, SP); cycles = 16; }
+    void PUSH_AF() { 
+        SP--; 
+        write(AF.hi, SP); 
+        SP--; 
+        write(AF.lo, SP); 
+        cycles = 16; 
+    }
     void PUSH_BC() { SP--; write(BC.hi, SP); SP--; write(BC.lo, SP); cycles = 16; }
     void PUSH_DE() { SP--; write(DE.hi, SP); SP--; write(DE.lo, SP); cycles = 16; }
     void PUSH_HL() { SP--; write(HL.hi, SP); SP--; write(HL.lo, SP); cycles = 16; }
 
     // Pop two bytes off stack into register pair, increment SP twice
-    void POP_AF() { u8 n = RAM::readAt(SP); AF.lo = n; ++SP; u8 m = RAM::readAt(SP); AF.hi = m; ++SP; cycles = 12; }
+    void POP_AF() { 
+        u8 n = RAM::readAt(SP);
+        AF.lo = n & 0xF0;
+        ++SP; 
+        u8 m = RAM::readAt(SP); 
+        AF.hi = m; 
+        ++SP; 
+
+        cycles = 12;
+    }
     void POP_BC() { u8 n = RAM::readAt(SP); BC.lo = n; ++SP; u8 m = RAM::readAt(SP); BC.hi = m; ++SP; cycles = 12; } //TODO: something is going wrong here
     void POP_DE() { u8 n = RAM::readAt(SP); DE.lo = n; ++SP; u8 m = RAM::readAt(SP); DE.hi = m; ++SP; cycles = 12; }
     void POP_HL() { u8 n = RAM::readAt(SP); HL.lo = n; ++SP; u8 m = RAM::readAt(SP); HL.hi = m; ++SP; cycles = 12; }
@@ -1701,102 +1716,94 @@ namespace CPU {
     }
     void CP_b()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - BC.hi;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < BC.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo
+        u8 x = BC.hi;
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
     void CP_c()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - BC.lo;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < BC.lo) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo
+        u8 x = BC.lo;
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
     void CP_d()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - DE.hi;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < DE.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo 
+        u8 x = DE.hi;
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
 
     void CP_e()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - DE.lo;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < DE.lo) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+        u8 x = DE.lo;
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
     void CP_h()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - HL.hi;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < HL.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+        u8 x = HL.hi;
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
     }
     void CP_l()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - HL.lo;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; }// set Z = 1 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < HL.lo) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+        u8 x = HL.lo;
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 4;
-        //TODO: i'm setting this last one incorrectly I think (the CPU manual thinks)
     }
     void CP_HL()
     {
         u8 x = RAM::readAt(HL.val());
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - x;
-        if (z == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 1 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+        u8 oldValue = AF.hi;
+        u8 comparison = AF.hi - x;
+
+        setZ(comparison == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 8;
     }
 
@@ -1806,7 +1813,7 @@ namespace CPU {
         u8 z = AF.hi - x;
         setZ(z == 0);
         setN(true);
-        setH((AF.hi & 0x0F) - (x & 0x0F) < 0);
+        setH((AF.hi & 0x0F) < (x & 0x0F));
         setC(AF.hi < x);
         cycles = 8;
     }
@@ -2255,7 +2262,7 @@ namespace CPU {
     }
 
     void DAA() {
-        // std::cout << "What is this: opcode 0x27, DAA" << std::endl;
+        std::cout << "Unimplemented: opcode 0x27, DAA" << std::endl;
         exit(0);
     }
 
