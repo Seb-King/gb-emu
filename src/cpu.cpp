@@ -2275,6 +2275,7 @@ namespace CPU {
         } else {
             if (getC()) {
                 AF.hi -= 0x60;
+                carry = true;
             }
             if (getH()) {
                 AF.hi -= 0x06;
