@@ -2269,7 +2269,7 @@ namespace CPU {
                 AF.hi += 0x60;
                 carry = true;
             }
-            if (getH() || (AF.lo & 0x0F) > 0x09) {
+            if (getH() || (AF.hi & 0x0F) > 0x09) {
                 AF.hi += 0x06;
             }
         } else {
