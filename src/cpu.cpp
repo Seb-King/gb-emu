@@ -2262,8 +2262,30 @@ namespace CPU {
     }
 
     void DAA() {
-        std::cout << "Unimplemented: opcode 0x27, DAA" << std::endl;
-        exit(0);
+        bool carry = false;
+
+        if (!getN()) {
+            if (getC() || AF.hi > 0x99) {
+                AF.hi += 0x60;
+                carry = true;
+            }
+            if (getH() || (AF.lo & 0x0F) > 0x09) {
+                AF.hi += 0x06;
+            }
+        } else {
+            if (getC()) {
+                AF.hi -= 0x60;
+            }
+            if (getH()) {
+                AF.hi -= 0x06;
+            }
+        }
+
+        setC(carry);
+        setZ(AF.hi == 0);
+        setH(false);
+
+        cycles = 4;
     }
 
     void init() {
