@@ -93,7 +93,11 @@ namespace CPU {
         else AF.lo &= 0xEF;
     }
 
-    bool getC() { return (AF.lo & 0x10) == 0x10; }
+    bool getC() { return (AF.lo & 0b00010000) == 0b00010000; }
+    bool getZ() { return (AF.lo & 0b10000000) == 0b10000000; }
+    bool getH() { return (AF.lo & 0b00100000) == 0b00100000; }
+    bool getN() { return (AF.lo & 0b01000000) == 0b01000000; }
+
 
     void print_registers() {
         std::cout << "A:";
@@ -303,6 +307,7 @@ namespace CPU {
         setZ(false);
         setN(false);
         setH(false);
+        cycles = 4;
     }
 
     void CB_RR_A() {
@@ -448,7 +453,7 @@ namespace CPU {
     }
 
     void RET_NZ() {
-        if ((AF.lo >> 7) == 0)
+        if (!getZ())
         {
             u8 n1 = RAM::readAt(SP);
             ++SP;
@@ -460,7 +465,7 @@ namespace CPU {
     }
 
     void RET_Z() {
-        if ((AF.lo >> 7) == 1) {
+        if (getZ()) {
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -470,7 +475,7 @@ namespace CPU {
         }
     }
     void RET_NC() {
-        if ((AF.lo & 0b00000001) == 0) {
+        if (!getC()) {
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -480,7 +485,7 @@ namespace CPU {
         }
     }
     void RET_C() {
-        if ((AF.lo & 0b00000001) == 1) {
+        if (getC()) {
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -808,8 +813,13 @@ namespace CPU {
         {
             s8 b = read();
             PC += b;
+            cycles = 12;
+
         }
-        else { ++PC; }
+        else { 
+            ++PC; 
+            cycles = 8;
+        }
     }
 
     void JR_Z()
@@ -818,14 +828,43 @@ namespace CPU {
         {
             s8 b = read();
             PC += b;
+            cycles = 12;
         }
-        else { ++PC; }
+        else { 
+            ++PC; 
+            cycles = 8;
+        }
+    }
+
+    void JR_NC() {
+        if (!getC()) {
+            s8 b = read();
+            PC += b;
+            cycles = 12;
+        }
+        else { 
+            ++PC; 
+            cycles = 8;
+        }
+    }
+
+    void JR_C() {
+        if (getC()) {
+            s8 b = read();
+            PC += b;
+            cycles = 12;
+        }
+        else { 
+            ++PC; 
+            cycles = 8;
+        }
     }
 
     void JR_n()
     {
         s8 jump = read();
         PC += jump;
+        cycles = 12;
     }
 
     void JP() {
@@ -1171,8 +1210,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_ab()
@@ -1183,8 +1222,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_ac()
@@ -1195,8 +1234,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_ad()
@@ -1207,8 +1246,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_ae()
@@ -1219,8 +1258,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_ah()
@@ -1231,8 +1270,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_al()
@@ -1243,8 +1282,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
     }
     void ADD_aH()
@@ -1255,8 +1294,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 8;
     }
     void ADD_a_hash() {
@@ -1266,8 +1305,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 8;
     }
 
@@ -1279,8 +1318,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1292,8 +1331,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1305,8 +1344,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1318,8 +1357,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1331,8 +1370,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1344,8 +1383,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1357,8 +1396,8 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 4;
 
     }
@@ -1370,26 +1409,22 @@ namespace CPU {
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
         AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 8;
 
     }
     void ADC_a_hash() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
-        AF.hi += read() + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        if (AF.hi < x) { AF.lo = AF.lo | 0b00100000; } // Set H if overfloss
-        if ((AF.hi & 0x0F) < loNib) { AF.lo = AF.lo | 0b00010000; } // Set CY if loer nibble overflos
+        AF.hi = (AF.hi + read() + getC());
+
+        setZ(AF.hi == 0);
+        setN(false);
+        setH((AF.hi & 0x0F) < loNib);
+        setC(AF.hi < x);
         cycles = 8;
     }
-
-    // have to change it to flag setting only when the there is NO underflo isntead of the opposite
-
-    // TODO:: for the CY flag, have to figure out whether it is a <= or a < in the if statement
 
     void SUB_a() {
         setZ(true);
@@ -1629,7 +1664,14 @@ namespace CPU {
     void OR_e() { AF.hi = AF.hi | DE.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
     void OR_h() { AF.hi = AF.hi | HL.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
     void OR_l() { AF.hi = AF.hi | HL.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_HL() { AF.hi = AF.hi | (RAM::readAt(HL.val())); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 8; }
+    void OR_HL() { 
+        AF.hi = AF.hi | RAM::readAt(HL.val()); 
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 8; 
+        }
     void OR_hash() { AF.hi = AF.hi | read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 8; }
 
 
@@ -2710,6 +2752,8 @@ namespace CPU {
         op_codes[0xFF] = RST_38;
 
         op_codes[0xCB] = run_cb;
+        op_codes[0x30] = JR_NC;
+        op_codes[0x38] = JR_C;
         op_codes[0x20] = JR_NZ;
         op_codes[0x28] = JR_Z;
         op_codes[0x18] = JR_n;
@@ -2860,7 +2904,6 @@ namespace CPU {
         cb_codes[0x3B] = SRL_E;
         cb_codes[0x3C] = SRL_H;
         cb_codes[0x3D] = SRL_L;
-        cb_codes[0x38] = SRL_B;
         cb_codes[0x3F] = SRL_A;
 
         cb_codes[0x1F] = CB_RR_A;
