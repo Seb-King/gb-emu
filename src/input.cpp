@@ -2,8 +2,6 @@
 #include <iostream>
 #include "utils.h"
 
-// $FF00h
-
 namespace INPUTS {
 	bool quit = false;
 	SDL_Event e;
@@ -13,6 +11,13 @@ namespace INPUTS {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				quit = true;
+			}
+
+			if (e.type == SDL_KEYDOWN) {
+				std::cout << e.type << std::endl;
+				if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+					quit = true;
+				}
 			}
 		}
 	}
