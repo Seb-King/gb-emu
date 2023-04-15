@@ -1,7 +1,14 @@
 #include <SDL.h>
 #include <string>
 
+enum DisplayMode {
+	GB,
+	SPRITE,
+	MEMORY,
+};
+
 namespace RENDER {
+	extern DisplayMode display_mode;
 	void setPixel(SDL_Surface* surface, int x, int y, Uint32 Color);
 	bool init();
 	void close();
@@ -12,4 +19,5 @@ namespace RENDER {
 	void drawText();
 	void drawDebugText(std::string textureText, int x, int y);
 	void clearDebugDisplay();
+	void setDisplay(DisplayMode mode);
 }

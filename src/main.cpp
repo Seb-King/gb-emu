@@ -1,9 +1,12 @@
 #include "game.hpp"
 
 std::string getRomPath() {
-	return "/Users/sebking/dev/gb-emu/roms/dr-mario.gb";
+	return "/Users/sebking/dev/gb-emu/roms/dr-mario.gb"; 
 }
 
 int main(int argc, char* argv[]) {
-	game_loop(getRomPath(), DEBUG);
+	RunOptions options;
+	options.LOG_STATE = false;
+	options.NO_DISPLAY = false;
+	game_loop(getRomPath(), options);
 }

@@ -16,6 +16,8 @@ CppProperties.json
 
 /logs/
 
+/.idea/
+
 *.pdb
 
 .DS_Store

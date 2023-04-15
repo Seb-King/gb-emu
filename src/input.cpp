@@ -4,6 +4,7 @@
 
 namespace INPUTS {
 	bool quit = false;
+	bool switch_display = false;
 	SDL_Event e;
 
 
@@ -15,8 +16,11 @@ namespace INPUTS {
 
 			if (e.type == SDL_KEYDOWN) {
 				std::cout << e.type << std::endl;
+
 				if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
 					quit = true;
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_TAB) {
+					switch_display = true;
 				}
 			}
 		}
