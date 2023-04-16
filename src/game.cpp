@@ -289,7 +289,7 @@ namespace LCD {
         int x = tile_x, y = tile_y, colour = 3;
 
         for (int i = 0; i < 8; i++) {
-            y = (tile_y - 15 + i - scrollY) % 256;
+            y = (tile_y - 16 + i - scrollY) % 256;
             line1 = RAM::readAt(addr);
             line2 = RAM::readAt(addr + 1);
 
