@@ -128,6 +128,7 @@ namespace LCD {
         STAT &= 0b11111101;
         CPU::write(STAT, 0xFF41);
 
+        CPU::SP--;
         CPU::write(CPU::PC & 0x0F, CPU::SP);
         CPU::SP--;
         CPU::write((CPU::PC & 0xF0) >> 8, CPU::SP);
@@ -290,7 +291,7 @@ namespace LCD {
         for (int i = 0; i < 8; i++) {
             y = (tile_y - 15 + i - scrollY) % 256;
             line1 = RAM::readAt(addr);
-            line2 = RAM::readAt(addr + 2);
+            line2 = RAM::readAt(addr + 1);
 
             addr += 2;
 
