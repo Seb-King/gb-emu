@@ -378,34 +378,35 @@ namespace TIMER {
     }
 
     void update() {
-        if (CPU::IME != 0) {
+        u8 TAC = RAM::readAt(0xFF07);
+        if (CPU::IME != 0 && ((TAC & 0b00000100) == 0b00000100)) {
             counter += CPU::cycles;
-            u8 rate_reg = RAM::readAt(0xFF07);
             int rate = 0;
-            if ((rate & 0b00000011) == 0) {
+            if ((TAC & 0b00000011) == 0) {
                 rate = 1024;
             }
-            else if ((rate & 0b00000011) == 1) {
+            else if ((TAC & 0b00000011) == 1) {
                 rate = 16;
             }
-            else if ((rate & 0b00000011) == 2) {
+            else if ((TAC & 0b00000011) == 2) {
                 rate = 64;
             }
-            else if ((rate & 0b00000011) == 3) {
+            else if ((TAC & 0b00000011) == 3) {
                 rate = 256;
             }
-            int amount = counter % rate;
+            int amount = counter / rate;
             if (amount != 0) {
-                counter = 0;
+                counter = counter % rate;
                 TIMER::inc(amount);
             }
         }
     }
 
     void overflow() {
-        CPU::write(CPU::PC & 0x0F, CPU::SP);
         CPU::SP--;
-        CPU::write((CPU::PC & 0xF0) >> 8, CPU::SP);
+        CPU::write((CPU::PC & 0xFF00) >> 8, CPU::SP);
+        CPU::SP--;
+        CPU::write(CPU::PC & 0x00FF, CPU::SP);
         CPU::PC = 0x0050;
 
         RUPS::IF = RAM::readAt(0xFF0F);
@@ -424,6 +425,11 @@ bool handle_interrupts() {
 
     if ((RUPS::IF & 1) == 1 && (RUPS::IE & 1) == 1) {
         LCD::v_blank();
+        CPU::halt = false;
+    }
+
+    if ((RUPS::IF & 0x04) == 0x04 && (RUPS::IE & 0x04) == 0x04) {
+        TIMER::overflow();
         CPU::halt = false;
     }
     return true;
