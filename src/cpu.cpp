@@ -453,8 +453,10 @@ namespace CPU {
     }
 
     void RET_NZ() {
+        cycles = 8;
         if (!getZ())
         {
+            cycles = 20;
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -465,7 +467,9 @@ namespace CPU {
     }
 
     void RET_Z() {
+        cycles = 8;
         if (getZ()) {
+            cycles = 20;
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -475,7 +479,9 @@ namespace CPU {
         }
     }
     void RET_NC() {
+        cycles = 8;
         if (!getC()) {
+            cycles = 20;
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -485,7 +491,9 @@ namespace CPU {
         }
     }
     void RET_C() {
+        cycles = 8;
         if (getC()) {
+            cycles = 20;
             u8 n1 = RAM::readAt(SP);
             ++SP;
             u16 n2 = RAM::readAt(SP);
@@ -503,6 +511,7 @@ namespace CPU {
         u16 addr = n1 + (n2 << 8);
         PC = addr;
         write(0xFF, 0xFFFF);
+        cycles = 16;
     }
 
     void CB() {
@@ -1177,7 +1186,18 @@ namespace CPU {
     void LD_SPHL() { SP = HL.val(); }
 
     // put SP + n effective address into HL
-    void LDHL_SPn() { u8 n = read(); HL.set(SP + n); AF.lo = AF.lo & 0x30; cycles = 12; }
+    void LDHL_SPn() { 
+        s8 n = read(); 
+        HL.set(SP + n); 
+        u8 point = SP + n;
+
+        setZ(false);
+        setN(false);
+        setC(point < SP);
+        setH((SP & 0x0F) + (n & 0x0F) > 0x0F);
+
+        cycles = 12; 
+        }
     void LD_nnSP()
     {
         u8 n1 = read();
@@ -1808,7 +1828,6 @@ namespace CPU {
 
     void CP_hash() {
         u8 x = read();
-        u8 loNib = AF.hi & 0x0F;
         u8 z = AF.hi - x;
         setZ(z == 0);
         setN(true);
