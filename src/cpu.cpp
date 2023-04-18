@@ -547,30 +547,14 @@ namespace CPU {
         cycles = 8;
     }
 
-    void BIT_0A() {
-        BIT(1, AF.hi);
-    }
-    void BIT_1A() {
-        BIT(0b00000010, AF.hi);
-    }
-    void BIT_2A() {
-        BIT(0b00000100, AF.hi);
-    }
-    void BIT_3A() {
-        BIT(0b00001000, AF.hi);
-    }
-    void BIT_4A() {
-        BIT(0b00010000, AF.hi);
-    }
-    void BIT_5A() {
-        BIT(0b00100000, AF.hi);
-    }
-    void BIT_6A() {
-        BIT(0b01000000, AF.hi);
-    }
-    void BIT_7A() {
-        BIT(0b10000000, AF.hi);
-    }
+    void BIT_0A() { BIT(1, AF.hi); }
+    void BIT_1A() { BIT(0b00000010, AF.hi); }
+    void BIT_2A() { BIT(0b00000100, AF.hi); }
+    void BIT_3A() { BIT(0b00001000, AF.hi); }
+    void BIT_4A() { BIT(0b00010000, AF.hi); }
+    void BIT_5A() { BIT(0b00100000, AF.hi); }
+    void BIT_6A() { BIT(0b01000000, AF.hi); }
+    void BIT_7A() { BIT(0b10000000, AF.hi); }
 
     void BIT_0B() { BIT(1, BC.hi); }
     void BIT_1B() { BIT(0b00000010, BC.hi); }
@@ -634,6 +618,169 @@ namespace CPU {
     void BIT_5HL() { BIT(0b00100000, RAM::readAt(HL.val())); cycles = 12; }
     void BIT_6HL() { BIT(0b01000000, RAM::readAt(HL.val())); cycles = 12; }
     void BIT_7HL() { BIT(0b10000000, RAM::readAt(HL.val())); cycles = 12; }
+
+
+    u8 AssignReg(u8 mask, u8 reg_, bool val) {
+        if (val) {
+            return reg_ | mask;
+        } else {
+            return reg_ & ~mask;
+        }
+    }
+
+    u8 RES(u8 bit, u8 reg_) {
+        cycles = 8;
+        return AssignReg(bit, reg_, false);
+    }
+
+    void RES_0A() { AF.hi = RES(1, AF.hi); }
+    void RES_1A() { AF.hi = RES(0b00000010, AF.hi); }
+    void RES_2A() { AF.hi = RES(0b00000100, AF.hi); }
+    void RES_3A() { AF.hi = RES(0b00001000, AF.hi); }
+    void RES_4A() { AF.hi = RES(0b00010000, AF.hi); }
+    void RES_5A() { AF.hi = RES(0b00100000, AF.hi); }
+    void RES_6A() { AF.hi = RES(0b01000000, AF.hi); }
+    void RES_7A() { AF.hi = RES(0b10000000, AF.hi); }
+
+    void RES_0B() { BC.hi = RES(1, BC.hi); }
+    void RES_1B() { BC.hi = RES(0b00000010, BC.hi); }
+    void RES_2B() { BC.hi = RES(0b00000100, BC.hi); }
+    void RES_3B() { BC.hi = RES(0b00001000, BC.hi); }
+    void RES_4B() { BC.hi = RES(0b00010000, BC.hi); }
+    void RES_5B() { BC.hi = RES(0b00100000, BC.hi); }
+    void RES_6B() { BC.hi = RES(0b01000000, BC.hi); }
+    void RES_7B() { BC.hi = RES(0b10000000, BC.hi); }
+
+    void RES_0C() { BC.lo = RES(1, BC.lo); }
+    void RES_1C() { BC.lo = RES(0b00000010, BC.lo); }
+    void RES_2C() { BC.lo = RES(0b00000100, BC.lo); }
+    void RES_3C() { BC.lo = RES(0b00001000, BC.lo); }
+    void RES_4C() { BC.lo = RES(0b00010000, BC.lo); }
+    void RES_5C() { BC.lo = RES(0b00100000, BC.lo); }
+    void RES_6C() { BC.lo = RES(0b01000000, BC.lo); }
+    void RES_7C() { BC.lo = RES(0b10000000, BC.lo); }
+
+    void RES_0D() { DE.hi = RES(1, DE.hi); }
+    void RES_1D() { DE.hi = RES(0b00000010, DE.hi); }
+    void RES_2D() { DE.hi = RES(0b00000100, DE.hi); }
+    void RES_3D() { DE.hi = RES(0b00001000, DE.hi); }
+    void RES_4D() { DE.hi = RES(0b00010000, DE.hi); }
+    void RES_5D() { DE.hi = RES(0b00100000, DE.hi); }
+    void RES_6D() { DE.hi = RES(0b01000000, DE.hi); }
+    void RES_7D() { DE.hi = RES(0b10000000, DE.hi); }
+
+    void RES_0E() { DE.lo = RES(1, DE.lo); }
+    void RES_1E() { DE.lo = RES(0b00000010, DE.lo); }
+    void RES_2E() { DE.lo = RES(0b00000100, DE.lo); }
+    void RES_3E() { DE.lo = RES(0b00001000, DE.lo); }
+    void RES_4E() { DE.lo = RES(0b00010000, DE.lo); }
+    void RES_5E() { DE.lo = RES(0b00100000, DE.lo); }
+    void RES_6E() { DE.lo = RES(0b01000000, DE.lo); }
+    void RES_7E() { DE.lo = RES(0b10000000, DE.lo); }
+
+    void RES_0H() { HL.hi = RES(1, HL.hi); }
+    void RES_1H() { HL.hi = RES(0b00000010, HL.hi); }
+    void RES_2H() { HL.hi = RES(0b00000100, HL.hi); }
+    void RES_3H() { HL.hi = RES(0b00001000, HL.hi); }
+    void RES_4H() { HL.hi = RES(0b00010000, HL.hi); }
+    void RES_5H() { HL.hi = RES(0b00100000, HL.hi); }
+    void RES_6H() { HL.hi = RES(0b01000000, HL.hi); }
+    void RES_7H() { HL.hi = RES(0b10000000, HL.hi); }
+
+    void RES_0L() { HL.lo = RES(1, HL.lo); }
+    void RES_1L() { HL.lo = RES(0b00000010, HL.lo); }
+    void RES_2L() { HL.lo = RES(0b00000100, HL.lo); }
+    void RES_3L() { HL.lo = RES(0b00001000, HL.lo); }
+    void RES_4L() { HL.lo = RES(0b00010000, HL.lo); }
+    void RES_5L() { HL.lo = RES(0b00100000, HL.lo); }
+    void RES_6L() { HL.lo = RES(0b01000000, HL.lo); }
+    void RES_7L() { HL.lo = RES(0b10000000, HL.lo); }
+
+    void RES_0HL() { RAM::write(RES(1, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_1HL() { RAM::write(RES(0b00000010, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_2HL() { RAM::write(RES(0b00000100, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_3HL() { RAM::write(RES(0b00001000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_4HL() { RAM::write(RES(0b00010000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_5HL() { RAM::write(RES(0b00100000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_6HL() { RAM::write(RES(0b01000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void RES_7HL() { RAM::write(RES(0b10000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+
+    u8 SET(u8 bit, u8 reg_) {
+        cycles = 8;
+        return AssignReg(bit, reg_, true);
+    }
+
+    void SET_0A() { AF.hi = SET(1, AF.hi); }
+    void SET_1A() { AF.hi = SET(0b00000010, AF.hi); }
+    void SET_2A() { AF.hi = SET(0b00000100, AF.hi); }
+    void SET_3A() { AF.hi = SET(0b00001000, AF.hi); }
+    void SET_4A() { AF.hi = SET(0b00010000, AF.hi); }
+    void SET_5A() { AF.hi = SET(0b00100000, AF.hi); }
+    void SET_6A() { AF.hi = SET(0b01000000, AF.hi); }
+    void SET_7A() { AF.hi = SET(0b10000000, AF.hi); }
+
+    void SET_0B() { BC.hi = SET(1, BC.hi); }
+    void SET_1B() { BC.hi = SET(0b00000010, BC.hi); }
+    void SET_2B() { BC.hi = SET(0b00000100, BC.hi); }
+    void SET_3B() { BC.hi = SET(0b00001000, BC.hi); }
+    void SET_4B() { BC.hi = SET(0b00010000, BC.hi); }
+    void SET_5B() { BC.hi = SET(0b00100000, BC.hi); }
+    void SET_6B() { BC.hi = SET(0b01000000, BC.hi); }
+    void SET_7B() { BC.hi = SET(0b10000000, BC.hi); }
+
+    void SET_0C() { BC.lo = SET(1, BC.lo); }
+    void SET_1C() { BC.lo = SET(0b00000010, BC.lo); }
+    void SET_2C() { BC.lo = SET(0b00000100, BC.lo); }
+    void SET_3C() { BC.lo = SET(0b00001000, BC.lo); }
+    void SET_4C() { BC.lo = SET(0b00010000, BC.lo); }
+    void SET_5C() { BC.lo = SET(0b00100000, BC.lo); }
+    void SET_6C() { BC.lo = SET(0b01000000, BC.lo); }
+    void SET_7C() { BC.lo = SET(0b10000000, BC.lo); }
+
+    void SET_0D() { DE.hi = SET(1, DE.hi); }
+    void SET_1D() { DE.hi = SET(0b00000010, DE.hi); }
+    void SET_2D() { DE.hi = SET(0b00000100, DE.hi); }
+    void SET_3D() { DE.hi = SET(0b00001000, DE.hi); }
+    void SET_4D() { DE.hi = SET(0b00010000, DE.hi); }
+    void SET_5D() { DE.hi = SET(0b00100000, DE.hi); }
+    void SET_6D() { DE.hi = SET(0b01000000, DE.hi); }
+    void SET_7D() { DE.hi = SET(0b10000000, DE.hi); }
+
+    void SET_0E() { DE.lo = SET(1, DE.lo); }
+    void SET_1E() { DE.lo = SET(0b00000010, DE.lo); }
+    void SET_2E() { DE.lo = SET(0b00000100, DE.lo); }
+    void SET_3E() { DE.lo = SET(0b00001000, DE.lo); }
+    void SET_4E() { DE.lo = SET(0b00010000, DE.lo); }
+    void SET_5E() { DE.lo = SET(0b00100000, DE.lo); }
+    void SET_6E() { DE.lo = SET(0b01000000, DE.lo); }
+    void SET_7E() { DE.lo = SET(0b10000000, DE.lo); }
+
+    void SET_0H() { HL.hi = SET(1, HL.hi); }
+    void SET_1H() { HL.hi = SET(0b00000010, HL.hi); }
+    void SET_2H() { HL.hi = SET(0b00000100, HL.hi); }
+    void SET_3H() { HL.hi = SET(0b00001000, HL.hi); }
+    void SET_4H() { HL.hi = SET(0b00010000, HL.hi); }
+    void SET_5H() { HL.hi = SET(0b00100000, HL.hi); }
+    void SET_6H() { HL.hi = SET(0b01000000, HL.hi); }
+    void SET_7H() { HL.hi = SET(0b10000000, HL.hi); }
+
+    void SET_0L() { HL.lo = SET(1, HL.lo); }
+    void SET_1L() { HL.lo = SET(0b00000010, HL.lo); }
+    void SET_2L() { HL.lo = SET(0b00000100, HL.lo); }
+    void SET_3L() { HL.lo = SET(0b00001000, HL.lo); }
+    void SET_4L() { HL.lo = SET(0b00010000, HL.lo); }
+    void SET_5L() { HL.lo = SET(0b00100000, HL.lo); }
+    void SET_6L() { HL.lo = SET(0b01000000, HL.lo); }
+    void SET_7L() { HL.lo = SET(0b10000000, HL.lo); }
+
+    void SET_0HL() { RAM::write(SET(1, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_1HL() { RAM::write(SET(0b00000010, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_2HL() { RAM::write(SET(0b00000100, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_3HL() { RAM::write(SET(0b00001000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_4HL() { RAM::write(SET(0b00010000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_5HL() { RAM::write(SET(0b00100000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_6HL() { RAM::write(SET(0b01000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
+    void SET_7HL() { RAM::write(SET(0b10000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
 
     void RLA() {
         u8 bit7 = AF.hi & 0b10000000;
@@ -3060,8 +3207,137 @@ namespace CPU {
         cb_codes[0x7C] = BIT_7H;
         cb_codes[0x7D] = BIT_7L;
         cb_codes[0x7E] = BIT_7HL;
-        cb_codes[0x7F] = BIT_7A; 
+        cb_codes[0x7F] = BIT_7A;
 
+        cb_codes[0x80] = RES_0B;
+        cb_codes[0x81] = RES_0C;
+        cb_codes[0x82] = RES_0D;
+        cb_codes[0x83] = RES_0E;
+        cb_codes[0x84] = RES_0H;
+        cb_codes[0x85] = RES_0L;
+        cb_codes[0x86] = RES_0HL;
+        cb_codes[0x87] = RES_0A;
+        cb_codes[0x88] = RES_1B;
+        cb_codes[0x89] = RES_1C;
+        cb_codes[0x8A] = RES_1D;
+        cb_codes[0x8B] = RES_1E;
+        cb_codes[0x8C] = RES_1H;
+        cb_codes[0x8D] = RES_1L;
+        cb_codes[0x8E] = RES_1HL;
+        cb_codes[0x8F] = RES_1A;
+        cb_codes[0x90] = RES_2B;
+        cb_codes[0x91] = RES_2C;
+        cb_codes[0x92] = RES_2D;
+        cb_codes[0x93] = RES_2E;
+        cb_codes[0x94] = RES_2H;
+        cb_codes[0x95] = RES_2L;
+        cb_codes[0x96] = RES_2HL;
+        cb_codes[0x97] = RES_2A;
+        cb_codes[0x98] = RES_3B;
+        cb_codes[0x99] = RES_3C;
+        cb_codes[0x9A] = RES_3D;
+        cb_codes[0x9B] = RES_3E;
+        cb_codes[0x9C] = RES_3H;
+        cb_codes[0x9D] = RES_3L;
+        cb_codes[0x9E] = RES_3HL;
+        cb_codes[0x9F] = RES_3A;
+        cb_codes[0xA0] = RES_4B;
+        cb_codes[0xA1] = RES_4C;
+        cb_codes[0xA2] = RES_4D;
+        cb_codes[0xA3] = RES_4E;
+        cb_codes[0xA4] = RES_4H;
+        cb_codes[0xA5] = RES_4L;
+        cb_codes[0xA6] = RES_4HL;
+        cb_codes[0xA7] = RES_4A;
+        cb_codes[0xA8] = RES_5B;
+        cb_codes[0xA9] = RES_5C;
+        cb_codes[0xAA] = RES_5D;
+        cb_codes[0xAB] = RES_5E;
+        cb_codes[0xAC] = RES_5H;
+        cb_codes[0xAD] = RES_5L;
+        cb_codes[0xAE] = RES_5HL;
+        cb_codes[0xAF] = RES_5A;
+        cb_codes[0xB0] = RES_6B;
+        cb_codes[0xB1] = RES_6C;
+        cb_codes[0xB2] = RES_6D;
+        cb_codes[0xB3] = RES_6E;
+        cb_codes[0xB4] = RES_6H;
+        cb_codes[0xB5] = RES_6L;
+        cb_codes[0xB6] = RES_6HL;
+        cb_codes[0xB7] = RES_6A;
+        cb_codes[0xB8] = RES_7B;
+        cb_codes[0xB9] = RES_7C;
+        cb_codes[0xBA] = RES_7D;
+        cb_codes[0xBB] = RES_7E;
+        cb_codes[0xBC] = RES_7H;
+        cb_codes[0xBD] = RES_7L;
+        cb_codes[0xBE] = RES_7HL;
+        cb_codes[0xBF] = RES_7A; 
+
+        cb_codes[0xC0] = SET_0B;
+        cb_codes[0xC1] = SET_0C;
+        cb_codes[0xC2] = SET_0D;
+        cb_codes[0xC3] = SET_0E;
+        cb_codes[0xC4] = SET_0H;
+        cb_codes[0xC5] = SET_0L;
+        cb_codes[0xC6] = SET_0HL;
+        cb_codes[0xC7] = SET_0A;
+        cb_codes[0xC8] = SET_1B;
+        cb_codes[0xC9] = SET_1C;
+        cb_codes[0xCA] = SET_1D;
+        cb_codes[0xCB] = SET_1E;
+        cb_codes[0xCC] = SET_1H;
+        cb_codes[0xCD] = SET_1L;
+        cb_codes[0xCE] = SET_1HL;
+        cb_codes[0xCF] = SET_1A;
+        cb_codes[0xD0] = SET_2B;
+        cb_codes[0xD1] = SET_2C;
+        cb_codes[0xD2] = SET_2D;
+        cb_codes[0xD3] = SET_2E;
+        cb_codes[0xD4] = SET_2H;
+        cb_codes[0xD5] = SET_2L;
+        cb_codes[0xD6] = SET_2HL;
+        cb_codes[0xD7] = SET_2A;
+        cb_codes[0xD8] = SET_3B;
+        cb_codes[0xD9] = SET_3C;
+        cb_codes[0xDA] = SET_3D;
+        cb_codes[0xDB] = SET_3E;
+        cb_codes[0xDC] = SET_3H;
+        cb_codes[0xDD] = SET_3L;
+        cb_codes[0xDE] = SET_3HL;
+        cb_codes[0xDF] = SET_3A;
+        cb_codes[0xE0] = SET_4B;
+        cb_codes[0xE1] = SET_4C;
+        cb_codes[0xE2] = SET_4D;
+        cb_codes[0xE3] = SET_4E;
+        cb_codes[0xE4] = SET_4H;
+        cb_codes[0xE5] = SET_4L;
+        cb_codes[0xE6] = SET_4HL;
+        cb_codes[0xE7] = SET_4A;
+        cb_codes[0xE8] = SET_5B;
+        cb_codes[0xE9] = SET_5C;
+        cb_codes[0xEA] = SET_5D;
+        cb_codes[0xEB] = SET_5E;
+        cb_codes[0xEC] = SET_5H;
+        cb_codes[0xED] = SET_5L;
+        cb_codes[0xEE] = SET_5HL;
+        cb_codes[0xEF] = SET_5A;
+        cb_codes[0xF0] = SET_6B;
+        cb_codes[0xF1] = SET_6C;
+        cb_codes[0xF2] = SET_6D;
+        cb_codes[0xF3] = SET_6E;
+        cb_codes[0xF4] = SET_6H;
+        cb_codes[0xF5] = SET_6L;
+        cb_codes[0xF6] = SET_6HL;
+        cb_codes[0xF7] = SET_6A;
+        cb_codes[0xF8] = SET_7B;
+        cb_codes[0xF9] = SET_7C;
+        cb_codes[0xFA] = SET_7D;
+        cb_codes[0xFB] = SET_7E;
+        cb_codes[0xFC] = SET_7H;
+        cb_codes[0xFD] = SET_7L;
+        cb_codes[0xFE] = SET_7HL;
+        cb_codes[0xFF] = SET_7A; 
         cb_codes[0x17] = RL_A;
         cb_codes[0x10] = RL_B;
         cb_codes[0x11] = RL_C;
