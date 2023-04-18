@@ -681,16 +681,7 @@ namespace CPU {
         else { AF.lo &= 0b01110000; }
         cycles = 4;
     }
-    void RL_A() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (AF.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        AF.hi = (AF.hi << 1) + carry;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
-        cycles = 4;
-    }
-    // rotate left (but not through the carry flag)
+    
     void RLC_A() {
         u8 carry = (AF.hi & 0b10000000) >> 7;
         AF.lo = (AF.hi & 0b10000000) >> 3;
@@ -754,70 +745,51 @@ namespace CPU {
         else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
-    void RL_B() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (BC.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        BC.hi = (BC.hi << 1) + carry;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+
+    u8 RL_generic(u8 val) {
+        u8 bit7 = val & 0b10000000;
+        u8 newVal = (val << 1) + getC();
+        setZ(newVal == 0);
+        setN(false);
+        setH(false);
+        setC(bit7 == 0b10000000);
+        return newVal;
+    }
+
+     void RL_A() {
+        AF.hi = RL_generic(AF.hi);
         cycles = 8;
     }
+
+    void RL_B() {
+        BC.hi = RL_generic(BC.hi);
+        cycles = 8;
+    }
+
     void RL_C() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (BC.lo & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        BC.lo = (BC.lo << 1) + carry;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        BC.lo = RL_generic(BC.lo);
         cycles = 8;
     }
 
     void RL_D() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (DE.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        DE.hi = (DE.hi << 1) + carry;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        DE.hi = RL_generic(DE.hi);
         cycles = 8;
     }
     void RL_E() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (DE.lo & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        DE.lo = (DE.lo << 1) + carry;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        DE.lo = RL_generic(DE.lo);
         cycles = 8;
     }
     void RL_H() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (HL.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        HL.hi = (HL.hi << 1) + carry;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        HL.hi = RL_generic(HL.hi);
         cycles = 8;
     }
     void RL_L() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (HL.lo & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        HL.lo = (HL.lo << 1) + carry;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        HL.lo = RL_generic(HL.lo);
         cycles = 8;
     }
     void RL_addr_HL() {
-        u8 x = RAM::readAt(HL.val());
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (x & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        x = (x << 1) + carry;
-        write(x, HL.val());
-        if (x == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        u8 readVal = RAM::readAt(HL.val());
+        RAM::write(RL_generic(readVal), HL.val());
         cycles = 16;
     }
     void RLC_HL() {
@@ -2310,8 +2282,8 @@ namespace CPU {
 
     u8 RRC_generic(u8 val) {
         bool bit0 = val & 1;
-        u8 newVal = val >> 1;
-        setZ(newVal);
+        u8 newVal = (val >> 1) + (bit0 << 7);
+        setZ(newVal == 0);
         setN(false);
         setH(false);
         setC(bit0);
@@ -2360,9 +2332,9 @@ namespace CPU {
     }
 
     u8 SLA_generic(u8 val) {
-        bool bit7 = val & 0b10000000;
+        u8 bit7 = val & 0b10000000;
         u8 newVal = val << 1;
-        setZ(newVal);
+        setZ(newVal == 0);
         setN(false);
         setH(false);
         setC(bit7 == 0b10000000);
@@ -2413,8 +2385,8 @@ namespace CPU {
     u8 SRA_generic(u8 val) {
         bool bit0 = val & 1;
         u8 bit7 = val & 0b10000000;
-        u8 newVal = (val >> 1 )+ bit7;
-        setZ(newVal);
+        u8 newVal = (val >> 1 ) + bit7;
+        setZ(newVal == 0);
         setN(false);
         setH(false);
         setC(bit0);
