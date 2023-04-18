@@ -538,27 +538,12 @@ namespace CPU {
         }
     }
 
-    //  //set z if bit 7 of reg H is zero 
-     // void BIT_7H() {
-    //  	u8 bit = (HL.hi >> 7);
-    //    	AF.lo &= 0b00010000; // TODO: figure out how AF.lo was being set in the first place
-    //    	if (bit == 0){AF.lo |= 0b10000000;} 
-    //    	AF.lo &= 0b10110000; 
-    //    	AF.lo |= 0b00100000; 
-    //  }
-
-    void BIT(u8, u8);
-    // Test bit (in binary representation so bit 3 = 0b00001000) n in register nn
     void BIT(u8 bit, u8 reg_) {
         u8 test = reg_ & bit;
-        if (test == 0) {
-            AF.lo |= 0b10000000;
-        }
-        else {
-            AF.lo &= 0b01111111;
-        }
-        AF.lo &= 0b10110000;
-        AF.lo |= 0b00100000;
+        
+        setZ(test != bit);
+        setN(false);
+        setH(true);
         cycles = 8;
     }
 
@@ -640,6 +625,15 @@ namespace CPU {
     void BIT_5L() { BIT(0b00100000, HL.lo); }
     void BIT_6L() { BIT(0b01000000, HL.lo); }
     void BIT_7L() { BIT(0b10000000, HL.lo); }
+
+    void BIT_0HL() { BIT(1, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_1HL() { BIT(0b00000010, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_2HL() { BIT(0b00000100, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_3HL() { BIT(0b00001000, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_4HL() { BIT(0b00010000, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_5HL() { BIT(0b00100000, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_6HL() { BIT(0b01000000, RAM::readAt(HL.val())); cycles = 12; }
+    void BIT_7HL() { BIT(0b10000000, RAM::readAt(HL.val())); cycles = 12; }
 
     void RLA() {
         u8 bit7 = AF.hi & 0b10000000;
@@ -2696,7 +2690,7 @@ namespace CPU {
         op_codes[0x43] = LDrr_be;
         op_codes[0x44] = LDrr_bh;
         op_codes[0x45] = LDrr_bl;
-        op_codes[0x46] = LDrr_bHL; // now i'm wondering where is the A into 
+        op_codes[0x46] = LDrr_bHL;
         op_codes[0x47] = LDrr_ba;
         op_codes[0x48] = LDrr_cb;
         op_codes[0x49] = LDrr_cc;
@@ -3009,65 +3003,64 @@ namespace CPU {
         cb_codes[0x43] = BIT_0E;
         cb_codes[0x44] = BIT_0H;
         cb_codes[0x45] = BIT_0L;
-        //cb_codes[0x46] = BIT_0HL;
+        cb_codes[0x46] = BIT_0HL;
+        cb_codes[0x47] = BIT_0A;
         cb_codes[0x48] = BIT_1B;
         cb_codes[0x49] = BIT_1C;
         cb_codes[0x4A] = BIT_1D;
         cb_codes[0x4B] = BIT_1E;
         cb_codes[0x4C] = BIT_1H;
         cb_codes[0x4D] = BIT_1L;
-        //cb_codes[0x4E] = BIT_1HL;
-        cb_codes[0x4F] = BIT_2A;
+        cb_codes[0x4E] = BIT_1HL;
+        cb_codes[0x4F] = BIT_1A;
         cb_codes[0x50] = BIT_2B;
         cb_codes[0x51] = BIT_2C;
         cb_codes[0x52] = BIT_2D;
         cb_codes[0x53] = BIT_2E;
         cb_codes[0x54] = BIT_2H;
         cb_codes[0x55] = BIT_2L;
-        //cb_codes[0x56] = BIT_2HL;
-        cb_codes[0x57] = BIT_3A;
+        cb_codes[0x56] = BIT_2HL;
+        cb_codes[0x57] = BIT_2A;
         cb_codes[0x58] = BIT_3B;
         cb_codes[0x59] = BIT_3C;
         cb_codes[0x5A] = BIT_3D;
         cb_codes[0x5B] = BIT_3E;
         cb_codes[0x5C] = BIT_3H;
         cb_codes[0x5D] = BIT_3L;
-        //cb_codes[0x5E] = BIT_3HL;
-        cb_codes[0x5F] = BIT_4A;
+        cb_codes[0x5E] = BIT_3HL;
+        cb_codes[0x5F] = BIT_3A;
         cb_codes[0x60] = BIT_4B;
         cb_codes[0x61] = BIT_4C;
         cb_codes[0x62] = BIT_4D;
         cb_codes[0x63] = BIT_4E;
         cb_codes[0x64] = BIT_4H;
         cb_codes[0x65] = BIT_4L;
-        //cb_codes[0x66] = BIT_4HL;
-        cb_codes[0x67] = BIT_5A;
+        cb_codes[0x66] = BIT_4HL;
+        cb_codes[0x67] = BIT_4A;
         cb_codes[0x68] = BIT_5B;
         cb_codes[0x69] = BIT_5C;
         cb_codes[0x6A] = BIT_5D;
         cb_codes[0x6B] = BIT_5E;
         cb_codes[0x6C] = BIT_5H;
         cb_codes[0x6D] = BIT_5L;
-        //cb_codes[0x6E] = BIT_5HL;
-        cb_codes[0x6F] = BIT_6A;
+        cb_codes[0x6E] = BIT_5HL;
+        cb_codes[0x6F] = BIT_5A;
         cb_codes[0x70] = BIT_6B;
         cb_codes[0x71] = BIT_6C;
         cb_codes[0x72] = BIT_6D;
         cb_codes[0x73] = BIT_6E;
         cb_codes[0x74] = BIT_6H;
         cb_codes[0x75] = BIT_6L;
-        //cb_codes[0x76] = BIT_6HL;
-        cb_codes[0x77] = BIT_7A;
+        cb_codes[0x76] = BIT_6HL;
+        cb_codes[0x77] = BIT_6A;
         cb_codes[0x78] = BIT_7B;
         cb_codes[0x79] = BIT_7C;
         cb_codes[0x7A] = BIT_7D;
         cb_codes[0x7B] = BIT_7E;
         cb_codes[0x7C] = BIT_7H;
         cb_codes[0x7D] = BIT_7L;
-        //cb_codes[0x7E] = BIT_7HL;
-        cb_codes[0x7F] = BIT_7A;
-
-        //cb_codes[0x7c] = BIT_7H; 
+        cb_codes[0x7E] = BIT_7HL;
+        cb_codes[0x7F] = BIT_7A; 
 
         cb_codes[0x17] = RL_A;
         cb_codes[0x10] = RL_B;
