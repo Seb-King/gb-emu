@@ -949,7 +949,7 @@ namespace CPU {
     // we have to treat the next byte as a signed variable
     void JR_NZ()
     {
-        if ((AF.lo >> 7) == 0)
+        if (!getZ())
         {
             s8 b = read();
             PC += b;
@@ -1017,7 +1017,7 @@ namespace CPU {
 
     void JP_NZ() {
         u8 n1, n2;
-        if ((AF.lo >> 7) == 0) {
+        if (!getZ()) {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
@@ -1028,7 +1028,7 @@ namespace CPU {
 
     void JP_Z() {
         u8 n1, n2;
-        if ((AF.lo >> 7) == 1) {
+        if (getZ()) {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
@@ -1039,7 +1039,7 @@ namespace CPU {
 
     void JP_NC() {
         u8 n1, n2;
-        if (((AF.lo >> 4) & 1) == 0) {
+        if (!getC()) {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
@@ -1049,7 +1049,7 @@ namespace CPU {
     }
     void JP_C() {
         u8 n1, n2;
-        if (((AF.lo >> 4) & 1) == 1) {
+        if (getC()) {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
@@ -1167,11 +1167,9 @@ namespace CPU {
         }
     }
     void CALL_NC() {
-        u8 F = AF.lo;
-        u8 C = (F & 0b00010000) >> 7;
         u8 n1 = read();
         u8 n2 = read();
-        if (C == 0) {
+        if (!getC()) {
             u8 loNib = PC & 0xFF;
             u8 hiNib = (PC >> 8) & 0xFF;
 
@@ -1185,11 +1183,9 @@ namespace CPU {
         }
     }
     void CALL_C() {
-        u8 F = AF.lo;
-        u8 C = (F & 0b00010000) >> 7;
         u8 n1 = read();
         u8 n2 = read();
-        if (C == 1) {
+        if (getC()) {
             u8 loNib = PC & 0xFF;
             u8 hiNib = (PC >> 8) & 0xFF;
 
@@ -1331,7 +1327,7 @@ namespace CPU {
 
         setZ(false);
         setN(false);
-        setC(point < SP);
+        setC((point & 0xFF) < (SP & 0xFF));
         setH((SP & 0x0F) + (n & 0x0F) > 0x0F);
 
         cycles = 12; 
@@ -2284,17 +2280,18 @@ namespace CPU {
     }
 
     void ADD_n_SP() {
-        u8 n = read();
-        u8 x = SP;
-        SP += n;
+        s8 readValue = read();
+        u16 oldValue = SP;
         AF.lo &= 0b00110000;
 
-        // half carry - set H if carry from bit 11 (so the 12th place in the binary expression)
-        if ((SP & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
-        //carry flag - we set C if there is carry, which is when the result is lower than to start
-        if (SP < x) { AF.lo |= 0b00010000; }
-        else { AF.lo &= 0b11100000; }
+        u16 result = SP + readValue;
+
+        setZ(0);
+        setN(0);
+        setH((SP & 0x0F) + (readValue & 0x0F) > 0x0F);
+        setC((result & 0xFF) < (oldValue & 0xFF));
+
+        SP = result;
         cycles = 16;
     }
 
