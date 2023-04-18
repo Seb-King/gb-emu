@@ -20,7 +20,7 @@ namespace RUPS {
 
 void reg::set(u16 x) {
     hi = x >> 8;
-    lo = (x << 8) >> 8; // this should chop off the most significant 4 bits
+    lo = (x & 0x00FF); // this should chop off the most significant 4 bits
 }
 
 u16 LCDC = 0xFF40;
@@ -62,6 +62,11 @@ namespace CPU {
     int getCyles() { return cycles; }
     int getTiming() { return timing; }
 
+    void init_codes() {
+        init_opcodes();
+        init_decoder();
+    }
+
     void init_registers() {
         PC = 0x0100;
         SP = 0xFFFE;
@@ -69,6 +74,17 @@ namespace CPU {
         BC.set(0x0013);
         DE.set(0x00D8);
         HL.set(0x014D);
+    }
+
+    bool halfCarryAdd(u8 a, u8 b) {
+        return ((((a & 0x0F) + (b & 0x0F)) & 0x10) == 0x10);
+    }
+
+    bool halfCarrySub(u8 a, u8 b) {
+        return ((a & 0x0F) < (b & 0x0F));
+    }
+
+    void init() {
         init_opcodes();
         init_decoder();
     }
@@ -450,6 +466,7 @@ namespace CPU {
         ++SP;
         u16 addr = n1 + (n2 << 8);
         PC = addr;
+        cycles = 16;
     }
 
     void RET_NZ() {
@@ -1203,7 +1220,9 @@ namespace CPU {
         u8 n1 = read();
         u8 n2 = read();
         u16 nn = n1 + (n2 << 8);
-        SP = RAM::readAt(nn);
+        RAM::write(SP, nn);
+
+        cycles = 20;
     } // Put SP at address nn
 
     // Push register pair nn onto stack, decrement SP twice
@@ -1450,14 +1469,26 @@ namespace CPU {
 
     }
     void ADC_a_hash() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi = (AF.hi + read() + getC());
+        u8 prevValue = AF.hi;
+        u8 readValue = read();
+        bool carry = false;
+        u8 add = readValue + getC();
+        
+
+        AF.hi += add;
 
         setZ(AF.hi == 0);
         setN(false);
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        setH((prevValue & 0x0F) + (readValue & 0x0F) + (getC() & 0x0F) > 0x0F);
+
+        if (add < readValue) {
+            carry = true;
+        }
+
+        if (AF.hi < prevValue) {
+            carry = true;
+        }
+        setC(carry);
         cycles = 8;
     }
 
@@ -1681,6 +1712,30 @@ namespace CPU {
         cycles = 8;
     }
 
+    void SBC_hash() {
+        u8 oldValue = AF.hi;
+        u8 readValue = read();
+        u8 change = getC() + readValue;
+        bool halfCarry = false;
+        bool carry = false;
+
+        if (oldValue < readValue || oldValue - readValue < getC()) {
+            carry = true;
+        }
+
+        if ((((oldValue) & 0x0F)  - (getC() & 0x0F) - (readValue & 0x0F) & 0x10) == 0x10) {
+            halfCarry = true;
+        }
+
+        AF.hi -= change;
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH(halfCarrySub(oldValue, readValue) || halfCarrySub(oldValue - readValue, getC()));
+        setC(carry);
+        cycles = 8;
+    }
+
     void AND_a() { AF.hi = AF.hi & AF.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
     void AND_b() { AF.hi = AF.hi & BC.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
     void AND_c() { AF.hi = AF.hi & BC.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
@@ -1691,13 +1746,48 @@ namespace CPU {
     void AND_HL() { AF.hi = AF.hi & RAM::readAt(HL.val()); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 8; }
     void AND_hash() { AF.hi = AF.hi & read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 8; }
 
-    void OR_a() { AF.hi = AF.hi | AF.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_b() { AF.hi = AF.hi | BC.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_c() { AF.hi = AF.hi | BC.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_d() { AF.hi = AF.hi | DE.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_e() { AF.hi = AF.hi | DE.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_h() { AF.hi = AF.hi | HL.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
-    void OR_l() { AF.hi = AF.hi | HL.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 4; }
+    void OR_a() { AF.hi = AF.hi | AF.hi;  
+        setN(false);
+        setH(false);
+        setC(false); 
+        setZ(AF.hi == 0);
+        cycles = 4; }
+    void OR_b() { AF.hi = AF.hi | BC.hi;  
+        setN(false);
+        setH(false);
+        setC(false); 
+        setZ(AF.hi == 0);
+        cycles = 4; }
+    void OR_c() { AF.hi = AF.hi | BC.lo;  
+        setN(false);
+        setH(false);
+        setC(false); 
+        setZ(AF.hi == 0);
+        cycles = 4; }
+    void OR_d() { AF.hi = AF.hi | DE.hi;  
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+         cycles = 4; }
+    void OR_e() { AF.hi = AF.hi | DE.lo;  
+        setN(false);
+        setH(false);
+        setC(false); 
+        setZ(AF.hi == 0);
+        cycles = 4; }
+    void OR_h() { AF.hi = AF.hi | HL.hi;  
+        setN(false);
+        setH(false);
+        setC(false); 
+        setZ(AF.hi == 0);
+        cycles = 4; }
+    void OR_l() { AF.hi = AF.hi | HL.lo;  
+        setN(false);
+        setH(false);
+        setC(false); 
+        setZ(AF.hi == 0);
+        cycles = 4; }
     void OR_HL() { 
         AF.hi = AF.hi | RAM::readAt(HL.val()); 
         setN(false);
@@ -1706,7 +1796,14 @@ namespace CPU {
         setZ(AF.hi == 0);
         cycles = 8; 
         }
-    void OR_hash() { AF.hi = AF.hi | read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; cycles = 8; }
+    void OR_hash() { 
+        AF.hi = AF.hi | read(); 
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0); 
+        cycles = 8; 
+        }
 
 
     void XOR_a() { AF.hi ^= AF.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
@@ -2307,11 +2404,6 @@ namespace CPU {
         cycles = 4;
     }
 
-    void init() {
-        init_opcodes();
-        init_decoder();
-    }
-
     void init_decoder() {
         decoder[0x00] = "NOP";
         decoder[0x01] = "LD_nn_BC";
@@ -2478,6 +2570,7 @@ namespace CPU {
         decoder[0x9C] = "SBC_h";
         decoder[0x9D] = "SBC_l";
         decoder[0x9E] = "SBC_HL";
+        decoder[0xDE] = "SBC_hash";
         decoder[0xA7] = "AND_a";
         decoder[0xA0] = "AND_b";
         decoder[0xA1] = "AND_c";
@@ -2710,6 +2803,7 @@ namespace CPU {
         op_codes[0x9C] = SBC_h;
         op_codes[0x9D] = SBC_l;
         op_codes[0x9E] = SBC_HL;
+        op_codes[0xDE] = SBC_hash;
 
         // ------ Logical Operations ------ //
         // Check flags in each operation
