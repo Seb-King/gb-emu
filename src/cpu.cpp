@@ -642,32 +642,33 @@ namespace CPU {
     void BIT_7L() { BIT(0b10000000, HL.lo); }
 
     void RLA() {
-        u8 carry = (AF.lo & 0b00010000) >> 4;
-        AF.lo = (AF.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        AF.hi = (AF.hi << 1) + carry;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        u8 bit7 = AF.hi & 0b10000000;
+        AF.hi = (AF.hi << 1) + getC();
+
+        setZ(false);
+        setN(false);
+        setH(false);
+        setC(bit7 == 0b10000000);
         cycles = 4;
     }
     void RLCA() {
-        // just rotate left
         u8 bit7 = AF.hi & 0b10000000;
-        AF.lo = (bit7 >> 3);
-        AF.lo &= 0b10010000;
         AF.hi = (AF.hi << 1) + (bit7 >> 7);
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        setZ(false);
+        setN(false);
+        setH(false);
+        setC(bit7 == 0b10000000);
         cycles = 4;
     }
 
     void RRCA() {
         u8 bit0 = AF.hi & 0b00000001;
-        AF.lo = (bit0 << 4);
-        AF.lo &= 0b10010000;
         AF.hi = (AF.hi >> 1) + (bit0 << 7);
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+
+        setZ(false);
+        setN(false);
+        setH(false);
+        setC(bit0);
         cycles = 4;
     }
 
@@ -1315,10 +1316,10 @@ namespace CPU {
     {
         u8 x = AF.hi;
         u8 loNib = DE.lo & 0x0F;
-        AF.hi += BC.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        AF.hi += DE.lo;
+
+        setZ(AF.hi == 0);
+        setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1330,7 +1331,7 @@ namespace CPU {
         AF.hi += HL.hi;
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1339,10 +1340,10 @@ namespace CPU {
     {
         u8 x = AF.hi;
         u8 loNib = HL.lo & 0x0F;
-        AF.hi += BC.hi;
+        AF.hi += HL.lo;
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1354,7 +1355,7 @@ namespace CPU {
         AF.hi += RAM::readAt(HL.val());
         if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
         else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 8;
@@ -1371,132 +1372,85 @@ namespace CPU {
         cycles = 8;
     }
 
+    void ADC_generic(u8 add) {
+        u8 a = AF.hi;
+        u8 b = add;
+        u8 c = getC();
+        bool carry = false;
+        u8 res = a + b + c;
+
+        setZ(res == 0);
+        setN(false);
+        setH((a & 0x0F) + (b & 0x0F) + (c & 0x0F) > 0x0F);
+
+        if (b + c > 0xFF) {
+            carry = true;
+        }
+
+        if (res < a) {
+            carry = true;
+        }
+        setC(carry);
+
+        AF.hi = res;
+    }
+
+    void ADC_a_hash() {
+        u8 readValue = read();
+        ADC_generic(readValue);
+
+        cycles = 8;
+    }
+
     void ADC_aa()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += AF.hi + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        ADC_generic(AF.hi);
         cycles = 4;
 
     }
     void ADC_ab()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += BC.hi + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        ADC_generic(BC.hi);
         cycles = 4;
-
     }
+
     void ADC_ac()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += BC.lo + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        ADC_generic(BC.lo);
         cycles = 4;
 
     }
     void ADC_ad()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += DE.hi + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+       ADC_generic(DE.hi);
         cycles = 4;
 
     }
     void ADC_ae()
     {
-        u8 x = AF.hi;
-        u8 loNib = DE.lo & 0x0F;
-        AF.hi += BC.hi + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        ADC_generic(DE.lo);
         cycles = 4;
 
     }
     void ADC_ah()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += HL.hi + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        ADC_generic(HL.hi);
         cycles = 4;
 
     }
     void ADC_al()
     {
-        u8 x = AF.hi;
-        u8 loNib = HL.lo & 0x0F;
-        AF.hi += BC.hi + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        ADC_generic(HL.lo);
         cycles = 4;
 
     }
     void ADC_aHL()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += RAM::readAt(HL.val()) + (AF.lo & 0b00010000);
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
+        u8 readValue = RAM::readAt(HL.val());
+        ADC_generic(readValue);
+
         cycles = 8;
 
-    }
-    void ADC_a_hash() {
-        u8 prevValue = AF.hi;
-        u8 readValue = read();
-        bool carry = false;
-        u8 add = readValue + getC();
-        
-
-        AF.hi += add;
-
-        setZ(AF.hi == 0);
-        setN(false);
-        setH((prevValue & 0x0F) + (readValue & 0x0F) + (getC() & 0x0F) > 0x0F);
-
-        if (add < readValue) {
-            carry = true;
-        }
-
-        if (AF.hi < prevValue) {
-            carry = true;
-        }
-        setC(carry);
-        cycles = 8;
     }
 
     void SUB_a() {
@@ -1607,115 +1561,64 @@ namespace CPU {
         cycles = 4;
     }
 
-    void SBC_a() {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
 
-        AF.hi -= AF.hi + getC();
+    void SBC_generic(u8 sub) {
+        u8 a = AF.hi;
+        u8 b = sub;
+        u8 c = getC();
+        bool halfCarry = false;
+        bool carry = false;
 
-        setN(true);
+        if (a < b || a - b < c) {
+            carry = true;
+        }
+
+        AF.hi -= (b + c);
+
+
         setZ(AF.hi == 0);
-        setH(carry);
-        setC(true);
+        setN(true);
+        setH(halfCarrySub(a, b) || halfCarrySub(a - b, c));
+        setC(carry);
+    }
 
+    void SBC_a() {
+        SBC_generic(AF.hi);
         cycles = 4;
     }
     void SBC_b()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = BC.hi + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(BC.hi);
         cycles = 4;
     }
     void SBC_c()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = BC.lo + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(BC.lo);
         cycles = 4;
     }
     void SBC_d()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = DE.hi + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(DE.hi);
         cycles = 4;
     }
     void SBC_e()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = DE.lo + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(DE.lo);
         cycles = 4;
     }
     void SBC_h()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = HL.hi + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(HL.hi);
         cycles = 4;
     }
     void SBC_l()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = HL.lo + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(HL.lo);
         cycles = 4;
     }
     void SBC_HL()
     {
-        u8 oldValue = AF.hi;
-        u8 carry = getC();
-        u8 change = RAM::readAt(HL.val()) + getC();
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (change & 0x0F));
-        setC(oldValue < change);
+        SBC_generic(RAM::readAt(HL.val()));
         cycles = 8;
     }
 
@@ -1825,16 +1728,10 @@ namespace CPU {
 
     void CP_a()
     {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        u8 z = AF.hi - AF.hi;
-        if (z == 0) { AF.lo |= 0x80; }
-        else { AF.lo &= 0b01110000; } // set Z = 1 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((z & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11010000; } // Set H if loer nibble does not underflo
-        if (AF.hi < AF.hi) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo 
+        setZ(true);
+        setN(true);
+        setH(false);
+        setC(false);
         cycles = 4;
     }
     void CP_b()
@@ -2087,7 +1984,7 @@ namespace CPU {
     void DEC_l()
     {
         u8 lowerNib = HL.lo & 0x0F;
-        u8 newValue = HL.lo--;
+        u8 newValue = --HL.lo;
         setN(true);
         setZ(newValue == 0);
         setH(lowerNib == 0x00);
@@ -2097,7 +1994,7 @@ namespace CPU {
     {
         u8 x = RAM::readAt(HL.val());
         u8 lowerNib = x & 0x0F;
-        u8 newValue = x--;
+        u8 newValue = --x;
         write(x, HL.val());
     
         setN(true);
