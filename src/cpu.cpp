@@ -681,7 +681,7 @@ namespace CPU {
         else { AF.lo &= 0b01110000; }
         cycles = 4;
     }
-    
+
     void RLC_A() {
         u8 carry = (AF.hi & 0b10000000) >> 7;
         AF.lo = (AF.hi & 0b10000000) >> 3;
@@ -2195,55 +2195,47 @@ namespace CPU {
         cycles = 4;
     }
 
+    u8 SWAP_gen(u8 val) {
+        u8 res = ((val >> 4) & 0x0F) + ((val << 4 ) & 0xF0);
+        setZ(res == 0);
+        setN(false);
+        setH(false);
+        setC(false);
+        return res;
+    }
+
     void SWAP_a() {
-        AF.hi = ((AF.hi & 0xF0) >> 4) + ((AF.hi & 0x0F) << 4);
-        AF.lo = 0;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
+        AF.hi = SWAP_gen(AF.hi);
         cycles = 8;
     }
     void SWAP_b() {
-        BC.hi = ((BC.hi & 0xF0) >> 4) + ((BC.hi & 0x0F) << 4);
-        AF.lo = 0;
-        if (BC.hi == 0) { AF.lo |= 0b10000000; }
+        BC.hi = SWAP_gen(BC.hi);
         cycles = 8;
     }
     void SWAP_c() {
-        BC.lo = ((BC.lo & 0xF0) >> 4) + ((BC.lo & 0x0F) << 4);
-        AF.lo = 0;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; }
+        BC.lo = SWAP_gen(BC.lo);
         cycles = 8;
     }
 
     void SWAP_d() {
-        DE.hi = ((DE.hi & 0xF0) >> 4) + ((DE.hi & 0x0F) << 4);
-        AF.lo = 0;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; }
+        DE.hi = SWAP_gen(DE.hi);
         cycles = 8;
     }
     void SWAP_e() {
-        DE.lo = ((DE.lo & 0xF0) >> 4) + ((DE.lo & 0x0F) << 4);
-        AF.lo = 0;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; }
+        DE.lo = SWAP_gen(DE.lo);
         cycles = 8;
     }
     void SWAP_h() {
-        HL.hi = ((HL.hi & 0xF0) >> 4) + ((HL.hi & 0x0F) << 4);
-        AF.lo = 0;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; }
+        HL.hi = SWAP_gen(HL.hi);
         cycles = 8;
     }
     void SWAP_l() {
-        HL.lo = ((HL.lo & 0xF0) >> 4) + ((HL.hi & 0x0F) << 4);
-        AF.lo = 0;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; }
+        HL.lo = SWAP_gen(HL.lo);
         cycles = 8;
     }
     void SWAP_HL() {
-        u8 x = RAM::readAt(HL.val());
-        x = ((x & 0xF0) >> 4) + ((x & 0x0F) << 4);
-        write(x, HL.val());
-        AF.lo = 0;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; }
+        u8 value = RAM::readAt(HL.val());
+        write(SWAP_gen(value), HL.val());
         cycles = 16;
     }
 
