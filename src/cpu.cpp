@@ -2308,6 +2308,160 @@ namespace CPU {
         cycles = 4;
     }
 
+    u8 RRC_generic(u8 val) {
+        bool bit0 = val & 1;
+        u8 newVal = val >> 1;
+        setZ(newVal);
+        setN(false);
+        setH(false);
+        setC(bit0);
+        return newVal;
+    }
+
+    void RRC_A() {
+        AF.hi = RRC_generic(AF.hi);
+        cycles = 8;
+    }
+
+    void RRC_B() {
+        BC.hi = RRC_generic(BC.hi);
+        cycles = 8;
+    }
+
+    void RRC_C() {
+        BC.lo = RRC_generic(BC.lo);
+        cycles = 8;
+    }
+
+    void RRC_D() {
+        DE.hi = RRC_generic(DE.hi);
+        cycles = 8;
+    }
+
+    void RRC_E() {
+        DE.lo = RRC_generic(DE.lo);
+        cycles = 8;
+    }
+
+    void RRC_H() {
+        HL.hi = RRC_generic(HL.hi);
+        cycles = 8;
+    }
+
+    void RRC_L() {
+        HL.lo = RRC_generic(HL.lo);
+        cycles = 8;
+    }
+
+    void RRC_HL() {
+        u8 readVal = RAM::readAt(HL.val());
+        RAM::write(RRC_generic(readVal), HL.val());
+        cycles = 16;
+    }
+
+    u8 SLA_generic(u8 val) {
+        bool bit7 = val & 0b10000000;
+        u8 newVal = val << 1;
+        setZ(newVal);
+        setN(false);
+        setH(false);
+        setC(bit7 == 0b10000000);
+        return newVal;
+    }
+
+    void SLA_A() {
+        AF.hi = SLA_generic(AF.hi);
+        cycles = 8;
+    }
+
+    void SLA_B() {
+        BC.hi = SLA_generic(BC.hi);
+        cycles = 8;
+    }
+
+    void SLA_C() {
+        BC.lo = SLA_generic(BC.lo);
+        cycles = 8;
+    }
+
+    void SLA_D() {
+        DE.hi = SLA_generic(DE.hi);
+        cycles = 8;
+    }
+
+    void SLA_E() {
+        DE.lo = SLA_generic(DE.lo);
+        cycles = 8;
+    }
+
+    void SLA_H() {
+        HL.hi = SLA_generic(HL.hi);
+        cycles = 8;
+    }
+
+    void SLA_L() {
+        HL.lo = SLA_generic(HL.lo);
+        cycles = 8;
+    }
+
+    void SLA_HL() {
+        u8 readVal = RAM::readAt(HL.val());
+        RAM::write(SLA_generic(readVal), HL.val());
+        cycles = 16;
+    }
+
+    u8 SRA_generic(u8 val) {
+        bool bit0 = val & 1;
+        u8 bit7 = val & 0b10000000;
+        u8 newVal = (val >> 1 )+ bit7;
+        setZ(newVal);
+        setN(false);
+        setH(false);
+        setC(bit0);
+        return newVal;
+    }
+
+    void SRA_A() {
+        AF.hi = SRA_generic(AF.hi);
+        cycles = 8;
+    }
+
+    void SRA_B() {
+        BC.hi = SRA_generic(BC.hi);
+        cycles = 8;
+    }
+
+    void SRA_C() {
+        BC.lo = SRA_generic(BC.lo);
+        cycles = 8;
+    }
+
+    void SRA_D() {
+        DE.hi = SRA_generic(DE.hi);
+        cycles = 8;
+    }
+
+    void SRA_E() {
+        DE.lo = SRA_generic(DE.lo);
+        cycles = 8;
+    }
+
+    void SRA_H() {
+        HL.hi = SRA_generic(HL.hi);
+        cycles = 8;
+    }
+
+    void SRA_L() {
+        HL.lo = SRA_generic(HL.lo);
+        cycles = 8;
+    }
+
+    void SRA_HL() {
+        u8 readVal = RAM::readAt(HL.val());
+        RAM::write(SRA_generic(readVal), HL.val());
+        cycles = 16;
+    }
+
     void init_decoder() {
         decoder[0x00] = "NOP";
         decoder[0x01] = "LD_nn_BC";
@@ -2857,6 +3011,33 @@ namespace CPU {
         cb_codes[0x05] = RLC_L;
         cb_codes[0x06] = RLC_HL;
         cb_codes[0x07] = RLC_A;
+
+        cb_codes[0x08] = RRC_B;
+        cb_codes[0x09] = RRC_C;
+        cb_codes[0x0A] = RRC_D;
+        cb_codes[0x0B] = RRC_E;
+        cb_codes[0x0C] = RRC_H;
+        cb_codes[0x0D] = RRC_L;
+        cb_codes[0x0E] = RRC_HL;
+        cb_codes[0x0F] = RRC_A;
+
+        cb_codes[0x20] = SLA_B;
+        cb_codes[0x21] = SLA_C;
+        cb_codes[0x22] = SLA_D;
+        cb_codes[0x23] = SLA_E;
+        cb_codes[0x24] = SLA_H;
+        cb_codes[0x25] = SLA_L;
+        cb_codes[0x26] = SLA_HL;
+        cb_codes[0x27] = SLA_A;
+
+        cb_codes[0x28] = SRA_B;
+        cb_codes[0x29] = SRA_C;
+        cb_codes[0x2A] = SRA_D;
+        cb_codes[0x2B] = SRA_E;
+        cb_codes[0x2C] = SRA_H;
+        cb_codes[0x2D] = SRA_L;
+        cb_codes[0x2E] = SRA_HL;
+        cb_codes[0x2F] = SRA_A;
 
         cb_codes[0x40] = BIT_0B;
         cb_codes[0x41] = BIT_0C;
