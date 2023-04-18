@@ -1110,56 +1110,63 @@ namespace CPU {
         cycles = 12;
     }
 
-    void LDrr_ab() { AF.hi = BC.hi; }
-    void LDrr_ac() { AF.hi = BC.lo; }
-    void LDrr_ad() { AF.hi = DE.hi; }
-    void LDrr_ae() { AF.hi = DE.lo; }
-    void LDrr_ah() { AF.hi = HL.hi; }
-    void LDrr_al() { AF.hi = HL.lo; }
+    void LDrr_aa() { cycles = 4; }
+    void LDrr_ab() { AF.hi = BC.hi; cycles = 4; }
+    void LDrr_ac() { AF.hi = BC.lo; cycles = 4; }
+    void LDrr_ad() { AF.hi = DE.hi; cycles = 4; }
+    void LDrr_ae() { AF.hi = DE.lo; cycles = 4; }
+    void LDrr_ah() { AF.hi = HL.hi; cycles = 4; }
+    void LDrr_al() { AF.hi = HL.lo; cycles = 4; }
     void LDrr_aBC() { AF.hi = RAM::readAt(BC.val()); }
     void LDrr_aDE() { AF.hi = RAM::readAt(DE.val()); }
     void LDrr_aHL() { AF.hi = RAM::readAt(HL.val()); }
-    void LDrr_ba() { BC.hi = AF.hi; }
-    void LDrr_bc() { BC.hi = BC.lo; }
-    void LDrr_bd() { BC.hi = DE.hi; }
-    void LDrr_be() { BC.hi = DE.lo; }
-    void LDrr_bh() { BC.hi = HL.hi; }
-    void LDrr_bl() { BC.hi = HL.lo; }
+    void LDrr_bb() { cycles = 4; }
+    void LDrr_ba() { BC.hi = AF.hi; cycles = 4; }
+    void LDrr_bc() { BC.hi = BC.lo; cycles = 4; }
+    void LDrr_bd() { BC.hi = DE.hi; cycles = 4; }
+    void LDrr_be() { BC.hi = DE.lo; cycles = 4; }
+    void LDrr_bh() { BC.hi = HL.hi; cycles = 4; }
+    void LDrr_bl() { BC.hi = HL.lo; cycles = 4; }
     void LDrr_bHL() { BC.hi = RAM::readAt(HL.val()); }
-    void LDrr_ca() { BC.lo = AF.hi; }
-    void LDrr_cb() { BC.lo = BC.hi; }
-    void LDrr_cd() { BC.lo = DE.hi; }
-    void LDrr_ce() { BC.lo = DE.lo; }
-    void LDrr_ch() { BC.lo = HL.hi; }
-    void LDrr_cl() { BC.lo = HL.lo; }
+    void LDrr_cc() { cycles = 4; }
+    void LDrr_ca() { BC.lo = AF.hi; cycles = 4; }
+    void LDrr_cb() { BC.lo = BC.hi; cycles = 4; }
+    void LDrr_cd() { BC.lo = DE.hi; cycles = 4; }
+    void LDrr_ce() { BC.lo = DE.lo; cycles = 4; }
+    void LDrr_ch() { BC.lo = HL.hi; cycles = 4; }
+    void LDrr_cl() { BC.lo = HL.lo; cycles = 4; }
     void LDrr_cHL() { BC.lo = RAM::readAt(HL.val()); }
-    void LDrr_da() { DE.hi = AF.hi; }
-    void LDrr_db() { DE.hi = BC.hi; }
-    void LDrr_dc() { DE.hi = BC.lo; }
-    void LDrr_de() { DE.hi = DE.lo; }
-    void LDrr_dh() { DE.hi = HL.hi; }
-    void LDrr_dl() { DE.hi = HL.lo; }
+    void LDrr_dd() { cycles = 4; }
+    void LDrr_da() { DE.hi = AF.hi; cycles = 4; }
+    void LDrr_db() { DE.hi = BC.hi; cycles = 4; }
+    void LDrr_dc() { DE.hi = BC.lo; cycles = 4; }
+    void LDrr_de() { DE.hi = DE.lo; cycles = 4; }
+    void LDrr_dh() { DE.hi = HL.hi; cycles = 4; }
+    void LDrr_dl() { DE.hi = HL.lo; cycles = 4; }
     void LDrr_dHL() { DE.hi = RAM::readAt(HL.val()); }
-    void LDrr_ea() { DE.lo = AF.hi; }
-    void LDrr_eb() { DE.lo = BC.hi; }
-    void LDrr_ec() { DE.lo = BC.lo; }
-    void LDrr_ed() { DE.lo = DE.hi; }
-    void LDrr_eh() { DE.lo = HL.hi; }
-    void LDrr_el() { DE.lo = HL.lo; }
+    void LDrr_ee() { cycles = 4; }
+    void LDrr_ea() { DE.lo = AF.hi; cycles = 4; }
+    void LDrr_eb() { DE.lo = BC.hi; cycles = 4; }
+    void LDrr_ec() { DE.lo = BC.lo; cycles = 4; }
+    void LDrr_ed() { DE.lo = DE.hi; cycles = 4; }
+    void LDrr_eh() { DE.lo = HL.hi; cycles = 4; }
+    void LDrr_el() { DE.lo = HL.lo; cycles = 4; }
     void LDrr_eHL() { DE.lo = RAM::readAt(HL.val()); }
-    void LDrr_ha() { HL.hi = AF.hi; }
-    void LDrr_hb() { HL.hi = BC.hi; }
-    void LDrr_hc() { HL.hi = BC.lo; }
-    void LDrr_hd() { HL.hi = DE.hi; }
-    void LDrr_he() { HL.hi = DE.lo; }
-    void LDrr_hl() { HL.hi = HL.lo; }
+    void LDrr_hh() { cycles = 4; }
+    void LDrr_ha() { HL.hi = AF.hi; cycles = 4; }
+    void LDrr_hb() { HL.hi = BC.hi; cycles = 4; }
+    void LDrr_hc() { HL.hi = BC.lo; cycles = 4; }
+    void LDrr_hd() { HL.hi = DE.hi; cycles = 4; }
+    void LDrr_he() { HL.hi = DE.lo; cycles = 4; }
+    void LDrr_hl() { HL.hi = HL.lo; cycles = 4; }
     void LDrr_hHL() { HL.hi = RAM::readAt(HL.val()); }
-    void LDrr_la() { HL.lo = AF.hi; }
-    void LDrr_lb() { HL.lo = BC.hi; }
-    void LDrr_lc() { HL.lo = BC.lo; }
-    void LDrr_ld() { HL.lo = DE.hi; }
-    void LDrr_le() { HL.lo = DE.lo; }
-    void LDrr_lh() { HL.lo = HL.hi; }
+    void LDrr_ll() { cycles = 4; }
+    void LDrr_la() { HL.lo = AF.hi; cycles = 4; }
+    void LDrr_lb() { HL.lo = BC.hi; cycles = 4; }
+    void LDrr_lc() { HL.lo = BC.lo; cycles = 4; }
+    void LDrr_ld() { HL.lo = DE.hi; cycles = 4; }
+    void LDrr_le() { HL.lo = DE.lo; cycles = 4; }
+    void LDrr_lh() { HL.lo = HL.hi; cycles = 4; }
     void LDrr_lHL() { HL.lo = RAM::readAt(HL.val()); }
     void LDrr_HLb() { write(BC.hi, HL.val()); cycles = 8; }
     void LDrr_HLc() { write(BC.lo, HL.val()); cycles = 8; }
@@ -2453,7 +2460,7 @@ namespace CPU {
         decoder[0x2E] = "LDl_n";
         decoder[0x2F] = "CPL";
 
-        decoder[0x7F] = "op_not_imp";
+        decoder[0x7F] = "Ldrr_aa";
         decoder[0x78] = "LDrr_ab";
         decoder[0x79] = "LDrr_ac";
         decoder[0x7A] = "LDrr_ad";
@@ -2463,7 +2470,7 @@ namespace CPU {
         decoder[0x7E] = "LDrr_aHL";
         decoder[0xFA] = "LDrr_ann";
         decoder[0x3E] = "LDrr_a_hash";
-        decoder[0x40] = "op_not_imp";
+        decoder[0x40] = "LDrr_bb";
         decoder[0x41] = "LDrr_bc";
         decoder[0x42] = "LDrr_bd";
         decoder[0x43] = "LDrr_be";
@@ -2472,7 +2479,7 @@ namespace CPU {
         decoder[0x46] = "LDrr_bHL";
         decoder[0x47] = "LDrr_ba";
         decoder[0x48] = "LDrr_cb";
-        decoder[0x49] = "op_not_imp";
+        decoder[0x49] = "LDrr_cc";
         decoder[0x4A] = "LDrr_cd";
         decoder[0x4B] = "LDrr_ce";
         decoder[0x4C] = "LDrr_ch";
@@ -2481,7 +2488,7 @@ namespace CPU {
         decoder[0x4F] = "LDrr_ca";
         decoder[0x50] = "LDrr_db";
         decoder[0x51] = "LDrr_dc";
-        decoder[0x52] = "op_not_imp";
+        decoder[0x52] = "LDrr_dd";
         decoder[0x53] = "LDrr_de";
         decoder[0x54] = "LDrr_dh";
         decoder[0x55] = "LDrr_dl";
@@ -2490,7 +2497,7 @@ namespace CPU {
         decoder[0x58] = "LDrr_eb";
         decoder[0x59] = "LDrr_ec";
         decoder[0x5A] = "LDrr_ed";
-        decoder[0x5B] = "op_not_imp";
+        decoder[0x5B] = "LDrr_ee";
         decoder[0x5C] = "LDrr_eh";
         decoder[0x5D] = "LDrr_el";
         decoder[0x5E] = "LDrr_eHL";
@@ -2499,7 +2506,7 @@ namespace CPU {
         decoder[0x61] = "LDrr_hc";
         decoder[0x62] = "LDrr_hd";
         decoder[0x63] = "LDrr_he";
-        decoder[0x64] = "op_not_imp";
+        decoder[0x64] = "LDrr_hh";
         decoder[0x65] = "LDrr_hl";
         decoder[0x66] = "LDrr_hHL";
         decoder[0x67] = "LDrr_ha";
@@ -2508,7 +2515,7 @@ namespace CPU {
         decoder[0x6A] = "LDrr_ld";
         decoder[0x6B] = "LDrr_le";
         decoder[0x6C] = "LDrr_lh";
-        decoder[0x6D] = "op_not_imp";
+        decoder[0x6D] = "LDrr_ll";
         decoder[0x6E] = "LDrr_lHL";
         decoder[0x6F] = "LDrr_la";
         decoder[0x70] = "LDrr_HLb";
@@ -2656,8 +2663,7 @@ namespace CPU {
         op_codes[0x26] = LDh_n;
         op_codes[0x2E] = LDl_n;
         // Load  LD r1r2, load r2 into r1
-        op_codes[0x7F] = op_not_imp; // loads A into A which is pointless and we should get aw 
-        // although it does take 4 cpu cycles anyway, so maybe things break without it
+        op_codes[0x7F] = LDrr_aa;
         op_codes[0x78] = LDrr_ab;
         op_codes[0x79] = LDrr_ac;
         op_codes[0x7A] = LDrr_ad;
@@ -2668,8 +2674,8 @@ namespace CPU {
         op_codes[0x0A] = LDrr_aBC;
         op_codes[0x1A] = LDrr_aDE;
         op_codes[0xFA] = LDrr_ann;
-        op_codes[0x3E] = LDrr_a_hash; // what the fuck is this op shiposed  
-        op_codes[0x40] = op_not_imp; // 
+        op_codes[0x3E] = LDrr_a_hash;
+        op_codes[0x40] = LDrr_bb;
         op_codes[0x41] = LDrr_bc;
         op_codes[0x42] = LDrr_bd;
         op_codes[0x43] = LDrr_be;
@@ -2678,7 +2684,7 @@ namespace CPU {
         op_codes[0x46] = LDrr_bHL; // now i'm wondering where is the A into 
         op_codes[0x47] = LDrr_ba;
         op_codes[0x48] = LDrr_cb;
-        op_codes[0x49] = op_not_imp;
+        op_codes[0x49] = LDrr_cc;
         op_codes[0x4A] = LDrr_cd;
         op_codes[0x4B] = LDrr_ce;
         op_codes[0x4C] = LDrr_ch;
@@ -2687,7 +2693,7 @@ namespace CPU {
         op_codes[0x4F] = LDrr_ca;
         op_codes[0x50] = LDrr_db;
         op_codes[0x51] = LDrr_dc;
-        op_codes[0x52] = op_not_imp;
+        op_codes[0x52] = LDrr_dd;
         op_codes[0x53] = LDrr_de;
         op_codes[0x54] = LDrr_dh;
         op_codes[0x55] = LDrr_dl;
@@ -2696,7 +2702,7 @@ namespace CPU {
         op_codes[0x58] = LDrr_eb;
         op_codes[0x59] = LDrr_ec;
         op_codes[0x5A] = LDrr_ed;
-        op_codes[0x5B] = op_not_imp;
+        op_codes[0x5B] = LDrr_ee;
         op_codes[0x5C] = LDrr_eh;
         op_codes[0x5D] = LDrr_el;
         op_codes[0x5E] = LDrr_eHL;
@@ -2705,7 +2711,7 @@ namespace CPU {
         op_codes[0x61] = LDrr_hc;
         op_codes[0x62] = LDrr_hd;
         op_codes[0x63] = LDrr_he;
-        op_codes[0x64] = op_not_imp;
+        op_codes[0x64] = LDrr_hh;
         op_codes[0x65] = LDrr_hl;
         op_codes[0x66] = LDrr_hHL;
         op_codes[0x67] = LDrr_ha;
@@ -2714,7 +2720,7 @@ namespace CPU {
         op_codes[0x6A] = LDrr_ld;
         op_codes[0x6B] = LDrr_le;
         op_codes[0x6C] = LDrr_lh;
-        op_codes[0x6D] = op_not_imp;
+        op_codes[0x6D] = LDrr_ll;
         op_codes[0x6E] = LDrr_lHL;
         op_codes[0x6F] = LDrr_la;
         op_codes[0x70] = LDrr_HLb;
