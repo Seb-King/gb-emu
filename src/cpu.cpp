@@ -1341,7 +1341,9 @@ namespace CPU {
         u8 n1 = read();
         u8 n2 = read();
         u16 nn = n1 + (n2 << 8);
-        RAM::write(SP, nn);
+        RAM::write(SP & 0x00FF, nn);
+        RAM::write((SP & 0xFF00) >> 8, nn + 1);
+
 
         cycles = 20;
     } // Put SP at address nn
@@ -1650,15 +1652,15 @@ namespace CPU {
     }
     void SUB_HL() {
         u8 x = RAM::readAt(HL.val());
-        u8 loNib = AF.hi & 0x0F;
+        u8 oldValue = AF.hi;
+
         AF.hi -= x;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo | 0b01000000; // set N
-        if ((AF.hi & 0x0F) <= loNib) { AF.lo = AF.lo | 0b00100000; }
-        else { AF.lo &= 0b11011111; } // Set H if loer nibble does not underflo
-        if (AF.hi <= x) { AF.lo = AF.lo | 0b00010000; }
-        else { AF.lo &= 0b11101111; } // Set CY if whole thing does not underflo underflos
+
+        setZ(AF.hi == 0);
+        setN(true);
+        setH((oldValue & 0x0F) < (x & 0x0F));
+        setC(oldValue < x);
+
         cycles = 8;
     }
     void SUB_hash() {
@@ -3338,6 +3340,7 @@ namespace CPU {
         cb_codes[0xFD] = SET_7L;
         cb_codes[0xFE] = SET_7HL;
         cb_codes[0xFF] = SET_7A; 
+
         cb_codes[0x17] = RL_A;
         cb_codes[0x10] = RL_B;
         cb_codes[0x11] = RL_C;
@@ -3363,6 +3366,7 @@ namespace CPU {
         cb_codes[0x3B] = SRL_E;
         cb_codes[0x3C] = SRL_H;
         cb_codes[0x3D] = SRL_L;
+        cb_codes[0x3E] = SRL_HL;
         cb_codes[0x3F] = SRL_A;
 
         cb_codes[0x1F] = CB_RR_A;
