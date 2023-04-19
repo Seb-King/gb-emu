@@ -280,7 +280,6 @@ namespace LCD {
         }
     }
 
-    // we can probably merge this and draw_BGTile into the same function with another parameter in the arguments
     void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette) {
         u8 scrollY = RAM::readAt(0xFF42);
         u8 scrollX = RAM::readAt(0xFF43);
@@ -312,7 +311,9 @@ namespace LCD {
                     else if (colour == 3) {
                         colour = (palette & 0b11000000) >> 6;
                     }
-                    RENDER::setGameBoyPixel(x, y, colour);
+                    if (colour != 4) {
+                        RENDER::setGameBoyPixel(x, y, colour);
+                    }
                 }
             }
         }
@@ -342,9 +343,6 @@ namespace LCD {
             // Sprites are all stored in v-ram from 0x8000-0x8BFF
             // std::cout << "x: " << std::hex << unsigned(x) << " y: " << std::hex << unsigned(y) << std::endl;
             if (y > 0 && y < 160 && x > 0 && x < 168) {
-
-                // std::cout << "x: " << x << " y: " << y << std::endl;
-                // exit(0);
                 render_sprite(x, y, charcode, palette);
             }
             addr += 4;
@@ -420,22 +418,60 @@ namespace TIMER {
     }
 }
 
-bool handle_interrupts() {
-    if (CPU::IME == 0) {
-        return false;
-    }
+void joypadInterrupt() {
+    CPU::SP--;
+    CPU::write((CPU::PC & 0xFF00) >> 8, CPU::SP);
+    CPU::SP--;
+    CPU::write(CPU::PC & 0x00FF, CPU::SP);
+    CPU::PC = 0x0060;
 
+    RUPS::IF = RAM::readAt(0xFF0F);
+    RUPS::IF &= 0b11101111;
+    CPU::write(RUPS::IF, 0xFF0F);
+}
+
+bool handle_interrupts() {
     RUPS::IF = RAM::readAt(0xFF0F);
     RUPS::IE = RAM::readAt(0xFFFF);
 
     if ((RUPS::IF & 1) == 1 && (RUPS::IE & 1) == 1) {
+        if (CPU::halt) {
+            CPU::halt = false;
+            CPU::halt_bug = true;
+        }
+        
+        if (CPU::IME == 0) {
+            return false;
+        }
+
         LCD::v_blank();
-        CPU::halt = false;
+
     }
 
     if ((RUPS::IF & 0x04) == 0x04 && (RUPS::IE & 0x04) == 0x04) {
+        if (CPU::halt) {
+            CPU::halt = false;
+            CPU::halt_bug = true;
+        }
+
+        if (CPU::IME == 0) {
+            return false;
+        }
         TIMER::overflow();
-        CPU::halt = false;
+
+    }
+
+    if ((RUPS::IF & 0x10) == 0x10 && (RUPS::IE & 0x10) == 0x10) {
+        if (CPU::halt) {
+            CPU::halt = false;
+            CPU::halt_bug = true;
+        }
+
+        if (CPU::IME == 0) {
+            return false;
+        }
+
+        joypadInterrupt();
     }
     return true;
 }
@@ -452,8 +488,6 @@ void game_loop(std::string rom_path, RunOptions options) {
     
     if (options.LOG_STATE) {
         CPU::init_registers();
-        CPU::print_registers();
-        RAM::write(0xFF, 0xFF00);
     }
 
     u16 debug = 0;
@@ -483,8 +517,6 @@ void game_loop(std::string rom_path, RunOptions options) {
         }
 
         if (CPU::PC == 0x00FE) {
-            // println("--BOOT COMPLETE--\n");
-
             if (!options.NO_DISPLAY) {
                 LCD::draw_BG(); 
 
@@ -492,13 +524,22 @@ void game_loop(std::string rom_path, RunOptions options) {
             }
         }
 
-        if (!CPU::halt) {
-            debug = CPU::PC;
-            opcode = CPU::read();
-            CPU::runOPCode(opcode);
 
+
+        if (!CPU::halt) {
             if (options.LOG_STATE) {
                 CPU::print_registers();
+            }
+            
+            if (CPU::halt_bug) {
+                CPU::halt_bug = false;
+                u16 prevPC = CPU::PC;
+                opcode = CPU::read();
+                CPU::runOPCode(opcode);
+                CPU::PC = prevPC;
+            } else {
+                opcode = CPU::read();
+                CPU::runOPCode(opcode);
             }
         }
 
