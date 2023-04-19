@@ -372,8 +372,10 @@ namespace TIMER {
     void inc(int amount) {
         u8 t = RAM::readAt(0xFF05);
         TIMA = t + amount;
-        if (t + amount < t) {
-            CPU::write(RAM::readAt(0xFF06), 0xFF05);
+        if (TIMA < t) {
+            u8 mod = RAM::readAt(0xFF06);
+            TIMA = mod;
+            CPU::write(mod, 0xFF05);
             CPU::write(RAM::readAt(0xFF0F) | 0b00000100, 0xFF0F);
         } else {
             RAM::write(t + amount, 0xFF05);
@@ -382,7 +384,7 @@ namespace TIMER {
 
     void update() {
         u8 TAC = RAM::readAt(0xFF07);
-        if (CPU::IME != 0 && ((TAC & 0b00000100) == 0b00000100)) {
+        if (((TAC & 0b00000100) == 0b00000100)) {
             counter += CPU::cycles;
             int rate = 0;
             if ((TAC & 0b00000011) == 0) {
