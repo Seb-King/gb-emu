@@ -2,8 +2,8 @@
 
 RunOptions parseOptions(int argc, char* argv[]) {
 	RunOptions options;
-	options.LOG_STATE = true;
-	options.NO_DISPLAY = true;
+	options.LOG_STATE = false;
+	options.NO_DISPLAY = false;
 
 	std::string rom = "";
 
@@ -15,6 +15,8 @@ RunOptions parseOptions(int argc, char* argv[]) {
 			std::cout << "Options:\n";
 			std::cout << "  -h, --help        Display this help message\n";
 			std::cout << "  -r, --rom         Path to rom\n";
+			std::cout << "  -d, --no-display  Disables rendering\n";
+			std::cout << "  -l, --log         Log state of memory\n";
 			exit(0);
 		}
 
@@ -26,6 +28,14 @@ RunOptions parseOptions(int argc, char* argv[]) {
 				std::cerr << "Error: missing argument for " << arg << "\n";
 				exit(1);
 			}
+		}
+
+		if (arg == "-d" || arg == "--no-display") {
+			options.NO_DISPLAY = true;
+		}
+
+		if (arg == "-l" || arg == "--log") {
+			options.LOG_STATE = true;
 		}
 	}
 
