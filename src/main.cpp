@@ -4,6 +4,7 @@ RunOptions parseOptions(int argc, char* argv[]) {
 	RunOptions options;
 	options.LOG_STATE = false;
 	options.NO_DISPLAY = false;
+	options.SKIP_BOOT = false;
 
 	std::string rom = "";
 
@@ -17,6 +18,7 @@ RunOptions parseOptions(int argc, char* argv[]) {
 			std::cout << "  -r, --rom         Path to rom\n";
 			std::cout << "  -d, --no-display  Disables rendering\n";
 			std::cout << "  -l, --log         Log state of memory\n";
+			std::cout << "  -s, --skip-boot   Skip boot sequence\n";
 			exit(0);
 		}
 
@@ -36,6 +38,10 @@ RunOptions parseOptions(int argc, char* argv[]) {
 
 		if (arg == "-l" || arg == "--log") {
 			options.LOG_STATE = true;
+		}
+
+		if (arg == "-s" || arg == "--skip-boot") {
+			options.SKIP_BOOT = true;
 		}
 	}
 

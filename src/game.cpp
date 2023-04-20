@@ -15,7 +15,7 @@ void game_loop(RunOptions options) {
         LCD::draw_BG();
     }
     
-    if (options.LOG_STATE) {
+    if (options.SKIP_BOOT) {
         CPU::init_registers();
         RAM::write(0x04, 0xFF0F);
     }

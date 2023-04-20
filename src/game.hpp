@@ -12,6 +12,7 @@ enum Mode {
 struct RunOptions {
     bool NO_DISPLAY;
     bool LOG_STATE;
+    bool SKIP_BOOT;
     std::string romPath;
 };
 
