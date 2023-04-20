@@ -12,9 +12,10 @@ enum Mode {
 struct RunOptions {
     bool NO_DISPLAY;
     bool LOG_STATE;
+    std::string romPath;
 };
 
-void game_loop(std::string rom_path, RunOptions options);
+void game_loop(RunOptions options);
 
 namespace TIMER {
     void inc(int);

@@ -5,9 +5,9 @@
 #include "game.hpp"
 #include "interrupts.hpp"
 
-void game_loop(std::string rom_path, RunOptions options) {
+void game_loop(RunOptions options) {
     CPU::init();
-    RAM::init_ram(rom_path);
+    RAM::init_ram(options.romPath);
 
     if (!options.NO_DISPLAY) {
         RENDER::init();

@@ -1,6 +1,6 @@
 #include "game.hpp"
 
-int main(int argc, char* argv[]) {
+RunOptions parseOptions(int argc, char* argv[]) {
 	RunOptions options;
 	options.LOG_STATE = true;
 	options.NO_DISPLAY = true;
@@ -11,27 +11,27 @@ int main(int argc, char* argv[]) {
 		std::string arg = argv[i];
 
 		if (arg == "-h" || arg == "--help") {
-				std::cout << "Usage: " << argv[0] << " [options]\n";
-				std::cout << "Options:\n";
-				std::cout << "  -h, --help        Display this help message\n";
-				std::cout << "  -r, --rom         Path to rom\n";
-				return 0;
+			std::cout << "Usage: " << argv[0] << " [options]\n";
+			std::cout << "Options:\n";
+			std::cout << "  -h, --help        Display this help message\n";
+			std::cout << "  -r, --rom         Path to rom\n";
+			exit(0);
 		}
 
 		if (arg == "-r" || arg == "--rom") {
-				if (i + 1 < argc) {
-						rom = argv[i + 1];
-						i++;
-				} else {
-						std::cerr << "Error: missing argument for " << arg << "\n";
-						return 1;
-				}
+			if (i + 1 < argc) {	
+				options.romPath = argv[i + 1];
+				i++;
+			} else {
+				std::cerr << "Error: missing argument for " << arg << "\n";
+				exit(1);
+			}
 		}
 	}
 
-	if (rom == "") {
-		exit(1);
-	}
+	return options;
+}
 
-	game_loop(rom, options);
+int main(int argc, char* argv[]) {
+	game_loop(parseOptions(argc, argv));
 }
