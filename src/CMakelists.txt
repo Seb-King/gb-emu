@@ -27,6 +27,7 @@ add_executable(
   sprite_renderer.cpp
   utils.cpp
   text.cpp
+  interrupts.cpp
 )
 
 set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
