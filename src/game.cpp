@@ -16,8 +16,8 @@ void game_loop(RunOptions options) {
     }
     
     if (options.SKIP_BOOT) {
-        CPU::init_registers();
-        RAM::write(0x04, 0xFF0F);
+        CPU::init_registers_to_skip_boot();
+        // RAM::write(0x04, 0xFF0F);
     }
 
     u16 debug = 0;
