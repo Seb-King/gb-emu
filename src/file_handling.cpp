@@ -8,7 +8,7 @@
 std::vector<u8> readFile(std::string fileName) {
 	if(!std::filesystem::exists(fileName)) {
 		std::cout << "File not found!" << std::endl;
-		throw std::runtime_error("File not found!");
+		throw std::runtime_error("File not found! " + fileName);
 	}
 
 	
