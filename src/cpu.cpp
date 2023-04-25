@@ -40,6 +40,7 @@ namespace CPU {
     std::vector<void (*)()> cb_codes(256, cb_not_imp);
 
     bool halt = false;
+    bool halt_bug = false;
     u8 IME = 0;
     u16 PC = 0; //Program Counter: holds the address of the current instruction being fetched from memory
     // Needs to be incremented after reading any opcode (note that opcodes can change the counter)
@@ -67,7 +68,7 @@ namespace CPU {
         init_decoder();
     }
 
-    void init_registers() {
+    void init_registers_to_skip_boot() {
         PC = 0x0100;
         SP = 0xFFFE;
         AF.set(0x01B0);
@@ -170,6 +171,7 @@ namespace CPU {
     }
 
     void STAT() {
+        CPU::SP--;
         write(CPU::PC & 0x0F, CPU::SP);
         CPU::SP--;
         write((CPU::PC & 0xF0) >> 8, CPU::SP);

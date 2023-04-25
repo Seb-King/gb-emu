@@ -16,10 +16,6 @@ class reg {
         void set(u16);
 };
 
-struct registers {
-
-};
-
 extern int flag;
 
 extern u16 LCDC;
@@ -36,12 +32,13 @@ namespace CPU {
     extern u16 SP;
     extern u8 IME;
     extern bool halt;
+    extern bool halt_bug;
     extern int cycles;
     extern int timing;
     extern int count;
 
     void runOPCode(u8 op_code);
-    void init_registers();
+    void init_registers_to_skip_boot();
     void print_registers();
 
     void write(u8 val, u16 addr);
