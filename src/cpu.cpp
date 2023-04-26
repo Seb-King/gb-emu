@@ -202,6 +202,21 @@ namespace CPU {
         cb_codes[op_code]();
     }
 
+    void executeNextOperation() {
+        if (!CPU::halt) {
+            if (halt_bug) {
+                halt_bug = false;
+                u16 prevPC = PC;
+                u8 opcode = read();
+                runOPCode(opcode);
+                PC = prevPC;
+            } else {
+                u8 opcode = read();
+                runOPCode(opcode);
+            }
+        }
+    }
+
     void runOPCode(u8 op_code) {
         op_codes[op_code]();
 

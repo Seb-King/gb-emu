@@ -37,6 +37,7 @@ namespace CPU {
     extern int timing;
     extern int count;
 
+    void executeNextOperation();
     void runOPCode(u8 op_code);
     void init_registers_to_skip_boot();
     void print_registers();

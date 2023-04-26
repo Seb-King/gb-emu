@@ -47,29 +47,11 @@ void game_loop(RunOptions options) {
             }
         }
 
-        if (CPU::PC == 0x00FE) {
-            if (!options.NO_DISPLAY) {
-                LCD::draw_BG(); 
-                RENDER::drawFrame();
-            }
+        if (options.LOG_STATE) {
+            CPU::print_registers();
         }
 
-        if (!CPU::halt) {
-            if (options.LOG_STATE) {
-                CPU::print_registers();
-            }
-            
-            if (CPU::halt_bug) {
-                CPU::halt_bug = false;
-                u16 prevPC = CPU::PC;
-                opcode = CPU::read();
-                CPU::runOPCode(opcode);
-                CPU::PC = prevPC;
-            } else {
-                opcode = CPU::read();
-                CPU::runOPCode(opcode);
-            }
-        }
+        CPU::executeNextOperation();
 
         if (!options.NO_DISPLAY) {
             LCD::update();
