@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include "render.hpp"
-#include "text.hpp"
 
 namespace RENDER {
 	const int GB_WIDTH = 160;
@@ -26,7 +25,7 @@ namespace RENDER {
 
 	SDL_Renderer* debugRenderer = NULL;
 
-	Text text;
+	DisplayMode display_mode = GB;
 
 	void setPix(SDL_Surface* surface, int x, int y, int colour) {
 		Uint32 alph = 0xFF000000, r = 0x00, g = 0x00, b = 0x00, shade;
@@ -81,26 +80,33 @@ namespace RENDER {
 		SDL_FillRect(surface, &GB_rect, Color);
 	}
 
+	void setDisplay(DisplayMode mode) {
+		if (mode == SPRITE) {
+			SDL_SetWindowSize(Window, SPRITE_WIDTH * RENDER_SCALE, SPRITE_HEIGHT * RENDER_SCALE);
+			display_mode = SPRITE;
+		} else if (mode == GB) {
+			SDL_SetWindowSize(Window, GB_WIDTH * RENDER_SCALE, GB_HEIGHT * RENDER_SCALE);
+			display_mode = GB;
+		} else if (mode == MEMORY) {
+			SDL_SetWindowSize(Window, DEBUG_WIDTH, DEBUG_HEIGHT);
+			display_mode = MEMORY;
+		}
+
+		WindowSurface = SDL_GetWindowSurface(Window);
+	}
+
 	bool init() {
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 			std::cout << "Could not initialise SDL\n" << SDL_GetError();
 			return false;
 		} 
 
-		Window = SDL_CreateWindow("gb emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (SCREEN_WIDTH * RENDER_SCALE) + DEBUG_WIDTH, SCREEN_HEIGHT * RENDER_SCALE, SDL_WINDOW_RESIZABLE);
+		Window = SDL_CreateWindow("gb emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (GB_WIDTH * RENDER_SCALE), GB_HEIGHT * RENDER_SCALE, SDL_WINDOW_RESIZABLE);
 
 		if (Window == NULL) {
 			std::cout << "Window could not be created" << SDL_GetError();
 			return false;
 		}
-
-		if (TTF_Init() == -1) {
-			printf("Could not initialise SDL_TTF");
-			return false;
-		}
-
-		loadFont();
-
 
 		WindowSurface = SDL_GetWindowSurface(Window);
 		GbSurface = SDL_CreateRGBSurface(0, GB_WIDTH * RENDER_SCALE, GB_HEIGHT * RENDER_SCALE, 32, 0, 0, 0, 0);
@@ -112,35 +118,34 @@ namespace RENDER {
 		SDL_FillRect(WindowSurface, NULL, SDL_MapRGB(WindowSurface->format, 0xA0, 0xBF, 0xA0));
 		SDL_UpdateWindowSurface(Window);
 
-		loadFont();
-
 		return true;
 	}
 
 	void drawFrame() {
-		SDL_Rect GB_rect = {};
-		GB_rect.x = 0;
-		GB_rect.y = 0;
-		GB_rect.w = GB_WIDTH * RENDER_SCALE;
-		GB_rect.h = GB_HEIGHT * RENDER_SCALE;
+		if (display_mode == GB) {
+			SDL_Rect GB_rect = {};
+			GB_rect.x = 0;
+			GB_rect.y = 0;
+			GB_rect.w = GB_WIDTH * RENDER_SCALE;
+			GB_rect.h = GB_HEIGHT * RENDER_SCALE;
+			SDL_BlitSurface(GbSurface, NULL, WindowSurface, &GB_rect);
+		} else if (display_mode == SPRITE) {
+			SDL_Rect SpriteRect = {};
+			SpriteRect.x = 0;
+			SpriteRect.y = 0;
+			SpriteRect.w = SPRITE_WIDTH * RENDER_SCALE;
+			SpriteRect.h = SPRITE_HEIGHT * RENDER_SCALE;
+			SDL_BlitSurface(SpriteSurface, NULL, WindowSurface, &SpriteRect);
+		} else if (display_mode == MEMORY) {
+			SDL_Rect DebugRect = {};
+			DebugRect.x = 0;
+			DebugRect.y = 0;
+			DebugRect.w = DEBUG_WIDTH;
+			DebugRect.h = DEBUG_HEIGHT;
+			SDL_BlitSurface(DebugSurface, NULL, WindowSurface, &DebugRect);
+			SDL_RenderPresent(debugRenderer);
 
-		SDL_Rect SpriteRect = {};
-		SpriteRect.x = GB_WIDTH * RENDER_SCALE;
-		SpriteRect.y = 0;
-		SpriteRect.w = SPRITE_WIDTH * RENDER_SCALE;
-		SpriteRect.h = SPRITE_HEIGHT * RENDER_SCALE;
-
-		SDL_Rect DebugRect = {};
-		DebugRect.x = GB_WIDTH * RENDER_SCALE + SPRITE_WIDTH * RENDER_SCALE;
-		DebugRect.y = 0;
-		DebugRect.w = DEBUG_WIDTH;
-		DebugRect.h = DEBUG_HEIGHT;
-
-		SDL_RenderPresent(debugRenderer);
-
-		SDL_BlitSurface(DebugSurface, NULL, WindowSurface, &DebugRect);
-		SDL_BlitSurface(SpriteSurface, NULL, WindowSurface, &SpriteRect);
-		SDL_BlitSurface(GbSurface, NULL, WindowSurface, &GB_rect);
+		}
 		SDL_UpdateWindowSurface(Window);
 	}
 
@@ -149,21 +154,6 @@ namespace RENDER {
 	}
 
 	void drawDebugText(std::string textureText, int x, int y) {
-		Text foo;
-
-		SDL_Color black;
-		black.r = 255;
-		black.g = 255;
-		black.b = 255;
-		black.a = 255;
-
-		if (!foo.loadFromRenderedText(textureText, black, debugRenderer)) {
-			printf("Could not load text");
-		}
-
-		foo.render(x, y, debugRenderer);
-
-		foo.free();
 	}
 
 	void delay(int time) {
@@ -171,17 +161,16 @@ namespace RENDER {
 	}
 
 	void close() {
-		closeFont();
 
-	    SDL_FreeSurface(WindowSurface);
+		SDL_FreeSurface(WindowSurface);
 		WindowSurface = NULL;
 	    
-	    SDL_DestroyWindow(Window);
-	    Window = NULL;
+		SDL_DestroyWindow(Window);
+		Window = NULL;
 
 		SDL_DestroyRenderer(debugRenderer);
 		debugRenderer = NULL;
 	    
-	    SDL_Quit();
+		SDL_Quit();
 	}	
 }

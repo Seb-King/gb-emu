@@ -9,3 +9,15 @@ CppProperties.json
 /x64
 /.vs
 /packages
+
+/build/
+/roms/
+/.vscode/
+
+/logs/
+
+/.idea/
+
+*.pdb
+
+.DS_Store

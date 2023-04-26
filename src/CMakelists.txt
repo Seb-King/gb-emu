@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 3.25)
+
+if (WIN32)
+  set(SDL2_DIR C:/Users/sebas/cpp-libs/SDL2-2.24.2/cmake)
+  set(SDL2_ttf_DIR C:/Users/sebas/cpp-libs/SDL2_ttf-2.20.1/cmake)
+endif (WIN32)
+
+project(emulator)
+
+find_package(SDL2 REQUIRED)
+# find_package(SDL2_ttf REQUIRED)
+
+# add_link_options("LINKER:-lSDL2_ttf")
+
+include_directories(emulator ${SDL2_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIRS})
+
+add_executable(
+  emulator 
+  main.cpp 
+  cpu.cpp
+  debug_display.cpp
+  file_handling.cpp
+  game.cpp
+  input.cpp
+  ram.cpp
+  render.cpp
+  sprite_renderer.cpp
+  utils.cpp
+  interrupts.cpp
+)
+
+set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
+
+target_link_libraries(emulator ${SDL2_LIBRARIES} ${SDL2_ttf_LIBRARIES})
