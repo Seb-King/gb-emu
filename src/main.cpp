@@ -23,10 +23,11 @@ RunOptions parseOptions(int argc, char* argv[]) {
 		}
 
 		if (arg == "-r" || arg == "--rom") {
-			if (i + 1 < argc) {	
+			if (i + 1 < argc) {
 				options.romPath = argv[i + 1];
 				i++;
-			} else {
+			}
+			else {
 				std::cerr << "Error: missing argument for " << arg << "\n";
 				exit(1);
 			}

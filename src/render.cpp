@@ -35,24 +35,29 @@ namespace RENDER {
 			r = 0xFF;
 			g = r << 8;
 			b = r << 16;
-		} else if (colour == 1) {
+		}
+		else if (colour == 1) {
 			alph = 0xFF000000;
 			r = 0xA0;
 			g = r << 8;
 			b = r << 16;
-		} else if (colour == 2) {
+		}
+		else if (colour == 2) {
 			alph = 0xFF000000;
 			r = 0x33;
 			g = r << 8;
 			b = r << 16;
-		} else if (colour == 3) {
+		}
+		else if (colour == 3) {
 			alph = 0xFF000000;
 			r = 0x00;
 			g = r << 8;
 			b = r << 16;
-		} else if (colour == 4) {
+		}
+		else if (colour == 4) {
 			alph = 0;
-		} else {
+		}
+		else {
 			std::cout << "Colour code is not valid\n";
 			exit(0);
 		}
@@ -84,10 +89,12 @@ namespace RENDER {
 		if (mode == SPRITE) {
 			SDL_SetWindowSize(Window, SPRITE_WIDTH * RENDER_SCALE, SPRITE_HEIGHT * RENDER_SCALE);
 			display_mode = SPRITE;
-		} else if (mode == GB) {
+		}
+		else if (mode == GB) {
 			SDL_SetWindowSize(Window, GB_WIDTH * RENDER_SCALE, GB_HEIGHT * RENDER_SCALE);
 			display_mode = GB;
-		} else if (mode == MEMORY) {
+		}
+		else if (mode == MEMORY) {
 			SDL_SetWindowSize(Window, DEBUG_WIDTH, DEBUG_HEIGHT);
 			display_mode = MEMORY;
 		}
@@ -99,7 +106,7 @@ namespace RENDER {
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 			std::cout << "Could not initialise SDL\n" << SDL_GetError();
 			return false;
-		} 
+		}
 
 		Window = SDL_CreateWindow("gb emu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, (GB_WIDTH * RENDER_SCALE), GB_HEIGHT * RENDER_SCALE, SDL_WINDOW_RESIZABLE);
 
@@ -129,14 +136,16 @@ namespace RENDER {
 			GB_rect.w = GB_WIDTH * RENDER_SCALE;
 			GB_rect.h = GB_HEIGHT * RENDER_SCALE;
 			SDL_BlitSurface(GbSurface, NULL, WindowSurface, &GB_rect);
-		} else if (display_mode == SPRITE) {
+		}
+		else if (display_mode == SPRITE) {
 			SDL_Rect SpriteRect = {};
 			SpriteRect.x = 0;
 			SpriteRect.y = 0;
 			SpriteRect.w = SPRITE_WIDTH * RENDER_SCALE;
 			SpriteRect.h = SPRITE_HEIGHT * RENDER_SCALE;
 			SDL_BlitSurface(SpriteSurface, NULL, WindowSurface, &SpriteRect);
-		} else if (display_mode == MEMORY) {
+		}
+		else if (display_mode == MEMORY) {
 			SDL_Rect DebugRect = {};
 			DebugRect.x = 0;
 			DebugRect.y = 0;
@@ -153,8 +162,7 @@ namespace RENDER {
 		SDL_RenderClear(debugRenderer);
 	}
 
-	void drawDebugText(std::string textureText, int x, int y) {
-	}
+	void drawDebugText(std::string textureText, int x, int y) {}
 
 	void delay(int time) {
 		SDL_Delay(time);
@@ -164,13 +172,13 @@ namespace RENDER {
 
 		SDL_FreeSurface(WindowSurface);
 		WindowSurface = NULL;
-	    
+
 		SDL_DestroyWindow(Window);
 		Window = NULL;
 
 		SDL_DestroyRenderer(debugRenderer);
 		debugRenderer = NULL;
-	    
+
 		SDL_Quit();
-	}	
+	}
 }

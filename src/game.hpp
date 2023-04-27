@@ -22,7 +22,7 @@ namespace TIMER {
     void inc(int);
     void update();
     void overflow();
-} 
+}
 
 namespace LCD {
     void draw_sprites();

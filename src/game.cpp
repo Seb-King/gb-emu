@@ -14,9 +14,11 @@ void handle_inputs() {
         INPUTS::switch_display = false;
         if (RENDER::display_mode == GB) {
             RENDER::setDisplay(SPRITE);;
-        } else if (RENDER::display_mode == SPRITE) {
+        }
+        else if (RENDER::display_mode == SPRITE) {
             RENDER::setDisplay(MEMORY);
-        } else if (RENDER::display_mode == MEMORY) {
+        }
+        else if (RENDER::display_mode == MEMORY) {
             RENDER::setDisplay(GB);
         }
     }
@@ -31,7 +33,7 @@ void game_loop(RunOptions options) {
         RENDER::drawFrame();
         LCD::draw_BG();
     }
-    
+
     if (options.SKIP_BOOT) {
         CPU::init_registers_to_skip_boot();
         // RAM::write(0x04, 0xFF0F);
@@ -59,7 +61,7 @@ void game_loop(RunOptions options) {
 
         if (!options.NO_DISPLAY) {
             LCD::update();
-        }  
+        }
 
         TIMER::update();
 

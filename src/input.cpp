@@ -17,7 +17,8 @@ namespace INPUTS {
 			if (e.type == SDL_KEYDOWN) {
 				if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
 					quit = true;
-				} else if (e.key.keysym.scancode == SDL_SCANCODE_TAB) {
+				}
+				else if (e.key.keysym.scancode == SDL_SCANCODE_TAB) {
 					switch_display = true;
 				}
 			}

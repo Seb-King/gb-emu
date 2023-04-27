@@ -6,7 +6,6 @@
 #include "cpu.hpp"
 #include "ram.hpp"
 
-
 int flag = 0;
 const int clockrate = 4194304;
 
@@ -134,7 +133,7 @@ namespace CPU {
         std::cout << " PC:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(PC);
 
         std::cout << " PCMEM:";
-        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC)); 
+        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC));
         std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 1));
         std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 2));
         std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 3));
@@ -210,7 +209,8 @@ namespace CPU {
                 u8 opcode = read();
                 runOPCode(opcode);
                 PC = prevPC;
-            } else {
+            }
+            else {
                 u8 opcode = read();
                 runOPCode(opcode);
             }
@@ -221,8 +221,7 @@ namespace CPU {
         op_codes[op_code]();
 
         if (interrupt_mode > 0) {
-            if (interrupt_mode == 1)
-            {
+            if (interrupt_mode == 1) {
                 IME = 0;
                 interrupt_mode = 0;
             }
@@ -262,7 +261,7 @@ namespace CPU {
         setH(false);
     }
 
-     void SRL_C() {
+    void SRL_C() {
         u8 oldValue = BC.lo;
         u8 newValue = oldValue >> 1;
         BC.lo = newValue;
@@ -488,8 +487,7 @@ namespace CPU {
 
     void RET_NZ() {
         cycles = 8;
-        if (!getZ())
-        {
+        if (!getZ()) {
             cycles = 20;
             u8 n1 = RAM::readAt(SP);
             ++SP;
@@ -551,13 +549,13 @@ namespace CPU {
     void CB() {
         u8 opcode = read();
         switch (opcode) {
-        // default: std::cout << "CB opcode not implemented: " << std::hex << unsigned(opcode) << std::endl;
+            // default: std::cout << "CB opcode not implemented: " << std::hex << unsigned(opcode) << std::endl;
         }
     }
 
     void BIT(u8 bit, u8 reg_) {
         u8 test = reg_ & bit;
-        
+
         setZ(test != bit);
         setN(false);
         setH(true);
@@ -640,7 +638,8 @@ namespace CPU {
     u8 AssignReg(u8 mask, u8 reg_, bool val) {
         if (val) {
             return reg_ | mask;
-        } else {
+        }
+        else {
             return reg_ & ~mask;
         }
     }
@@ -914,7 +913,7 @@ namespace CPU {
         return newVal;
     }
 
-     void RL_A() {
+    void RL_A() {
         AF.hi = RL_generic(AF.hi);
         cycles = 8;
     }
@@ -964,31 +963,27 @@ namespace CPU {
 
     // if NZ (if Z is zero) then add n to current address and jump to that address
     // we have to treat the next byte as a signed variable
-    void JR_NZ()
-    {
-        if (!getZ())
-        {
+    void JR_NZ() {
+        if (!getZ()) {
             s8 b = read();
             PC += b;
             cycles = 12;
 
         }
-        else { 
-            ++PC; 
+        else {
+            ++PC;
             cycles = 8;
         }
     }
 
-    void JR_Z()
-    {
-        if ((AF.lo >> 7) == 1)
-        {
+    void JR_Z() {
+        if ((AF.lo >> 7) == 1) {
             s8 b = read();
             PC += b;
             cycles = 12;
         }
-        else { 
-            ++PC; 
+        else {
+            ++PC;
             cycles = 8;
         }
     }
@@ -999,8 +994,8 @@ namespace CPU {
             PC += b;
             cycles = 12;
         }
-        else { 
-            ++PC; 
+        else {
+            ++PC;
             cycles = 8;
         }
     }
@@ -1011,14 +1006,13 @@ namespace CPU {
             PC += b;
             cycles = 12;
         }
-        else { 
-            ++PC; 
+        else {
+            ++PC;
             cycles = 8;
         }
     }
 
-    void JR_n()
-    {
+    void JR_n() {
         s8 jump = read();
         PC += jump;
         cycles = 12;
@@ -1082,47 +1076,39 @@ namespace CPU {
     }
 
     // load C into n ()
-    void LDc_n()
-    {
+    void LDc_n() {
         u8 n = read();
         BC.lo = n;
     }
 
-    void LDb_n()
-    {
+    void LDb_n() {
         u8 n = read();
         BC.hi = n;
     }
-    void LDd_n()
-    {
+    void LDd_n() {
         u8 n = read();
         DE.hi = n;
     }
-    void LDe_n()
-    {
+    void LDe_n() {
         u8 n = read();
         DE.lo = n;
     }
-    void LDh_n()
-    {
+    void LDh_n() {
         u8 n = read();
         HL.hi = n;
     }
 
-    void LDl_n()
-    {
+    void LDl_n() {
         u8 n = read();
         HL.lo = n;
     }
 
-    void  LDrr_a_hash()
-    {
+    void  LDrr_a_hash() {
         u8 byte = read();
         AF.hi = byte;
     }
 
-    void LD_HL_a()
-    {
+    void LD_HL_a() {
         write(AF.hi, HL.val());
     }
     void LD_BC_a() { write(AF.hi, BC.val()); }
@@ -1130,8 +1116,7 @@ namespace CPU {
 
     void LDad_n_a() { u8 add = read(); u16 addr = add + 0xFF00; write(AF.hi, addr); cycles = 12; }
 
-    void CALL_nn()
-    {
+    void CALL_nn() {
         u8 n1 = read();
         u8 n2 = read();
 
@@ -1215,23 +1200,20 @@ namespace CPU {
             cycles = 12;
         }
     }
-    void LDI_HLa()
-    {
+    void LDI_HLa() {
         write(AF.hi, HL.val());
         u16 x = HL.val() + 1;
         HL.set(x);
     }
 
-    void LD_nn_a()
-    {
+    void LD_nn_a() {
         u8 n1 = read();
         u8 n2 = read();
         u16 addr = n1 + (n2 << 8);
         write(AF.hi, addr);
     }
 
-    void LDH_a_ffn()
-    {
+    void LDH_a_ffn() {
         u8 n = read();
         AF.hi = RAM::readAt(0xFF00 + n);
         cycles = 12;
@@ -1321,8 +1303,7 @@ namespace CPU {
     void LDHAn() { u8 n = read(); RAM::readAt(0xFF00 + n); }
     //-- 16-Bit shit --//
     // going to need to read 16 bit values little endian style (I think)
-    void LD_nn_BC()
-    {
+    void LD_nn_BC() {
         u8 n1 = read();
         u8 n2 = read();
         u16 nn = n1 + (n2 << 8);
@@ -1337,9 +1318,9 @@ namespace CPU {
     void LD_SPHL() { SP = HL.val(); }
 
     // put SP + n effective address into HL
-    void LDHL_SPn() { 
-        s8 n = read(); 
-        HL.set(SP + n); 
+    void LDHL_SPn() {
+        s8 n = read();
+        HL.set(SP + n);
         u8 point = SP + n;
 
         setZ(false);
@@ -1347,10 +1328,9 @@ namespace CPU {
         setC((point & 0xFF) < (SP & 0xFF));
         setH((SP & 0x0F) + (n & 0x0F) > 0x0F);
 
-        cycles = 12; 
-        }
-    void LD_nnSP()
-    {
+        cycles = 12;
+    }
+    void LD_nnSP() {
         u8 n1 = read();
         u8 n2 = read();
         u16 nn = n1 + (n2 << 8);
@@ -1364,25 +1344,25 @@ namespace CPU {
     // Push register pair nn onto stack, decrement SP twice
     // TODO: figure out whether to set the value first or decrement SP first 
     // TODO: check that the endianess is correct (does it even matter??)
-    void PUSH_AF() { 
-        SP--; 
-        write(AF.hi, SP); 
-        SP--; 
-        write(AF.lo & 0xF0, SP); 
-        cycles = 16; 
+    void PUSH_AF() {
+        SP--;
+        write(AF.hi, SP);
+        SP--;
+        write(AF.lo & 0xF0, SP);
+        cycles = 16;
     }
     void PUSH_BC() { SP--; write(BC.hi, SP); SP--; write(BC.lo, SP); cycles = 16; }
     void PUSH_DE() { SP--; write(DE.hi, SP); SP--; write(DE.lo, SP); cycles = 16; }
     void PUSH_HL() { SP--; write(HL.hi, SP); SP--; write(HL.lo, SP); cycles = 16; }
 
     // Pop two bytes off stack into register pair, increment SP twice
-    void POP_AF() { 
+    void POP_AF() {
         u8 n = RAM::readAt(SP);
         AF.lo = n & 0xF0;
-        ++SP; 
-        u8 m = RAM::readAt(SP); 
-        AF.hi = m; 
-        ++SP; 
+        ++SP;
+        u8 m = RAM::readAt(SP);
+        AF.hi = m;
+        ++SP;
 
         cycles = 12;
     }
@@ -1392,8 +1372,7 @@ namespace CPU {
 
 
     // ADD_xy add y to x and set flags
-    void ADD_aa()
-    {
+    void ADD_aa() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += AF.hi;
@@ -1404,8 +1383,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_ab()
-    {
+    void ADD_ab() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += BC.hi;
@@ -1416,8 +1394,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_ac()
-    {
+    void ADD_ac() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += BC.lo;
@@ -1428,8 +1405,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_ad()
-    {
+    void ADD_ad() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += DE.hi;
@@ -1440,8 +1416,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_ae()
-    {
+    void ADD_ae() {
         u8 x = AF.hi;
         u8 loNib = DE.lo & 0x0F;
         AF.hi += DE.lo;
@@ -1452,8 +1427,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_ah()
-    {
+    void ADD_ah() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += HL.hi;
@@ -1464,8 +1438,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_al()
-    {
+    void ADD_al() {
         u8 x = AF.hi;
         u8 loNib = HL.lo & 0x0F;
         AF.hi += HL.lo;
@@ -1476,8 +1449,7 @@ namespace CPU {
         setC(AF.hi < x);
         cycles = 4;
     }
-    void ADD_aH()
-    {
+    void ADD_aH() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += RAM::readAt(HL.val());
@@ -1530,50 +1502,42 @@ namespace CPU {
         cycles = 8;
     }
 
-    void ADC_aa()
-    {
+    void ADC_aa() {
         ADC_generic(AF.hi);
         cycles = 4;
 
     }
-    void ADC_ab()
-    {
+    void ADC_ab() {
         ADC_generic(BC.hi);
         cycles = 4;
     }
 
-    void ADC_ac()
-    {
+    void ADC_ac() {
         ADC_generic(BC.lo);
         cycles = 4;
 
     }
-    void ADC_ad()
-    {
-       ADC_generic(DE.hi);
+    void ADC_ad() {
+        ADC_generic(DE.hi);
         cycles = 4;
 
     }
-    void ADC_ae()
-    {
+    void ADC_ae() {
         ADC_generic(DE.lo);
         cycles = 4;
 
     }
-    void ADC_ah()
-    {
+    void ADC_ah() {
         ADC_generic(HL.hi);
         cycles = 4;
 
     }
-    void ADC_al()
-    {
+    void ADC_al() {
         ADC_generic(HL.lo);
         cycles = 4;
 
     }
-    void ADC_aHL()
-    {
+    void ADC_aHL() {
         u8 readValue = RAM::readAt(HL.val());
         ADC_generic(readValue);
 
@@ -1602,8 +1566,7 @@ namespace CPU {
 
         cycles = 4;
     }
-    void SUB_c()
-    {
+    void SUB_c() {
         u8 x = BC.lo;
         u8 oldValue = AF.hi;
         AF.hi -= x;
@@ -1714,38 +1677,31 @@ namespace CPU {
         SBC_generic(AF.hi);
         cycles = 4;
     }
-    void SBC_b()
-    {
+    void SBC_b() {
         SBC_generic(BC.hi);
         cycles = 4;
     }
-    void SBC_c()
-    {
+    void SBC_c() {
         SBC_generic(BC.lo);
         cycles = 4;
     }
-    void SBC_d()
-    {
+    void SBC_d() {
         SBC_generic(DE.hi);
         cycles = 4;
     }
-    void SBC_e()
-    {
+    void SBC_e() {
         SBC_generic(DE.lo);
         cycles = 4;
     }
-    void SBC_h()
-    {
+    void SBC_h() {
         SBC_generic(HL.hi);
         cycles = 4;
     }
-    void SBC_l()
-    {
+    void SBC_l() {
         SBC_generic(HL.lo);
         cycles = 4;
     }
-    void SBC_HL()
-    {
+    void SBC_HL() {
         SBC_generic(RAM::readAt(HL.val()));
         cycles = 8;
     }
@@ -1761,7 +1717,7 @@ namespace CPU {
             carry = true;
         }
 
-        if ((((oldValue) & 0x0F)  - (getC() & 0x0F) - (readValue & 0x0F) & 0x10) == 0x10) {
+        if ((((oldValue) & 0x0F) - (getC() & 0x0F) - (readValue & 0x0F) & 0x10) == 0x10) {
             halfCarry = true;
         }
 
@@ -1784,64 +1740,78 @@ namespace CPU {
     void AND_HL() { AF.hi = AF.hi & RAM::readAt(HL.val()); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 8; }
     void AND_hash() { AF.hi = AF.hi & read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 8; }
 
-    void OR_a() { AF.hi = AF.hi | AF.hi;  
-        setN(false);
-        setH(false);
-        setC(false); 
-        setZ(AF.hi == 0);
-        cycles = 4; }
-    void OR_b() { AF.hi = AF.hi | BC.hi;  
-        setN(false);
-        setH(false);
-        setC(false); 
-        setZ(AF.hi == 0);
-        cycles = 4; }
-    void OR_c() { AF.hi = AF.hi | BC.lo;  
-        setN(false);
-        setH(false);
-        setC(false); 
-        setZ(AF.hi == 0);
-        cycles = 4; }
-    void OR_d() { AF.hi = AF.hi | DE.hi;  
+    void OR_a() {
+        AF.hi = AF.hi | AF.hi;
         setN(false);
         setH(false);
         setC(false);
         setZ(AF.hi == 0);
-         cycles = 4; }
-    void OR_e() { AF.hi = AF.hi | DE.lo;  
-        setN(false);
-        setH(false);
-        setC(false); 
-        setZ(AF.hi == 0);
-        cycles = 4; }
-    void OR_h() { AF.hi = AF.hi | HL.hi;  
-        setN(false);
-        setH(false);
-        setC(false); 
-        setZ(AF.hi == 0);
-        cycles = 4; }
-    void OR_l() { AF.hi = AF.hi | HL.lo;  
-        setN(false);
-        setH(false);
-        setC(false); 
-        setZ(AF.hi == 0);
-        cycles = 4; }
-    void OR_HL() { 
-        AF.hi = AF.hi | RAM::readAt(HL.val()); 
+        cycles = 4;
+    }
+    void OR_b() {
+        AF.hi = AF.hi | BC.hi;
         setN(false);
         setH(false);
         setC(false);
         setZ(AF.hi == 0);
-        cycles = 8; 
-        }
-    void OR_hash() { 
-        AF.hi = AF.hi | read(); 
+        cycles = 4;
+    }
+    void OR_c() {
+        AF.hi = AF.hi | BC.lo;
         setN(false);
         setH(false);
         setC(false);
-        setZ(AF.hi == 0); 
-        cycles = 8; 
-        }
+        setZ(AF.hi == 0);
+        cycles = 4;
+    }
+    void OR_d() {
+        AF.hi = AF.hi | DE.hi;
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 4;
+    }
+    void OR_e() {
+        AF.hi = AF.hi | DE.lo;
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 4;
+    }
+    void OR_h() {
+        AF.hi = AF.hi | HL.hi;
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 4;
+    }
+    void OR_l() {
+        AF.hi = AF.hi | HL.lo;
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 4;
+    }
+    void OR_HL() {
+        AF.hi = AF.hi | RAM::readAt(HL.val());
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 8;
+    }
+    void OR_hash() {
+        AF.hi = AF.hi | read();
+        setN(false);
+        setH(false);
+        setC(false);
+        setZ(AF.hi == 0);
+        cycles = 8;
+    }
 
 
     void XOR_a() { AF.hi ^= AF.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
@@ -1854,16 +1824,14 @@ namespace CPU {
     void XOR_HL() { AF.hi ^= (RAM::readAt(HL.val())); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 8; }
     void XOR_hash() { AF.hi ^= read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 8; }
 
-    void CP_a()
-    {
+    void CP_a() {
         setZ(true);
         setN(true);
         setH(false);
         setC(false);
         cycles = 4;
     }
-    void CP_b()
-    {
+    void CP_b() {
         u8 x = BC.hi;
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1875,8 +1843,7 @@ namespace CPU {
 
         cycles = 4;
     }
-    void CP_c()
-    {
+    void CP_c() {
         u8 x = BC.lo;
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1888,8 +1855,7 @@ namespace CPU {
 
         cycles = 4;
     }
-    void CP_d()
-    {
+    void CP_d() {
         u8 x = DE.hi;
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1902,8 +1868,7 @@ namespace CPU {
         cycles = 4;
     }
 
-    void CP_e()
-    {
+    void CP_e() {
         u8 x = DE.lo;
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1915,8 +1880,7 @@ namespace CPU {
 
         cycles = 4;
     }
-    void CP_h()
-    {
+    void CP_h() {
         u8 x = HL.hi;
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1928,8 +1892,7 @@ namespace CPU {
 
         cycles = 4;
     }
-    void CP_l()
-    {
+    void CP_l() {
         u8 x = HL.lo;
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1941,8 +1904,7 @@ namespace CPU {
 
         cycles = 4;
     }
-    void CP_HL()
-    {
+    void CP_HL() {
         u8 x = RAM::readAt(HL.val());
         u8 oldValue = AF.hi;
         u8 comparison = AF.hi - x;
@@ -1965,8 +1927,7 @@ namespace CPU {
         cycles = 8;
     }
 
-    void INC_a()
-    {
+    void INC_a() {
         u8 loNib = AF.hi & 0x0F;
         ++AF.hi;
         if (AF.hi == 0) { AF.lo |= 0b10000000; }
@@ -1976,8 +1937,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_b()
-    {
+    void INC_b() {
         u8 loNib = BC.hi & 0x0F;
         ++BC.hi;
         if (BC.hi == 0) { AF.lo |= 0b10000000; }
@@ -1987,8 +1947,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_c()
-    {
+    void INC_c() {
         u8 loNib = BC.lo & 0x0F;
         ++BC.lo;
         if (BC.lo == 0) { AF.lo |= 0b10000000; }
@@ -1998,8 +1957,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_d()
-    {
+    void INC_d() {
         u8 loNib = DE.hi & 0x0F;
         ++DE.hi;
         if (DE.hi == 0) { AF.lo |= 0b10000000; }
@@ -2009,8 +1967,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_e()
-    {
+    void INC_e() {
         u8 loNib = DE.lo & 0x0F;
         ++DE.lo;
         if (DE.lo == 0) { AF.lo |= 0b10000000; }
@@ -2020,8 +1977,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_h()
-    {
+    void INC_h() {
         u8 loNib = HL.hi & 0x0F;
         ++HL.hi;
         if (HL.hi == 0) { AF.lo |= 0b10000000; }
@@ -2031,8 +1987,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_l()
-    {
+    void INC_l() {
         u8 loNib = HL.lo & 0x0F;
         ++HL.lo;
         if (HL.lo == 0) { AF.lo |= 0b10000000; }
@@ -2042,8 +1997,7 @@ namespace CPU {
         else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
-    void INC_HLad()
-    {
+    void INC_HLad() {
         u8 x = RAM::readAt(HL.val());
         u8 loNib = x & 0x0F;
         ++x;
@@ -2056,8 +2010,7 @@ namespace CPU {
         cycles = 12;
     }
 
-    void DEC_a()
-    {
+    void DEC_a() {
         u8 lowerNib = AF.hi & 0x0F;
         u8 newValue = --AF.hi;
         setN(true);
@@ -2065,8 +2018,7 @@ namespace CPU {
         setH(lowerNib == 0x00);
         cycles = 4;
     }
-    void DEC_b()
-    {
+    void DEC_b() {
         u8 lowerNib = BC.hi & 0x0F;
         u8 newValue = --BC.hi;
         setN(true);
@@ -2082,8 +2034,7 @@ namespace CPU {
         setH(lowerNib == 0x00);
         cycles = 4;
     }
-    void DEC_d()
-    {
+    void DEC_d() {
         u8 lowerNib = DE.hi & 0x0F;
         u8 newValue = --DE.hi;
         setN(true);
@@ -2091,8 +2042,7 @@ namespace CPU {
         setH(lowerNib == 0x00);
         cycles = 4;
     }
-    void DEC_e()
-    {
+    void DEC_e() {
         u8 lowerNib = DE.lo & 0x0F;
         u8 newValue = --DE.lo;
         setN(true);
@@ -2100,8 +2050,7 @@ namespace CPU {
         setH(lowerNib == 0x00);
         cycles = 4;
     }
-    void DEC_h()
-    {
+    void DEC_h() {
         u8 lowerNib = HL.hi & 0x0F;
         u8 newValue = --HL.hi;
         setN(true);
@@ -2109,8 +2058,7 @@ namespace CPU {
         setH(lowerNib == 0x00);
         cycles = 4;
     }
-    void DEC_l()
-    {
+    void DEC_l() {
         u8 lowerNib = HL.lo & 0x0F;
         u8 newValue = --HL.lo;
         setN(true);
@@ -2118,13 +2066,12 @@ namespace CPU {
         setH(lowerNib == 0x00);
         cycles = 4;
     }
-    void DEC_HLad()
-    {
+    void DEC_HLad() {
         u8 x = RAM::readAt(HL.val());
         u8 lowerNib = x & 0x0F;
         u8 newValue = --x;
         write(x, HL.val());
-    
+
         setN(true);
         setZ(newValue == 0);
         setH(lowerNib == 0x00);
@@ -2135,7 +2082,7 @@ namespace CPU {
         halt = true;
         cycles = 4;
     }
-    
+
     void RST_00() {
         u8 loNibble = PC & 0x00FF;
         u8 hiNibble = (PC & 0xFF00) >> 8;
@@ -2353,7 +2300,7 @@ namespace CPU {
     }
 
     u8 SWAP_gen(u8 val) {
-        u8 res = ((val >> 4) & 0x0F) + ((val << 4 ) & 0xF0);
+        u8 res = ((val >> 4) & 0x0F) + ((val << 4) & 0xF0);
         setZ(res == 0);
         setN(false);
         setH(false);
@@ -2412,7 +2359,8 @@ namespace CPU {
             if (getH() || (AF.hi & 0x0F) > 0x09) {
                 AF.hi += 0x06;
             }
-        } else {
+        }
+        else {
             if (getC()) {
                 AF.hi -= 0x60;
                 carry = true;
@@ -2534,7 +2482,7 @@ namespace CPU {
     u8 SRA_generic(u8 val) {
         bool bit0 = val & 1;
         u8 bit7 = val & 0b10000000;
-        u8 newVal = (val >> 1 ) + bit7;
+        u8 newVal = (val >> 1) + bit7;
         setZ(newVal == 0);
         setN(false);
         setH(false);
@@ -3288,7 +3236,7 @@ namespace CPU {
         cb_codes[0xBC] = RES_7H;
         cb_codes[0xBD] = RES_7L;
         cb_codes[0xBE] = RES_7HL;
-        cb_codes[0xBF] = RES_7A; 
+        cb_codes[0xBF] = RES_7A;
 
         cb_codes[0xC0] = SET_0B;
         cb_codes[0xC1] = SET_0C;
@@ -3353,7 +3301,7 @@ namespace CPU {
         cb_codes[0xFC] = SET_7H;
         cb_codes[0xFD] = SET_7L;
         cb_codes[0xFE] = SET_7HL;
-        cb_codes[0xFF] = SET_7A; 
+        cb_codes[0xFF] = SET_7A;
 
         cb_codes[0x17] = RL_A;
         cb_codes[0x10] = RL_B;

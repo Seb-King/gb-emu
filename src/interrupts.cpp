@@ -42,7 +42,7 @@ namespace LCD {
         }
     }
 
-    
+
     void v_blank() {
         u8 STAT = RAM::readAt(0xFF41);
         STAT |= 0b00000001;
@@ -150,7 +150,7 @@ namespace LCD {
         }
     }
 
-    
+
 
     void draw_Window() {
 
@@ -258,7 +258,8 @@ namespace LCD {
 
             if ((attrib & 0b00010000) == 0) {
                 palette = RAM::readAt(0xFF48);
-            } else {
+            }
+            else {
                 palette = RAM::readAt(0xFF49);
             }
 
@@ -366,7 +367,8 @@ namespace TIMER {
             TIMA = mod;
             CPU::write(mod, 0xFF05);
             CPU::write(RAM::readAt(0xFF0F) | 0b00000100, 0xFF0F);
-        } else {
+        }
+        else {
             RAM::write(t + amount, 0xFF05);
         }
     }
@@ -430,7 +432,7 @@ bool handle_interrupts() {
             CPU::halt = false;
             CPU::halt_bug = true;
         }
-        
+
         if (CPU::IME == 0) {
             return false;
         }

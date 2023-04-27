@@ -10,10 +10,10 @@ namespace RUPS {
 }
 
 class reg {
-    public:
-        u8 hi, lo;
-        u16 val();
-        void set(u16);
+public:
+    u8 hi, lo;
+    u16 val();
+    void set(u16);
 };
 
 extern int flag;
@@ -27,7 +27,7 @@ extern u16 LYC;
 extern u16 DMA;
 extern u16 BGP;
 
-namespace CPU {   
+namespace CPU {
     extern u16 PC;
     extern u16 SP;
     extern u8 IME;

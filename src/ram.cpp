@@ -35,7 +35,7 @@ namespace RAM {
         if (addr == 0xFF44) {
             return 0x90;
         }
-        
+
         if (addr < 0x8000) {
             if (addr < 0x0100) {
                 if (moreRam[0xFF50 - 0xFEA0] == 0) // if the bootrom is enabled (which it is by default)
@@ -57,7 +57,7 @@ namespace RAM {
     }
 
     void write(u8 val, u16 addr) {
-        if (addr < 0x8000) { 
+        if (addr < 0x8000) {
             // std::cout << "Tried writing to ROM!" << std::hex << unsigned(addr) << " " << std::hex << unsigned(val) << std::endl; 
         }
         else if (addr < 0xA000) { vRam.at(addr - 0x8000) = val; }
