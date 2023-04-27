@@ -1,7 +1,7 @@
-#include "sprite_renderer.h"
+#include "sprite_renderer.hpp"
 #include "render.hpp"
 #include "ram.hpp"
-#include "utils.h"
+#include "utils.hpp"
 
 void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette) {
     int x = tile_x, y = tile_y, colour = 3;

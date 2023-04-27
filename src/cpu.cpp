@@ -3,7 +3,7 @@
 #include <string>
 #include "typedefs.hpp"
 #include <vector>
-#include "cpu.h"
+#include "cpu.hpp"
 #include "ram.hpp"
 
 

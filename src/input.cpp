@@ -1,6 +1,6 @@
 #include <SDL.h>
 #include <iostream>
-#include "utils.h"
+#include "utils.hpp"
 
 namespace INPUTS {
 	bool quit = false;

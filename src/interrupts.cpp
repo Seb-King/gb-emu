@@ -1,8 +1,8 @@
 #include "render.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include "ram.hpp"
-#include "cpu.h"
-#include "sprite_renderer.h"
+#include "cpu.hpp"
+#include "sprite_renderer.hpp"
 #include "debug_display.hpp"
 
 namespace LCD {
@@ -294,8 +294,6 @@ namespace LCD {
                 }
                 CPU::write(RAM::readAt(0xFF0F) | 0x01, 0xFF0F); // request interrupt
 
-                u8 thing = RAM::readAt(0xFF40);
-
                 u8 LCDC_ = RAM::readAt(LCDC);
 
                 if (LCDC_ >> 7 == 1) {
@@ -309,10 +307,10 @@ namespace LCD {
                     // Sprites
                     if ((LCDC_ & 2) == 2) {
                         draw_sprites();
-                        display_sprites();
-                        displayObjects();
                     }
 
+                    display_sprites();
+                    displayObjects();
                 }
 
                 drawAtStackPointer();

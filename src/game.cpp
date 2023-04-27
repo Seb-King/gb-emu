@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "cpu.hpp"
 #include "input.hpp"
 #include "render.hpp"
 #include "ram.hpp"
