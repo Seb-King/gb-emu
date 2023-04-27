@@ -5,6 +5,23 @@
 #include "game.hpp"
 #include "interrupts.hpp"
 
+void handle_inputs() {
+    for (int i = 0; i < 50; i++) {
+        INPUTS::readInputs();
+    }
+
+    if (INPUTS::switch_display) {
+        INPUTS::switch_display = false;
+        if (RENDER::display_mode == GB) {
+            RENDER::setDisplay(SPRITE);;
+        } else if (RENDER::display_mode == SPRITE) {
+            RENDER::setDisplay(MEMORY);
+        } else if (RENDER::display_mode == MEMORY) {
+            RENDER::setDisplay(GB);
+        }
+    }
+}
+
 void game_loop(RunOptions options) {
     CPU::init();
     RAM::init_ram(options.romPath);
@@ -31,20 +48,7 @@ void game_loop(RunOptions options) {
 
         if (inp_time == 100) {
             inp_time = 0;
-            for (int i = 0; i < 50; i++) {
-                INPUTS::readInputs();
-            }
-
-            if (INPUTS::switch_display) {
-                INPUTS::switch_display = false;
-                if (RENDER::display_mode == GB) {
-                    RENDER::setDisplay(SPRITE);;
-                } else if (RENDER::display_mode == SPRITE) {
-                    RENDER::setDisplay(MEMORY);
-                } else if (RENDER::display_mode == MEMORY) {
-                    RENDER::setDisplay(GB);
-                }
-            }
+            handle_inputs();
         }
 
         if (options.LOG_STATE) {
