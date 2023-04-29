@@ -42,6 +42,9 @@ namespace CPU {
     void init_registers_to_skip_boot();
     void print_registers();
 
+    void push_onto_stack(u16 val);
+    u16 pop_from_stack();
+
     void write(u8 val, u16 addr);
     u8 read();
     void init_opcodes();

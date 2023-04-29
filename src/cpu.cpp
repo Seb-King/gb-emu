@@ -76,6 +76,29 @@ namespace CPU {
         HL.set(0x014D);
     }
 
+    void push_byte_onto_stack(u8 val) {
+        SP--;
+        write(val, SP);
+    }
+
+    void push_onto_stack(u16 val) {
+        u8 lowerByte = val & 0x00FF;
+        u8 higherByte = (val & 0xFF00) >> 8;
+
+        push_byte_onto_stack(higherByte);
+        push_byte_onto_stack(lowerByte);
+    }
+
+    u8 pop_byte_from_stack() {
+        u8 value = RAM::readAt(SP);
+        SP++;
+        return value;
+    }
+
+    u16 pop_from_stack() {
+        return pop_byte_from_stack() + (pop_byte_from_stack() << 8);
+    }
+
     bool halfCarryAdd(u8 a, u8 b) {
         return ((((a & 0x0F) + (b & 0x0F)) & 0x10) == 0x10);
     }
@@ -170,10 +193,7 @@ namespace CPU {
     }
 
     void STAT() {
-        CPU::SP--;
-        write(CPU::PC & 0x0F, CPU::SP);
-        CPU::SP--;
-        write((CPU::PC & 0xF0) >> 8, CPU::SP);
+        push_onto_stack(PC);
         CPU::PC = 0x0048;
 
         // now get rid of request flag IF
@@ -209,8 +229,7 @@ namespace CPU {
                 u8 opcode = read();
                 runOPCode(opcode);
                 PC = prevPC;
-            }
-            else {
+            } else {
                 u8 opcode = read();
                 runOPCode(opcode);
             }

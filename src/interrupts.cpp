@@ -49,10 +49,7 @@ namespace LCD {
         STAT &= 0b11111101;
         CPU::write(STAT, 0xFF41);
 
-        CPU::SP--;
-        CPU::write(CPU::PC & 0x0F, CPU::SP);
-        CPU::SP--;
-        CPU::write((CPU::PC & 0xF0) >> 8, CPU::SP);
+        CPU::push_onto_stack(CPU::PC);
         CPU::PC = 0x0040;
         flag = 0;
 
@@ -272,6 +269,12 @@ namespace LCD {
         }
     }
 
+    void set_mode_to(u8 mode) {
+        u8 stat = RAM::readAt(0xFF41);
+        stat = (stat & 0b11111100) + mode;
+        RAM::write(stat, 0xFF41);
+    }
+
     void update() {
         // -- Display -- //
         u8 IF = RAM::readAt(0xFFFF);
@@ -281,11 +284,29 @@ namespace LCD {
             LCD::scanline_count -= CPU::getCyles();
         }
 
+        u8 l = RAM::readAt(LY);
+
+
+        if (l < 144) {
+            if (LCD::scanline_count < 456) {
+                set_mode_to(2);
+            }
+            if (LCD::scanline_count < 200) {
+                set_mode_to(3);
+            }
+            if (LCD::scanline_count <= 0) {
+                set_mode_to(0);
+            }
+        } else {
+            set_mode_to(1);
+        }
+
         if (LCD::scanline_count <= 0) {
-            LCD::scanline_count = 456;
+            LCD::scanline_count = 5000;
+            set_mode_to(0);
+
 
             // Increment LY
-            u8 l = RAM::readAt(LY);
             CPU::write(l + 1, LY);
             u8 line = RAM::readAt(LY);
 
@@ -322,9 +343,9 @@ namespace LCD {
             else if (line > 153) {
                 // here we reset LY and reset the flag associated with v-blank
                 CPU::write(0, 0xFF44);
-                u8 IF = RAM::readAt(0xFF0F); // interrupt flag
-                IF &= 0b11111110;
-                CPU::write(IF, 0xFF0F);
+                // u8 IF = RAM::readAt(0xFF0F); // interrupt flag
+                // IF &= 0b11111110;
+                // CPU::write(IF, 0xFF0F);
             }
         }
 
@@ -335,7 +356,7 @@ namespace LCD {
 
                 // request interrupt
                 CPU::write(RAM::readAt(0xFF0F) | 0b00000010, 0xFF0F);
-                //CPU::STAT();
+                // CPU::STAT();
                 //std::cout << "LY = LYC interrupt" << std::endl;
             }
         }
@@ -412,10 +433,7 @@ namespace TIMER {
 }
 
 void joypadInterrupt() {
-    CPU::SP--;
-    CPU::write((CPU::PC & 0xFF00) >> 8, CPU::SP);
-    CPU::SP--;
-    CPU::write(CPU::PC & 0x00FF, CPU::SP);
+    CPU::push_onto_stack(CPU::PC);
     CPU::PC = 0x0060;
 
     RUPS::IF = RAM::readAt(0xFF0F);
