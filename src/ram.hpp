@@ -9,4 +9,6 @@ namespace RAM {
     void dump_oam();
     void DMA_routine();
     void d_vram();
+
+    extern bool UP, DOWN, LEFT, RIGHT, A, B, START, SELECT, ACTIONS, DIRECTIONS;
 };

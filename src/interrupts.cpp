@@ -77,14 +77,11 @@ namespace LCD {
                 colour = ((line1 >> k) & 1) + 2 * ((line2 >> k) & 1); // can make this a lot shorter but this way preserve readability (for me)
                 if (colour == 0) {
                     colour = palette & 0b00000011;
-                }
-                else if (colour == 1) {
+                } else if (colour == 1) {
                     colour = (palette & 0b00001100) >> 2;
-                }
-                else if (colour == 2) {
+                } else if (colour == 2) {
                     colour = (palette & 0b00110000) >> 4;
-                }
-                else if (colour == 3) {
+                } else if (colour == 3) {
                     colour = (palette & 0b11000000) >> 6;
                 }
                 x = (7 - k + 8 * (tile_num % 32) - scrollX) % 256;
@@ -104,8 +101,7 @@ namespace LCD {
         // this figures where the BG tilemap is 
         if (((LCDC_ & 0b00001000) >> 3) == 0) {
             addr = 0x9800;
-        }
-        else {
+        } else {
             addr = 0x9C00;
         }
 
@@ -113,8 +109,7 @@ namespace LCD {
 
         if (((LCDC_ & 0b00010000) >> 4) == 0) {
             tile_addr = 0x9000; // tiles are indexed by a signed 8 bit int
-        }
-        else {
+        } else {
             tile_addr = 0x8000; // tiles indexed by an unsigned 8-bit integer
         }
 
@@ -135,8 +130,7 @@ namespace LCD {
             if (x == 0x9000) {
                 s8 charc = charcode;
                 tile_addr = ((0x0900 + charc) << 4);
-            }
-            else {
+            } else {
                 tile_addr += (charcode << 4);
             }
 
@@ -159,15 +153,13 @@ namespace LCD {
         // we are drawing the window here, so this gives us the Window tilemap
         if (((LCDC_ & 0b01000000) >> 6) == 0) {
             addr = 0x9800;
-        }
-        else {
+        } else {
             addr = 0x9C00;
         }
 
         if (((LCDC_ & 0b00001000) >> 3) == 1) {
             tile_addr = 0x9000; // tiles are indexed by a signed 8 bit int
-        }
-        else {
+        } else {
             tile_addr = 0x8000; // tiles indexed by an unsigned 8-bit integer
         }
 
@@ -187,8 +179,7 @@ namespace LCD {
             if (x == 0x9000) {
                 s8 s_char = charcode;
                 tile_addr = ((0x0900 + s_char) << 4);
-            }
-            else {
+            } else {
                 tile_addr += (charcode << 4);
             }
 
@@ -220,14 +211,11 @@ namespace LCD {
                 if (x >= 0 && x < 160 && y >= 0 && y < 144) {
                     if (colour == 0) {
                         colour = 4;
-                    }
-                    else if (colour == 1) {
+                    } else if (colour == 1) {
                         colour = (palette & 0b00001100) >> 2;
-                    }
-                    else if (colour == 2) {
+                    } else if (colour == 2) {
                         colour = (palette & 0b00110000) >> 4;
-                    }
-                    else if (colour == 3) {
+                    } else if (colour == 3) {
                         colour = (palette & 0b11000000) >> 6;
                     }
                     if (colour != 4) {
@@ -239,8 +227,6 @@ namespace LCD {
     }
 
     void draw_sprites() {
-        int fff = 0;
-
         // The first address in OAM
         u16 addr = 0xFE00;
         u8 palette;
@@ -255,8 +241,7 @@ namespace LCD {
 
             if ((attrib & 0b00010000) == 0) {
                 palette = RAM::readAt(0xFF48);
-            }
-            else {
+            } else {
                 palette = RAM::readAt(0xFF49);
             }
 
@@ -337,10 +322,9 @@ namespace LCD {
 
                 drawAtStackPointer();
                 RENDER::drawFrame();
-                RENDER::delay(5);
+                // RENDER::delay(5);
 
-            }
-            else if (line > 153) {
+            } else if (line > 153) {
                 // here we reset LY and reset the flag associated with v-blank
                 CPU::write(0, 0xFF44);
                 // u8 IF = RAM::readAt(0xFF0F); // interrupt flag
@@ -388,8 +372,7 @@ namespace TIMER {
             TIMA = mod;
             CPU::write(mod, 0xFF05);
             CPU::write(RAM::readAt(0xFF0F) | 0b00000100, 0xFF0F);
-        }
-        else {
+        } else {
             RAM::write(t + amount, 0xFF05);
         }
     }
@@ -401,14 +384,11 @@ namespace TIMER {
             int rate = 0;
             if ((TAC & 0b00000011) == 0) {
                 rate = 1024;
-            }
-            else if ((TAC & 0b00000011) == 1) {
+            } else if ((TAC & 0b00000011) == 1) {
                 rate = 16;
-            }
-            else if ((TAC & 0b00000011) == 2) {
+            } else if ((TAC & 0b00000011) == 2) {
                 rate = 64;
-            }
-            else if ((TAC & 0b00000011) == 3) {
+            } else if ((TAC & 0b00000011) == 3) {
                 rate = 256;
             }
             int amount = counter / rate;

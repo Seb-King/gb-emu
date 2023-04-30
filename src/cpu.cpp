@@ -67,6 +67,10 @@ namespace CPU {
         init_decoder();
     }
 
+    void disable_boot_rom() {
+        RAM::write(0x01, 0xFF50);
+    }
+
     void init_registers_to_skip_boot() {
         PC = 0x0100;
         SP = 0xFFFE;
@@ -74,6 +78,7 @@ namespace CPU {
         BC.set(0x0013);
         DE.set(0x00D8);
         HL.set(0x014D);
+        disable_boot_rom();
     }
 
     void push_byte_onto_stack(u8 val) {
@@ -243,16 +248,14 @@ namespace CPU {
             if (interrupt_mode == 1) {
                 IME = 0;
                 interrupt_mode = 0;
-            }
-            else if (interrupt_mode == 2) {
+            } else if (interrupt_mode == 2) {
                 interrupt_mode--;
             }
 
             if (interrupt_mode == 3) {
                 IME = 1;
                 interrupt_mode = 0;
-            }
-            else if (interrupt_mode == 4) {
+            } else if (interrupt_mode == 4) {
                 interrupt_mode--;
             }
         }

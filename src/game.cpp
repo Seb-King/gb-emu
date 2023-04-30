@@ -14,11 +14,9 @@ void handle_inputs() {
         INPUTS::switch_display = false;
         if (RENDER::display_mode == GB) {
             RENDER::setDisplay(SPRITE);;
-        }
-        else if (RENDER::display_mode == SPRITE) {
+        } else if (RENDER::display_mode == SPRITE) {
             RENDER::setDisplay(MEMORY);
-        }
-        else if (RENDER::display_mode == MEMORY) {
+        } else if (RENDER::display_mode == MEMORY) {
             RENDER::setDisplay(GB);
         }
     }
