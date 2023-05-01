@@ -378,6 +378,8 @@ namespace TIMER {
     }
 
     void update() {
+        RAM::DIV++;
+
         u8 TAC = RAM::readAt(0xFF07);
         if (((TAC & 0b00000100) == 0b00000100)) {
             counter += CPU::cycles;

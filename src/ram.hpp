@@ -2,6 +2,8 @@
 #include "typedefs.hpp"
 
 namespace RAM {
+    extern u8 DIV;
+
     u8 readAt(u16);
     u8 read();
     void write(u8 val, u16 addr);
