@@ -10,6 +10,21 @@ namespace INPUTS {
 	SDL_Event e;
 
 
+	bool actionsEnabled() {
+		u8 val = RAM::readAt(0xFF00);
+		return ((val >> 5) & 1) == 0;
+	}
+
+	bool directionsEnabled() {
+		u8 val = RAM::readAt(0xFF00);
+		return ((val >> 4) & 1) == 0;
+	}
+
+	void requestJoypadInterrupt() {
+		CPU::write(RAM::readAt(0xFF0F) | 0b00010000, 0xFF0F);
+	}
+
+
 	void readInputs() {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
@@ -23,18 +38,22 @@ namespace INPUTS {
 					switch_display = true;
 				} else if (e.key.keysym.scancode == SDL_SCANCODE_Z) {
 					RAM::A = 0;
-					RAM::B = 0;
+					RAM::B = 1;
 					RAM::START = 0;
-					RAM::SELECT = 0;
-					RAM::DOWN = 0;
+					RAM::SELECT = 1;
+					RAM::DOWN = 1;
+
+					if (actionsEnabled()) {
+						requestJoypadInterrupt();
+					}
 				}
 			}
 
 
 			if (e.type == SDL_KEYUP) {
 				if (e.key.keysym.scancode == SDL_SCANCODE_Z) {
-					CPU::write(RAM::readAt(0xFF0F) | 0b00010000, 0xFF0F);
 					RAM::A = 1;
+					RAM::START = 1;
 				}
 			}
 		}

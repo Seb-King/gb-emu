@@ -5,6 +5,7 @@
 #include <string>
 #include "typedefs.hpp"
 #include "ram.hpp"
+#include <iomanip>
 
 namespace RAM {
     u16 LCDC = 0xFF40;
@@ -32,27 +33,24 @@ namespace RAM {
     bool UP = 1, DOWN = 1, LEFT = 1, RIGHT = 1, A = 1, B = 1, START = 1, SELECT = 1, ACTIONS = 1, DIRECTIONS = 1;
 
     u8 joyPadInputs() {
+        u8 foo = 0b11000000;
         u8 acts = A + B * 2 + SELECT * 4 + START * 8 + DIRECTIONS * 16 + ACTIONS * 32;
         u8 dirs = RIGHT + LEFT * 2 + UP * 4 + DOWN * 8 + DIRECTIONS * 16 + ACTIONS * 32;
         if (ACTIONS == 0) {
-            return A + B * 2 + SELECT * 4 + START * 8 + DIRECTIONS * 16 + ACTIONS * 32;
+            return A + B * 2 + SELECT * 4 + START * 8 + DIRECTIONS * 16 + ACTIONS * 32 + foo;
         }
 
         if (DIRECTIONS == 0) {
-            return RIGHT + LEFT * 2 + UP * 4 + DOWN * 8 + DIRECTIONS * 16 + ACTIONS * 32;
+            return RIGHT + LEFT * 2 + UP * 4 + DOWN * 8 + DIRECTIONS * 16 + ACTIONS * 32 + foo;
         }
-        return 0x00;
+        return 0b11111111;
     }
 
     u8 readAt(u16 addr) {
-        // if (addr == 0xFF44) {
-        //     return 0x90;
-        // }
-
         if (addr == 0xFF00) {
-            return 0b11011110;
-            // return 0xCF;
-            // return joyPadInputs();
+            u8 inputs = joyPadInputs();
+
+            return inputs;
         }
 
         if (addr < 0x8000) {
@@ -69,10 +67,19 @@ namespace RAM {
 
     void write(u8 val, u16 addr) {
         if (addr == 0xFF00) {
-            DIRECTIONS = ((val > 4) & 1);
-            ACTIONS = ((val > 5) & 1);
+            // std::cout << "writing joypad" << std::endl;
+
+            DIRECTIONS = ((val >> 4) & 1);
+            ACTIONS = ((val >> 5) & 1);
+
+            // std::cout << DIRECTIONS << std::endl;
+            // std::cout << ACTIONS << std::endl;
+
+            // std::cout << " val:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << std::uppercase << int(val) << std::endl;
+
+
             u8 prevVal = readAt(0xFF00);
-            moreRam.at(0xFF00 - 0xFEA0) = (prevVal & 0b11001111) + (val | 0b00110000);
+            moreRam.at(0xFF00 - 0xFEA0) = (prevVal & 0b11001111) + (val & 0b00110000);
         }
 
         if (addr == 0xFF46) {
