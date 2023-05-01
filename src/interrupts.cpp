@@ -287,7 +287,7 @@ namespace LCD {
         }
 
         if (LCD::scanline_count <= 0) {
-            LCD::scanline_count = 5000;
+            LCD::scanline_count = 400;
             set_mode_to(0);
 
 

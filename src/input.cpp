@@ -37,23 +37,76 @@ namespace INPUTS {
 				} else if (e.key.keysym.scancode == SDL_SCANCODE_TAB) {
 					switch_display = true;
 				} else if (e.key.keysym.scancode == SDL_SCANCODE_Z) {
+					RAM::SELECT = 0;
+					if (actionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_A) {
 					RAM::A = 0;
-					RAM::B = 1;
-					RAM::START = 0;
-					RAM::SELECT = 1;
-					RAM::DOWN = 1;
 
 					if (actionsEnabled()) {
 						requestJoypadInterrupt();
 					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_S) {
+					RAM::B = 0;
+
+					if (actionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_X) {
+					RAM::START = 0;
+					if (actionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+					RAM::LEFT = 0;
+
+					if (directionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+					RAM::RIGHT = 0;
+
+					if (directionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
+					RAM::DOWN = 0;
+
+					if (directionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				}
+			} else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
+				RAM::UP = 0;
+
+				if (directionsEnabled()) {
+					requestJoypadInterrupt();
 				}
 			}
 
 
 			if (e.type == SDL_KEYUP) {
 				if (e.key.keysym.scancode == SDL_SCANCODE_Z) {
-					RAM::A = 1;
+					RAM::SELECT = 1;
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_X) {
 					RAM::START = 1;
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_A) {
+					RAM::A = 1;
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_S) {
+					RAM::B = 1;
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+					RAM::LEFT = 1;
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+					RAM::RIGHT = 1;
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
+					RAM::DOWN = 1;
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
+					RAM::UP = 1;
 				}
 			}
 		}
