@@ -21,7 +21,7 @@ void handle_inputs() {
 }
 
 void game_loop(RunOptions options) {
-    if (!options.NO_DISPLAY && options.romPath == "") {
+    if (!options.NO_DISPLAY) {
         RENDER::init();
 
         if (options.romPath == "") {
