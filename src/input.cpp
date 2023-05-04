@@ -24,6 +24,35 @@ namespace INPUTS {
 		CPU::write(RAM::readAt(0xFF0F) | 0b00010000, 0xFF0F);
 	}
 
+	std::string listen_for_dropped_file() {
+		char* dropped_filedir;
+		SDL_bool done;
+		done = SDL_FALSE;
+		while (!done) {
+			while (!done && SDL_PollEvent(&e)) {
+				switch (e.type) {
+				case (SDL_QUIT): {
+					done = SDL_TRUE;
+					break;
+				}
+
+				case (SDL_DROPFILE): {
+					done = SDL_TRUE;
+					dropped_filedir = e.drop.file;
+					break;
+				}
+				case (SDL_KEYDOWN): {
+					if (e.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+						done = SDL_TRUE;
+						break;
+					}
+				}
+				}
+			}
+			SDL_Delay(0);
+		}
+		return dropped_filedir;
+	}
 
 	void readInputs() {
 		while (SDL_PollEvent(&e) != 0) {

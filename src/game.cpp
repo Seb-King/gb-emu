@@ -21,22 +21,25 @@ void handle_inputs() {
 }
 
 void game_loop(RunOptions options) {
+    if (!options.NO_DISPLAY && options.romPath == "") {
+        RENDER::init();
+
+        if (options.romPath == "") {
+            options.romPath = INPUTS::listen_for_dropped_file();
+        }
+    }
+
     CPU::init();
     RAM::init_ram(options.romPath);
 
     if (!options.NO_DISPLAY) {
-        RENDER::init();
         RENDER::drawFrame();
         LCD::draw_BG();
     }
 
     if (options.SKIP_BOOT) {
         CPU::init_registers_to_skip_boot();
-        // RAM::write(0x04, 0xFF0F);
     }
-
-    u16 debug = 0;
-    u8 opcode = 0;
 
     int inp_time = 0;
     int cnt = 0;
