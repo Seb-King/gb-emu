@@ -14,8 +14,6 @@ FetchContent_MakeAvailable(SDL2)
 
 set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
 
-include_directories(emulator)
-
 add_executable(
   emulator 
   main.cpp 
