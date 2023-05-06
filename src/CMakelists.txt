@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.25)
-
-if (WIN32)
-  set(SDL2_DIR C:/Users/sebas/cpp-libs/SDL2-2.24.2/cmake)
-  set(SDL2_ttf_DIR C:/Users/sebas/cpp-libs/SDL2_ttf-2.20.1/cmake)
-endif (WIN32)
+include(FetchContent)
 
 project(emulator)
 
-find_package(SDL2 REQUIRED)
-# find_package(SDL2_ttf REQUIRED)
+FetchContent_Declare(
+    SDL2
+    GIT_REPOSITORY  https://github.com/libsdl-org/SDL
+    GIT_TAG         55b03c7493a7abed33cf803d1380a40fa8af903f  # release-2.24.2
+    GIT_PROGRESS    TRUE
+)
 
-# add_link_options("LINKER:-lSDL2_ttf")
+FetchContent_MakeAvailable(SDL2)
 
-include_directories(emulator ${SDL2_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIRS})
+set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
 
 add_executable(
   emulator 
@@ -30,5 +30,4 @@ add_executable(
 )
 
 set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
-
-target_link_libraries(emulator ${SDL2_LIBRARIES} ${SDL2_ttf_LIBRARIES})
+target_link_libraries(emulator ${SDL_LIBRARIES})
