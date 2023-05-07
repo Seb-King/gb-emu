@@ -287,7 +287,8 @@ namespace LCD {
         }
 
         if (LCD::scanline_count <= 0) {
-            LCD::scanline_count = 400;
+            // TODO: correct this timing
+            LCD::scanline_count = 1000;
             set_mode_to(0);
 
 
