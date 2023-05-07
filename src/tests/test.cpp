@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
-#include "../utils.hpp"
+#include "../cpu.hpp"
 
-TEST(HelloTest, TestAssertions) {
-  println("henlo");
-  // Expect two strings not to be equal.
-  EXPECT_STRNE("hello", "world");
-  // Expect equality.
-  EXPECT_EQ(7 * 6, 42);
+TEST(CPU_Tests, READ_INCREMENTS_PC) {
+  CPU::PC = 0x0000;
+  CPU::read();
+  EXPECT_EQ(CPU::PC, 0x0001);
+
+  CPU::read();
+  EXPECT_EQ(CPU::PC, 0x0002);
 }
