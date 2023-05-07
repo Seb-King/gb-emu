@@ -11,7 +11,6 @@ std::vector<u8> readFile(std::string fileName) {
 		throw std::runtime_error("File not found! " + fileName);
 	}
 
-
 	std::ifstream file(fileName, std::ios::binary);
 
 	std::vector<u8> buffer((std::istreambuf_iterator<char>(file)), {});

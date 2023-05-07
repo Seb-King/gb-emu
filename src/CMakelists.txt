@@ -32,6 +32,7 @@ add_library(
   utils.cpp
   utils.hpp
   interrupts.cpp
+  cartridge.cpp
 )
 
 cmake_minimum_required(VERSION 3.25)
@@ -45,10 +46,10 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-
 add_executable(
   tests
-  tests/test.cpp
+  tests/cpu_test.cpp
+  tests/cart_test.cpp
 )
 
 set_property(TARGET emulator PROPERTY CXX_STANDARD 17)

@@ -1,11 +1,12 @@
 #include <bitset>
-#include "file_handling.hpp"
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <string>
+#include "file_handling.hpp"
 #include "typedefs.hpp"
 #include "ram.hpp"
-#include <iomanip>
+#include "cartridge.hpp"
 
 namespace RAM {
     u16 LCDC = 0xFF40;
@@ -21,7 +22,7 @@ namespace RAM {
     u8 ie = 0;
     u8 DIV = 0x00;
 
-    std::vector<u8> rom(0x8000, 0);
+    Cartridge cart;
     std::vector<u8> vRam(0xA000 - 0x8000, 0);
     std::vector<u8> iRam(0xC000 - 0xA000, 0);
     std::vector<u8> mbc(0xE000 - 0xC000, 0); // This size should be big enough to cover all RAM banks
@@ -48,6 +49,10 @@ namespace RAM {
         return 0b11111111;
     }
 
+    u8 read_from_cart(u16 addr) {
+        return cart.read(addr);
+    }
+
     u8 readAt(u16 addr) {
         if (addr == 0xFF00) {
             u8 inputs = joyPadInputs();
@@ -66,7 +71,7 @@ namespace RAM {
                     return bootRom.at(addr);
                 }
             }
-            return rom.at(addr);
+            return read_from_cart(addr);
         } else if (addr < 0xA000) {
             return vRam.at(addr - 0x8000);
         } else if (addr < 0xC000) {
@@ -142,7 +147,7 @@ namespace RAM {
     }
 
     void init_ram(std::string rom_path) {
-        RAM::rom = readFile(rom_path);
+        cart.init(readFile(rom_path));
     }
 
 
