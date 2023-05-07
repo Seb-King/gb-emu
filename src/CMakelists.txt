@@ -15,7 +15,12 @@ set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
 
 add_executable(
   emulator 
-  main.cpp 
+  main.cpp
+)
+
+add_library(
+  emulator_core 
+  SHARED
   cpu.cpp
   debug_display.cpp
   file_handling.cpp
@@ -25,11 +30,9 @@ add_executable(
   render.cpp
   sprite_renderer.cpp
   utils.cpp
+  utils.hpp
   interrupts.cpp
 )
-
-set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
-target_link_libraries(emulator ${SDL_LIBRARIES})
 
 cmake_minimum_required(VERSION 3.25)
 
@@ -42,17 +45,33 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-enable_testing()
 
 add_executable(
   tests
   tests/test.cpp
 )
 
+set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
+set_property(TARGET emulator_core PROPERTY CXX_STANDARD 17)
+set_property(TARGET tests PROPERTY CXX_STANDARD 17)
+
 target_link_libraries(
   tests
   GTest::gtest_main
+  emulator_core
 )
 
+target_link_libraries(
+  emulator_core
+  ${SDL_LIBRARIES} 
+)
+
+target_link_libraries(
+  emulator 
+  emulator_core
+)
+
+
+enable_testing()
 include(GoogleTest)
 gtest_discover_tests(tests)
