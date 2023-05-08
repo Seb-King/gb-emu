@@ -22,7 +22,7 @@ namespace RAM {
     u8 ie = 0;
     u8 DIV = 0x00;
 
-    Cartridge cart;
+    Cartridge* cart;
     std::vector<u8> vRam(0xA000 - 0x8000, 0);
     std::vector<u8> iRam(0xC000 - 0xA000, 0);
     std::vector<u8> mbc(0xE000 - 0xC000, 0); // This size should be big enough to cover all RAM banks
@@ -49,7 +49,7 @@ namespace RAM {
     }
 
     u8 read_from_cart(u16 addr) {
-        return cart.read(addr);
+        return cart->read(addr);
     }
 
     u8 readAt(u16 addr) {
@@ -74,7 +74,7 @@ namespace RAM {
         } else if (addr < 0xA000) {
             return vRam.at(addr - 0x8000);
         } else if (addr < 0xC000) {
-            return cart.read(addr);
+            return cart->read(addr);
         } else if (addr < 0xE000) {
             return iRam.at(addr - 0xC000);
         } else if (addr < 0xFE00) {
@@ -109,11 +109,11 @@ namespace RAM {
         }
 
         if (addr < 0x8000) {
-            cart.write(val, addr);
+            cart->write(val, addr);
         } else if (addr < 0xA000) {
             vRam.at(addr - 0x8000) = val;
         } else if (addr < 0xC000) {
-            cart.write(val, addr);
+            cart->write(val, addr);
         } else if (addr < 0xE000) {
             iRam.at(addr - 0xC000) = val;
         } else if (addr < 0xFE00) {
@@ -147,7 +147,7 @@ namespace RAM {
     }
 
     void init_ram(std::string rom_path) {
-        cart = *cart_factory(readFile(rom_path));
+        cart = cart_factory(readFile(rom_path));
     }
 
     void dump_oam() {
