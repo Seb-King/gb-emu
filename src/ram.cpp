@@ -109,10 +109,11 @@ namespace RAM {
         }
 
         if (addr < 0x8000) {
+            cart.write(val, addr);
         } else if (addr < 0xA000) {
             vRam.at(addr - 0x8000) = val;
         } else if (addr < 0xC000) {
-            sRam.at(addr - 0xA000) = val;
+            cart.write(val, addr);
         } else if (addr < 0xE000) {
             iRam.at(addr - 0xC000) = val;
         } else if (addr < 0xFE00) {
@@ -146,9 +147,8 @@ namespace RAM {
     }
 
     void init_ram(std::string rom_path) {
-        cart.init(readFile(rom_path));
+        cart = *cart_factory(readFile(rom_path));
     }
-
 
     void dump_oam() {
         u16 addr = 0xFE00;
