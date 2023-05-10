@@ -10,7 +10,7 @@ TEST(Cart_Factory_Tests, ASSERTIONS) {
   EXPECT_TRUE(cart->cart_type() == "NoMBC");
 }
 
-TEST(NoMBC_Cart_Tests, READ_ASSERTIONS) {
+TEST(NoMBC_Cart_Tests, READ_AND_WRITES_ASSERTIONS) {
   std::vector<u8> memory(0xC000, 1);
   memory.at(0x0147) = 0x00;
   Cartridge* cart = cart_factory(memory);

@@ -18,8 +18,9 @@ public:
   }
 
   void write(u8 val, u16 addr) {
-    if (addr >= 0xA000 && addr <= 0xBFFF)
-      RAM.at(addr) = val;
+    if (addr >= 0xA000 && addr <= 0xBFFF) {
+      RAM.at(addr - 0xA000) = val;
+    }
   }
 
   u8 read_rom(u16 addr) {
