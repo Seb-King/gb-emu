@@ -2,12 +2,20 @@
 #include <string>
 #include "../cartridge.hpp"
 
-TEST(Cart_Factory_Tests, ASSERTIONS) {
+TEST(Cart_Factory_Tests, NoMBC) {
   std::vector<u8> memory(0x8000, 0);
   memory.at(0x0147) = 0x00;
   Cartridge* cart = cart_factory(memory);
 
   EXPECT_TRUE(cart->cart_type() == "NoMBC");
+}
+
+TEST(Cart_Factory_Tests, MBC3) {
+  std::vector<u8> memory(0x8000, 0);
+  memory.at(0x0147) = 0x0F;
+  Cartridge* cart = cart_factory(memory);
+
+  EXPECT_TRUE(cart->cart_type() == "MBC3");
 }
 
 TEST(NoMBC_Cart_Tests, READ_AND_WRITES_ASSERTIONS) {
