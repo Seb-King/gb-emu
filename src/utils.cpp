@@ -1,5 +1,5 @@
 #include "utils.hpp"
 
-void println(std::string str) {
+inline void println(std::string str) {
 	std::cout << str << std::endl;
 }

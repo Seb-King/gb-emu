@@ -5,6 +5,11 @@
 #include "sprite_renderer.hpp"
 #include "debug_display.hpp"
 
+enum ObjSize {
+    BIG,
+    SMALL
+};
+
 namespace LCD {
     int scanline_count = 456;
 
@@ -190,23 +195,58 @@ namespace LCD {
         }
     }
 
-    void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette) {
+    ObjSize getSpriteSize() {
+        u8 LCDC_ = RAM::readAt(0xFF40);
+        if ((LCDC_ >> 2) & 1) {
+            return BIG;
+        } else {
+            return SMALL;
+        }
+    }
+
+    void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette, u8 attrib) {
         u8 scrollY = RAM::readAt(0xFF42);
         u8 scrollX = RAM::readAt(0xFF43);
         u8 line1, line2;
         u16 addr = 0x8000 + (charcode << 4);
         int x = tile_x, y = tile_y, colour = 3;
 
-        for (int i = 0; i < 8; i++) {
-            y = (tile_y - 16 + i - scrollY) % 256;
+        bool xFlip = (attrib >> 5) & 1;
+        bool yFlip = (attrib >> 6) & 1;
+        bool behindBG = (attrib >> 7) & 1;
+
+
+        ObjSize size = getSpriteSize();
+        int spriteHeight = 8;
+        if (size == BIG) {
+            spriteHeight = 16;
+        }
+
+        for (int i = 0; i < spriteHeight; i++) {
+            if (yFlip) {
+                if (spriteHeight == BIG) {
+                    y = (tile_y - i - scrollY) % 256;
+                } else {
+                    y = (tile_y - 8 - i - scrollY) % 256;
+                }
+            } else {
+                y = (tile_y - 16 + i - scrollY) % 256;
+            }
+
             line1 = RAM::readAt(addr);
             line2 = RAM::readAt(addr + 1);
 
             addr += 2;
 
+
             for (int j = 0; j < 8; j++) {
                 colour = ((line1 >> j) & 1) + 2 * ((line2 >> j) & 1);
-                x = (-1 - j + tile_x - scrollX) % 256;
+
+                if (xFlip) {
+                    x = (-1 + j + tile_x - 8 - scrollX) % 256;
+                } else {
+                    x = (-1 - j + tile_x - scrollX) % 256;
+                }
 
                 if (x >= 0 && x < 160 && y >= 0 && y < 144) {
                     if (colour == 0) {
@@ -248,7 +288,7 @@ namespace LCD {
             // Sprites are all stored in v-ram from 0x8000-0x8BFF
             // std::cout << "x: " << std::hex << unsigned(x) << " y: " << std::hex << unsigned(y) << std::endl;
             if (y > 0 && y < 160 && x > 0 && x < 168) {
-                render_sprite(x, y, charcode, palette);
+                render_sprite(x, y, charcode, palette, attrib);
             }
             addr += 4;
         }
@@ -288,7 +328,7 @@ namespace LCD {
 
         if (LCD::scanline_count <= 0) {
             // TODO: correct this timing
-            LCD::scanline_count = 1000;
+            LCD::scanline_count = 500;
             set_mode_to(0);
 
 

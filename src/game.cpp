@@ -52,7 +52,7 @@ void game_loop(RunOptions options) {
             handle_inputs();
         }
 
-        if (options.LOG_STATE) {
+        if (options.LOG_STATE || INPUTS::toggle_logging) {
             CPU::print_registers();
         }
 

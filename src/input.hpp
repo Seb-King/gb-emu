@@ -1,5 +1,6 @@
 #include <string>
 namespace INPUTS {
+	extern bool toggle_logging;
 	extern bool switch_display;
 	void readInputs();
 	void waitForInput();

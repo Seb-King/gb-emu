@@ -7,6 +7,7 @@
 namespace INPUTS {
 	bool quit = false;
 	bool switch_display = false;
+	bool toggle_logging = false;
 	SDL_Event e;
 
 
@@ -105,12 +106,14 @@ namespace INPUTS {
 					if (directionsEnabled()) {
 						requestJoypadInterrupt();
 					}
-				}
-			} else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
-				RAM::UP = 0;
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
+					RAM::UP = 0;
 
-				if (directionsEnabled()) {
-					requestJoypadInterrupt();
+					if (directionsEnabled()) {
+						requestJoypadInterrupt();
+					}
+				} else if (e.key.keysym.scancode == SDL_SCANCODE_L) {
+					toggle_logging = !toggle_logging;
 				}
 			}
 
