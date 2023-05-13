@@ -211,10 +211,9 @@ namespace LCD {
         u16 addr = 0x8000 + (charcode << 4);
         int x = tile_x, y = tile_y, colour = 3;
 
-        bool xFlip = (attrib >> 5) & 1;
-        bool yFlip = (attrib >> 6) & 1;
-        bool behindBG = (attrib >> 7) & 1;
-
+        bool xFlip = getBit(attrib, 5);
+        bool yFlip = getBit(attrib, 6);
+        bool behindBG = getBit(attrib, 7);
 
         ObjSize size = getSpriteSize();
         int spriteHeight = 8;
@@ -344,10 +343,10 @@ namespace LCD {
 
                 u8 LCDC_ = RAM::readAt(LCDC);
 
-                if (LCDC_ >> 7 == 1) {
-                    if ((LCDC_ & 1) == 1) {
+                if (getBit(LCDC_, 7)) {
+                    if (getBit(LCDC_, 0)) {
                         draw_BG();
-                        if (((LCDC_ & 0b00100000) >> 5) == 1) {
+                        if (getBit(LCDC_, 5)) {
                             draw_Window();
                         }
                     }

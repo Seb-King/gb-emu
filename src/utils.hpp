@@ -1,4 +1,8 @@
 #include <iostream>
 #include <string>
+#include "typedefs.hpp"
 
-void println(std::string str);
+using namespace std;
+
+void println(string str);
+bool getBit(u16 val, int bit);

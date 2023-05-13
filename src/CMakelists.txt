@@ -30,7 +30,6 @@ add_library(
   render.cpp
   sprite_renderer.cpp
   utils.cpp
-  utils.hpp
   interrupts.cpp
   cartridge.cpp
 )
