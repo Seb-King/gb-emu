@@ -55,7 +55,7 @@ class MBC3Cartridge : public Cartridge {
     if (addr >= 0 && addr <= 0x3FFF) {
       return ROM.at(addr);
     } else {
-      return ROM.at(addr + 0x4000 * rom_bank);
+      return ROM.at(addr - 0x4000 + 0x4000 * rom_bank);
     }
   }
 
