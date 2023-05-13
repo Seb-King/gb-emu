@@ -86,7 +86,7 @@ public:
 
   void init(vector<u8> game_data) {
     ROM = game_data;
-    RAM = *(new vector<u8>(0x2000, 0));
+    RAM = *(new vector<u8>(0x2000 * 8, 0));
   }
 
   void write(u8 val, u16 addr) {
