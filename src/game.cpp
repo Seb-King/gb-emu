@@ -20,7 +20,25 @@ void handle_inputs() {
     }
 }
 
-void game_loop(RunOptions options) {
+void tick(RunOptions options) {
+
+
+    if (options.LOG_STATE || INPUTS::toggle_logging) {
+        CPU::print_registers();
+    }
+
+    CPU::executeNextOperation();
+
+    if (!options.NO_DISPLAY) {
+        LCD::update();
+    }
+
+    TIMER::update();
+
+    handle_interrupts();
+}
+
+void initialiseState(RunOptions options) {
     if (!options.NO_DISPLAY) {
         RENDER::init();
 
@@ -40,30 +58,21 @@ void game_loop(RunOptions options) {
     if (options.SKIP_BOOT) {
         CPU::init_registers_to_skip_boot();
     }
+}
 
-    int inp_time = 0;
+void game_loop(RunOptions options) {
+    initialiseState(options);
+
+    int input_time = 0;
     int cnt = 0;
 
     while (!INPUTS::getQuit()) {
-        inp_time++;
+        input_time++;
 
-        if (inp_time == 100) {
-            inp_time = 0;
+        if (input_time == 100) {
+            input_time = 0;
             handle_inputs();
         }
-
-        if (options.LOG_STATE || INPUTS::toggle_logging) {
-            CPU::print_registers();
-        }
-
-        CPU::executeNextOperation();
-
-        if (!options.NO_DISPLAY) {
-            LCD::update();
-        }
-
-        TIMER::update();
-
-        handle_interrupts();
+        tick(options);
     }
 }
