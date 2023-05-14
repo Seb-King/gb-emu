@@ -4,6 +4,8 @@
 #include "ram.hpp"
 #include "game.hpp"
 #include "interrupts.hpp"
+#include "ppu.hpp"
+#include "sprite_renderer.hpp"
 
 void handle_inputs() {
     for (int i = 0; i < 50; i++) {
@@ -20,8 +22,7 @@ void handle_inputs() {
     }
 }
 
-void tick(RunOptions options) {
-
+void tick(RunOptions options, PPU* ppu) {
 
     if (options.LOG_STATE || INPUTS::toggle_logging) {
         CPU::print_registers();
@@ -29,12 +30,8 @@ void tick(RunOptions options) {
 
     CPU::executeNextOperation();
 
-    if (!options.NO_DISPLAY) {
-        LCD::update();
-    }
-
+    ppu->update(CPU::getCyles());
     TIMER::update();
-
     handle_interrupts();
 }
 
@@ -52,7 +49,6 @@ void initialiseState(RunOptions options) {
 
     if (!options.NO_DISPLAY) {
         RENDER::drawFrame();
-        LCD::draw_BG();
     }
 
     if (options.SKIP_BOOT) {
@@ -63,8 +59,12 @@ void initialiseState(RunOptions options) {
 void game_loop(RunOptions options) {
     initialiseState(options);
 
+    PPU* ppu = buildPPU();
+
     int input_time = 0;
     int cnt = 0;
+
+    bool render_next_vblank = true;
 
     while (!INPUTS::getQuit()) {
         input_time++;
@@ -73,6 +73,22 @@ void game_loop(RunOptions options) {
             input_time = 0;
             handle_inputs();
         }
-        tick(options);
+        tick(options, ppu);
+
+        if (!options.NO_DISPLAY) {
+            u8 y_line = RAM::readAt(LY);
+            if (y_line == 144 && render_next_vblank) {
+                render_next_vblank = false;
+
+                RENDER::drawFromPPUBuffer(ppu->getBuffer());
+                RENDER::drawFrame();
+                display_sprites();
+                displayObjects();
+            }
+
+            if (y_line != 144 && !render_next_vblank) {
+                render_next_vblank = true;
+            }
+        }
     }
 }

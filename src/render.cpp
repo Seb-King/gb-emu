@@ -2,6 +2,8 @@
 #include <vector>
 #include "render.hpp"
 
+using namespace std;
+
 namespace RENDER {
 	const int GB_WIDTH = 160;
 	const int GB_HEIGHT = 144;
@@ -35,29 +37,24 @@ namespace RENDER {
 			r = 0xFF;
 			g = r << 8;
 			b = r << 16;
-		}
-		else if (colour == 1) {
+		} else if (colour == 1) {
 			alph = 0xFF000000;
 			r = 0xA0;
 			g = r << 8;
 			b = r << 16;
-		}
-		else if (colour == 2) {
+		} else if (colour == 2) {
 			alph = 0xFF000000;
 			r = 0x33;
 			g = r << 8;
 			b = r << 16;
-		}
-		else if (colour == 3) {
+		} else if (colour == 3) {
 			alph = 0xFF000000;
 			r = 0x00;
 			g = r << 8;
 			b = r << 16;
-		}
-		else if (colour == 4) {
+		} else if (colour == 4) {
 			alph = 0;
-		}
-		else {
+		} else {
 			std::cout << "Colour code is not valid\n";
 			exit(0);
 		}
@@ -89,12 +86,10 @@ namespace RENDER {
 		if (mode == SPRITE) {
 			SDL_SetWindowSize(Window, SPRITE_WIDTH * RENDER_SCALE, SPRITE_HEIGHT * RENDER_SCALE);
 			display_mode = SPRITE;
-		}
-		else if (mode == GB) {
+		} else if (mode == GB) {
 			SDL_SetWindowSize(Window, GB_WIDTH * RENDER_SCALE, GB_HEIGHT * RENDER_SCALE);
 			display_mode = GB;
-		}
-		else if (mode == MEMORY) {
+		} else if (mode == MEMORY) {
 			SDL_SetWindowSize(Window, DEBUG_WIDTH, DEBUG_HEIGHT);
 			display_mode = MEMORY;
 		}
@@ -136,16 +131,14 @@ namespace RENDER {
 			GB_rect.w = GB_WIDTH * RENDER_SCALE;
 			GB_rect.h = GB_HEIGHT * RENDER_SCALE;
 			SDL_BlitSurface(GbSurface, NULL, WindowSurface, &GB_rect);
-		}
-		else if (display_mode == SPRITE) {
+		} else if (display_mode == SPRITE) {
 			SDL_Rect SpriteRect = {};
 			SpriteRect.x = 0;
 			SpriteRect.y = 0;
 			SpriteRect.w = SPRITE_WIDTH * RENDER_SCALE;
 			SpriteRect.h = SPRITE_HEIGHT * RENDER_SCALE;
 			SDL_BlitSurface(SpriteSurface, NULL, WindowSurface, &SpriteRect);
-		}
-		else if (display_mode == MEMORY) {
+		} else if (display_mode == MEMORY) {
 			SDL_Rect DebugRect = {};
 			DebugRect.x = 0;
 			DebugRect.y = 0;
@@ -160,6 +153,33 @@ namespace RENDER {
 
 	void clearDebugDisplay() {
 		SDL_RenderClear(debugRenderer);
+	}
+
+	int toInt(Colour val) {
+		switch (val) {
+		case (LIGHT): {
+			return 3;
+		}
+		case (DARK): {
+			return 2;
+		}
+		case (DARKER): {
+			return 1;
+		}
+		case (DARKEST): {
+			return 0;
+		}
+		}
+
+		return LIGHT;
+	}
+
+	void drawFromPPUBuffer(vector<vector<Colour>> pixelMap) {
+		for (int x = 0; x < 160; x++) {
+			for (int y = 0; y < 144; y++) {
+				setGameBoyPixel(x, y, toInt(pixelMap.at(x).at(y)));
+			}
+		}
 	}
 
 	void drawDebugText(std::string textureText, int x, int y) {}

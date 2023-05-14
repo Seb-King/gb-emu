@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <string>
+#include "ppu.hpp"
 
 enum DisplayMode {
 	GB,
@@ -20,4 +21,5 @@ namespace RENDER {
 	void drawDebugText(std::string textureText, int x, int y);
 	void clearDebugDisplay();
 	void setDisplay(DisplayMode mode);
+	void drawFromPPUBuffer(vector<vector<Colour>> pixelMap);
 }

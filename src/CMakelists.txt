@@ -32,6 +32,9 @@ add_library(
   utils.cpp
   interrupts.cpp
   cartridge.cpp
+  emulator.cpp
+  run_options.cpp
+  ppu.cpp
 )
 
 cmake_minimum_required(VERSION 3.25)
