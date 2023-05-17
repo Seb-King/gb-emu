@@ -179,8 +179,6 @@ class DmgPPU : public PPU {
   }
 
   void render_sprite(u8 tile_x, u8 tile_y, u8 charcode, u8 palette, u8 attrib) {
-    u8 scrollY = RAM::readAt(0xFF42);
-    u8 scrollX = RAM::readAt(0xFF43);
     u8 line1, line2;
     u16 addr = 0x8000 + (charcode << 4);
     int x = tile_x, y = tile_y, colour = 3;
@@ -198,12 +196,12 @@ class DmgPPU : public PPU {
     for (int i = 0; i < spriteHeight; i++) {
       if (yFlip) {
         if (spriteHeight == BIG) {
-          y = (tile_y - i - scrollY) % 256;
+          y = (tile_y - i) % 256;
         } else {
-          y = (tile_y - 8 - i - scrollY) % 256;
+          y = (tile_y - 8 - i) % 256;
         }
       } else {
-        y = (tile_y - 16 + i - scrollY) % 256;
+        y = (tile_y - 16 + i) % 256;
       }
 
       line1 = RAM::readAt(addr);
@@ -215,7 +213,7 @@ class DmgPPU : public PPU {
         colour = ((line1 >> j) & 1) + 2 * ((line2 >> j) & 1);
 
         if (xFlip) {
-          x = (-1 + j + tile_x - 8 - scrollX) % 256;
+          x = (-1 + j + tile_x - 8) % 256;
         } else {
           x = (-1 - j + tile_x) % 256;
         }
