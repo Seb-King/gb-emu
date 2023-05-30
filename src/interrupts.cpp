@@ -8,20 +8,8 @@
 
 namespace TIMER {
     int counter = 0;
-
-    /**
-    * The gameboy has a timer with selectable frequency of 4096, 16384 65536, 262144 Hertz
-    * when it overflows, it generates an interrupt it is then loaded with the contents of
-    * timer modulo (TMA)
-    */
-    u8 TIMA; // 0xFF05 frequency specified by 0xFF07 
-    u8 TMA; // 0xFF06 when TIMA overflows this data is loaded
-
-    // Timer control:
-    // Bit 2 = 0 : stop timer, = 1 : start timer
-    // Bits 1+0 - Input clock select, = 00 4.096KHz, = 01 : 262.144KHz, = 10 65.536KHz, =11 : 16.384KHz 
-    // u8 TAC; 
-    // 1024 cycles, 16, 64, 256
+    u8 TIMA;
+    u8 TMA;
 
     void inc(int amount) {
         u8 t = RAM::readAt(0xFF05);

@@ -4,8 +4,6 @@
 
 namespace RUPS {
     extern u8 IF;
-
-    //  Interrupt Enable 0xFFFF if a bit is 0 it disables the corresponding interrupt in IF
     extern u8 IE;
 }
 

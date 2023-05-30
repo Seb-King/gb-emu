@@ -50,11 +50,8 @@ class DmgPPU : public PPU {
       line2 = RAM::readAt(addr + 1);
       addr += 2;
 
-      // now we have to loop through each bit in the lines, extracting the colours
       for (int k = 0; k < 8; k++) {
-
-        //TODO: colour is also determined by the colour palette (same goes for OBJs) at 0xFF47
-        colour = ((line1 >> k) & 1) + 2 * ((line2 >> k) & 1); // can make this a lot shorter but this way preserve readability (for me)
+        colour = ((line1 >> k) & 1) + 2 * ((line2 >> k) & 1);
         if (colour == 0) {
           colour = palette & 0b00000011;
         } else if (colour == 1) {
@@ -74,23 +71,19 @@ class DmgPPU : public PPU {
   }
 
   void draw_BG() {
-    // figure out where the tileset is located for the background
     u8 LCDC_ = RAM::readAt(LCDC);
     u16 addr, tile_addr;
 
-    // this figures where the BG tilemap is 
     if (((LCDC_ & 0b00001000) >> 3) == 0) {
       addr = 0x9800;
     } else {
       addr = 0x9C00;
     }
 
-    //addr = 0x9800;
-
     if (((LCDC_ & 0b00010000) >> 4) == 0) {
-      tile_addr = 0x9000; // tiles are indexed by a signed 8 bit int
+      tile_addr = 0x9000;
     } else {
-      tile_addr = 0x8000; // tiles indexed by an unsigned 8-bit integer
+      tile_addr = 0x8000;
     }
 
     u8 charcode;
@@ -99,14 +92,13 @@ class DmgPPU : public PPU {
     scrollY = RAM::readAt(0xFF42);
     scrollX = RAM::readAt(0xFF43);
 
-    u8 palette = RAM::readAt(0xFF47); //BGP
+    u8 palette = RAM::readAt(0xFF47);
 
     u16 x;
     for (int j = 0; j < 32 * 32; j++) {
       charcode = RAM::readAt(addr);
       x = tile_addr;
 
-      // TODO: handle signed integers
       if (x == 0x9000) {
         s8 charc = charcode;
         tile_addr = ((0x0900 + charc) << 4);
@@ -123,13 +115,9 @@ class DmgPPU : public PPU {
 
 
   void draw_Window() {
-
-    // figure out where the tileset is located for the OBJ
     u8  LCDC_ = RAM::readAt(0xFF40);
     u16 addr, tile_addr;
-    // address of the tilemap for objects
 
-    // we are drawing the window here, so this gives us the Window tilemap
     if (((LCDC_ & 0b01000000) >> 6) == 0) {
       addr = 0x9800;
     } else {
@@ -137,9 +125,9 @@ class DmgPPU : public PPU {
     }
 
     if (((LCDC_ & 0b00001000) >> 3) == 1) {
-      tile_addr = 0x9000; // tiles are indexed by a signed 8 bit int
+      tile_addr = 0x9000;
     } else {
-      tile_addr = 0x8000; // tiles indexed by an unsigned 8-bit integer
+      tile_addr = 0x8000;
     }
 
     u8 charcode;
@@ -237,7 +225,6 @@ class DmgPPU : public PPU {
   }
 
   void draw_sprites() {
-    // The first address in OAM
     u16 addr = 0xFE00;
     u8 palette;
 
@@ -273,10 +260,8 @@ public:
   }
 
   void update(int ticks) {
-    // -- Display -- //
     u8 IF = RAM::readAt(0xFFFF);
 
-    // we need to check that the LCD is turned on
     if ((RAM::readAt(LCDC) >> 7) == 1) {
       scanline_count -= ticks;
     }
@@ -298,7 +283,6 @@ public:
     }
 
     if (scanline_count <= 0) {
-      // TODO: correct this timing
       scanline_count = 700;
       set_mode_to(0);
 
@@ -306,10 +290,7 @@ public:
       u8 line = RAM::readAt(LY);
 
       if (line == 144) {
-        if (flag == 1) {
-          // RAM::d_vram();    
-        }
-        CPU::write(RAM::readAt(0xFF0F) | 0x01, 0xFF0F); // request interrupt
+        CPU::write(RAM::readAt(0xFF0F) | 0x01, 0xFF0F);
 
         u8 LCDC_ = RAM::readAt(LCDC);
 
@@ -321,29 +302,18 @@ public:
             }
           }
 
-          // Sprites
           if ((LCDC_ & 2) == 2) {
             draw_sprites();
           }
         }
       } else if (line > 153) {
-        // here we reset LY and reset the flag associated with v-blank
         CPU::write(0, 0xFF44);
-        // u8 IF = RAM::readAt(0xFF0F); // interrupt flag
-        // IF &= 0b11111110;
-        // CPU::write(IF, 0xFF0F);
       }
     }
 
-    // LCDC Status interrupt
     if (CPU::IME == 1 && ((IF & 0x02) >> 1) == 1) {
-      // if LY = LYC
       if (RAM::readAt(0xFF44) == RAM::readAt(0xFF45)) {
-
-        // request interrupt
         CPU::write(RAM::readAt(0xFF0F) | 0b00000010, 0xFF0F);
-        // CPU::STAT();
-        //std::cout << "LY = LYC interrupt" << std::endl;
       }
     }
   }

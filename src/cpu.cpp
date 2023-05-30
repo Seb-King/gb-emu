@@ -9,7 +9,6 @@
 int flag = 0;
 const int clockrate = 4194304;
 
-// wrapper to allow two 8 bit registers to be used as a single 16 bit register
 u16 reg::val() { return lo + (hi << 8); }
 
 namespace RUPS {
@@ -19,19 +18,18 @@ namespace RUPS {
 
 void reg::set(u16 x) {
     hi = x >> 8;
-    lo = (x & 0x00FF); // this should chop off the most significant 4 bits
+    lo = (x & 0x00FF);
 }
 
 u16 LCDC = 0xFF40;
-u16 STAT = 0xFF41;  // LCDC status (interrupts and memory access)
-u16 SCY = 0xFF42; 	// - Scroll Y
-u16 SCX = 0xFF43; 	// - Scroll X
-u16 LY = 0xFF44;	//   0xFF44 - LCDC Y-Coordinate (the vertical line to which present data is transferred to the LCD driver)
-u16 LYC = 0xFF45;	//   0xFF45 - LY Compare : Compares itself with the LY. If the values ar ethe same, set the coincedent flag 
-// That is Bit 6 of STAT
+u16 STAT = 0xFF41;
+u16 SCY = 0xFF42;
+u16 SCX = 0xFF43;
+u16 LY = 0xFF44;
+u16 LYC = 0xFF45;
 
-u16 DMA = 0xFF46; 	//0xFF46 - Direct Memory Access Transfer
-u16 BGP = 0xFF47; 	//0xFF47 - Background Palette Data  0b11 10 01 00
+u16 DMA = 0xFF46;
+u16 BGP = 0xFF47;
 
 namespace CPU {
     std::vector<std::string> decoder(256);
@@ -41,14 +39,8 @@ namespace CPU {
     bool halt = false;
     bool halt_bug = false;
     u8 IME = 0;
-    u16 PC = 0; //Program Counter: holds the address of the current instruction being fetched from memory
-    // Needs to be incremented after reading any opcode (note that opcodes can change the counter)
-
-    u16 SP; //Stack Pointer: holds the address of the current top of stack located in external RAM
-
-    // Could be signed integers, I'm not sure, not even sure that the GB uses these registers
-
-    // F is the the flag register Z N H C 0 0 0 0, Z - zero flag, N - subtract flag, H - half carry, C - carry flag
+    u16 PC = 0;
+    u16 SP;
     reg AF, BC, DE, HL;
 
     int interrupt_mode = 0;
@@ -190,18 +182,14 @@ namespace CPU {
 
             data = RAM::readAt(source + idx);
 
-            // now write the data to OAM
             write(data, 0xFE00 + idx);
         }
-
-        //RAM::dump_oam();
     }
 
     void STAT() {
         push_onto_stack(PC);
         CPU::PC = 0x0048;
 
-        // now get rid of request flag IF
         RUPS::IF = RAM::readAt(0xFF0F);
         RUPS::IF &= 0b11111101;
         write(RUPS::IF, 0xFF0F);
@@ -480,8 +468,7 @@ namespace CPU {
         AF.lo &= 0b10010000;
         if ((AF.lo & 0b00010000) == 0b00010000) {
             AF.lo -= 0b00010000;
-        }
-        else {
+        } else {
             AF.lo += 0b00010000;
         }
         cycles = 4;
@@ -566,13 +553,6 @@ namespace CPU {
         PC = addr;
         write(0xFF, 0xFFFF);
         cycles = 16;
-    }
-
-    void CB() {
-        u8 opcode = read();
-        switch (opcode) {
-            // default: std::cout << "CB opcode not implemented: " << std::hex << unsigned(opcode) << std::endl;
-        }
     }
 
     void BIT(u8 bit, u8 reg_) {
@@ -660,8 +640,7 @@ namespace CPU {
     u8 AssignReg(u8 mask, u8 reg_, bool val) {
         if (val) {
             return reg_ | mask;
-        }
-        else {
+        } else {
             return reg_ & ~mask;
         }
     }
@@ -856,8 +835,7 @@ namespace CPU {
         AF.lo = (AF.hi & 0b00000001) << 4;
         AF.lo &= 0b10010000;
         AF.hi = (AF.hi >> 1) + carry;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 4;
     }
 
@@ -866,8 +844,7 @@ namespace CPU {
         AF.lo = (AF.hi & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         AF.hi = (AF.hi << 1) + carry;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
     void RLC_B() {
@@ -875,8 +852,7 @@ namespace CPU {
         AF.lo = (BC.hi & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         BC.hi = (BC.hi << 1) + carry;
-        if (BC.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (BC.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
     void RLC_C() {
@@ -884,8 +860,7 @@ namespace CPU {
         AF.lo = (BC.lo & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         BC.lo = (BC.lo << 1) + carry;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (BC.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
     void RLC_D() {
@@ -893,8 +868,7 @@ namespace CPU {
         AF.lo = (DE.hi & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         DE.hi = (DE.hi << 1) + carry;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (DE.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
     void RLC_E() {
@@ -902,8 +876,7 @@ namespace CPU {
         AF.lo = (DE.lo & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         DE.lo = (DE.lo << 1) + carry;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (DE.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
     void RLC_H() {
@@ -911,8 +884,7 @@ namespace CPU {
         AF.lo = (HL.hi & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         HL.hi = (HL.hi << 1) + carry;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (HL.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
     void RLC_L() {
@@ -920,8 +892,7 @@ namespace CPU {
         AF.lo = (HL.lo & 0b10000000) >> 3;
         AF.lo &= 0b10010000;
         HL.lo = (HL.lo << 1) + carry;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (HL.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 8;
     }
 
@@ -978,21 +949,17 @@ namespace CPU {
         AF.lo &= 0b10010000;
         x = (x << 1) + carry;
         write(x, HL.val());
-        if (x == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (x == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         cycles = 16;
     }
 
-    // if NZ (if Z is zero) then add n to current address and jump to that address
-    // we have to treat the next byte as a signed variable
     void JR_NZ() {
         if (!getZ()) {
             s8 b = read();
             PC += b;
             cycles = 12;
 
-        }
-        else {
+        } else {
             ++PC;
             cycles = 8;
         }
@@ -1003,8 +970,7 @@ namespace CPU {
             s8 b = read();
             PC += b;
             cycles = 12;
-        }
-        else {
+        } else {
             ++PC;
             cycles = 8;
         }
@@ -1015,8 +981,7 @@ namespace CPU {
             s8 b = read();
             PC += b;
             cycles = 12;
-        }
-        else {
+        } else {
             ++PC;
             cycles = 8;
         }
@@ -1027,8 +992,7 @@ namespace CPU {
             s8 b = read();
             PC += b;
             cycles = 12;
-        }
-        else {
+        } else {
             ++PC;
             cycles = 8;
         }
@@ -1054,8 +1018,7 @@ namespace CPU {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
-        }
-        else { PC += 2; }
+        } else { PC += 2; }
         cycles = 12;
     }
 
@@ -1065,8 +1028,7 @@ namespace CPU {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
-        }
-        else { PC += 2; }
+        } else { PC += 2; }
         cycles = 12;
     }
 
@@ -1076,8 +1038,7 @@ namespace CPU {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
-        }
-        else { PC += 2; }
+        } else { PC += 2; }
         cycles = 12;
     }
     void JP_C() {
@@ -1086,18 +1047,15 @@ namespace CPU {
             n1 = read();
             n2 = read();
             PC = n1 + (n2 << 8);
-        }
-        else { PC += 2; }
+        } else { PC += 2; }
         cycles = 12;
     }
 
     void JP_HL() {
-        // u8 n = RAM::readAt(HL.val());
         PC = HL.val();
         cycles = 4;
     }
 
-    // load C into n ()
     void LDc_n() {
         u8 n = read();
         BC.lo = n;
@@ -1323,8 +1281,7 @@ namespace CPU {
 
     void LDHnA() { u8 n = read(); write(AF.hi, 0xFF00 + n); }
     void LDHAn() { u8 n = read(); RAM::readAt(0xFF00 + n); }
-    //-- 16-Bit shit --//
-    // going to need to read 16 bit values little endian style (I think)
+
     void LD_nn_BC() {
         u8 n1 = read();
         u8 n2 = read();
@@ -1335,11 +1292,8 @@ namespace CPU {
     void LD_nn_HL() { u8 n1 = read(); u8 n2 = read(); u16 nn = n1 + (n2 << 8); HL.set(nn); }
     void LD_nn_SP() { u8 n1 = read(); u8 n2 = read(); u16 nn = n1 + (n2 << 8); SP = nn; }
 
-    // i'm not sure whether SP = HL.val() or the bytes at SP should be set to HL
-    //TODO: fix this shit
     void LD_SPHL() { SP = HL.val(); }
 
-    // put SP + n effective address into HL
     void LDHL_SPn() {
         s8 n = read();
         HL.set(SP + n);
@@ -1361,11 +1315,8 @@ namespace CPU {
 
 
         cycles = 20;
-    } // Put SP at address nn
+    }
 
-    // Push register pair nn onto stack, decrement SP twice
-    // TODO: figure out whether to set the value first or decrement SP first 
-    // TODO: check that the endianess is correct (does it even matter??)
     void PUSH_AF() {
         SP--;
         write(AF.hi, SP);
@@ -1377,7 +1328,6 @@ namespace CPU {
     void PUSH_DE() { SP--; write(DE.hi, SP); SP--; write(DE.lo, SP); cycles = 16; }
     void PUSH_HL() { SP--; write(HL.hi, SP); SP--; write(HL.lo, SP); cycles = 16; }
 
-    // Pop two bytes off stack into register pair, increment SP twice
     void POP_AF() {
         u8 n = RAM::readAt(SP);
         AF.lo = n & 0xF0;
@@ -1388,19 +1338,18 @@ namespace CPU {
 
         cycles = 12;
     }
-    void POP_BC() { u8 n = RAM::readAt(SP); BC.lo = n; ++SP; u8 m = RAM::readAt(SP); BC.hi = m; ++SP; cycles = 12; } //TODO: something is going wrong here
+    void POP_BC() { u8 n = RAM::readAt(SP); BC.lo = n; ++SP; u8 m = RAM::readAt(SP); BC.hi = m; ++SP; cycles = 12; }
     void POP_DE() { u8 n = RAM::readAt(SP); DE.lo = n; ++SP; u8 m = RAM::readAt(SP); DE.hi = m; ++SP; cycles = 12; }
     void POP_HL() { u8 n = RAM::readAt(SP); HL.lo = n; ++SP; u8 m = RAM::readAt(SP); HL.hi = m; ++SP; cycles = 12; }
 
 
-    // ADD_xy add y to x and set flags
+
     void ADD_aa() {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += AF.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
+        AF.lo = AF.lo & 0b10110000;
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1409,9 +1358,8 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += BC.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
+        AF.lo = AF.lo & 0b10110000;
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1420,9 +1368,8 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += BC.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
+        AF.lo = AF.lo & 0b10110000;
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1431,9 +1378,8 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += DE.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
+        AF.lo = AF.lo & 0b10110000;
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 4;
@@ -1453,8 +1399,7 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += HL.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
         setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
@@ -1464,8 +1409,7 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = HL.lo & 0x0F;
         AF.hi += HL.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
         setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
@@ -1475,8 +1419,7 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += RAM::readAt(HL.val());
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
         setN(false);
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
@@ -1486,9 +1429,8 @@ namespace CPU {
         u8 x = AF.hi;
         u8 loNib = AF.hi & 0x0F;
         AF.hi += read();
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; }
-        else { AF.lo = 0; } // set Z = 0 if == 0
-        AF.lo = AF.lo & 0b10110000; // reset N (N = 0)
+        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
+        AF.lo = AF.lo & 0b10110000;
         setH((AF.hi & 0x0F) < loNib);
         setC(AF.hi < x);
         cycles = 8;
@@ -1952,71 +1894,57 @@ namespace CPU {
     void INC_a() {
         u8 loNib = AF.hi & 0x0F;
         ++AF.hi;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (AF.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (AF.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_b() {
         u8 loNib = BC.hi & 0x0F;
         ++BC.hi;
-        if (BC.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (BC.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (BC.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (BC.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_c() {
         u8 loNib = BC.lo & 0x0F;
         ++BC.lo;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (BC.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (BC.lo & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (BC.lo & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_d() {
         u8 loNib = DE.hi & 0x0F;
         ++DE.hi;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (DE.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (DE.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (DE.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_e() {
         u8 loNib = DE.lo & 0x0F;
         ++DE.lo;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (DE.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (DE.lo & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (DE.lo & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_h() {
         u8 loNib = HL.hi & 0x0F;
         ++HL.hi;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (HL.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (HL.hi & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (HL.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_l() {
         u8 loNib = HL.lo & 0x0F;
         ++HL.lo;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (HL.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (HL.lo & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (HL.lo & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 4;
     }
     void INC_HLad() {
@@ -2024,11 +1952,9 @@ namespace CPU {
         u8 loNib = x & 0x0F;
         ++x;
         write(x, HL.val());
-        if (x == 0) { AF.lo |= 0b10000000; }
-        else { AF.lo &= 0b01110000; }
+        if (x == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
         AF.lo &= 0b10110000;
-        if (loNib > (x & 0x0F)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
+        if (loNib > (x & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
         cycles = 12;
     }
 
@@ -2210,48 +2136,40 @@ namespace CPU {
         u16 x = HL.val();
         HL.set(x + BC.val());
         AF.lo &= 0b10110000;
-        // half carry - set H if carry from bit 11 (so the 12th place in the binary expression)
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
-        //carry flag - we set C if there is carry, which is when the result is lower than to start
-        if (HL.val() < x) { AF.lo |= 0b00010000; }
-        else { AF.lo &= 0b11100000; }
+
+        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
+
+        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
         cycles = 8;
     }
     void ADD_DE() {
         u16 x = HL.val();
         HL.set(x + DE.val());
         AF.lo &= 0b10110000;
-        // half carry - set H if carry from bit 11 (so the 12th place in the binary expression)
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
-        //carry flag - we set C if there is carry, which is when the result is lower than to start
-        if (HL.val() < x) { AF.lo |= 0b00010000; }
-        else { AF.lo &= 0b11100000; }
+
+        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
+
+        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
         cycles = 8;
     }
     void ADD_HL() {
         u16 x = HL.val();
         HL.set(2 * x);
         AF.lo &= 0b10110000;
-        // half carry - set H if carry from bit 11 (so the 12th place in the binary expression)
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
-        //carry flag - we set C if there is carry, which is when the result is lower than to start
-        if (HL.val() < x) { AF.lo |= 0b00010000; }
-        else { AF.lo &= 0b11100000; }
+
+        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
+
+        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
         cycles = 8;
     }
     void ADD_SP() {
         u16 x = HL.val();
         HL.set(x + SP);
         AF.lo &= 0b10110000;
-        // half carry - set H if carry from bit 11 (so the 12th place in the binary expression)
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; }
-        else { AF.lo &= 0b11010000; }
-        //carry flag - we set C if there is carry, which is when the result is lower than to start
-        if (HL.val() < x) { AF.lo |= 0b00010000; }
-        else { AF.lo &= 0b11100000; }
+
+        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
+
+        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
         cycles = 8;
     }
 
@@ -2381,8 +2299,7 @@ namespace CPU {
             if (getH() || (AF.hi & 0x0F) > 0x09) {
                 AF.hi += 0x06;
             }
-        }
-        else {
+        } else {
             if (getC()) {
                 AF.hi -= 0x60;
                 carry = true;
@@ -2782,7 +2699,7 @@ namespace CPU {
         decoder[0xCC] = "CALL_Z";
         decoder[0xD4] = "CALL_NC";
         decoder[0xDC] = "CALL_C";
-        decoder[0xEA] = "LD_nn_a"; // put value A into the address nn 
+        decoder[0xEA] = "LD_nn_a";
         decoder[0xC9] = "RET";
         decoder[0xC0] = "RET_NZ";
         decoder[0xC8] = "RET_Z";
@@ -2798,13 +2715,12 @@ namespace CPU {
 
     void init_opcodes() {
         op_codes[0x00] = NOP;
-        op_codes[0x06] = LDb_n; // load 
-        op_codes[0x0E] = LDc_n;              // how do we even handle what n is? Where should it  
+        op_codes[0x06] = LDb_n;
+        op_codes[0x0E] = LDc_n;
         op_codes[0x16] = LDd_n;
         op_codes[0x1E] = LDe_n;
         op_codes[0x26] = LDh_n;
         op_codes[0x2E] = LDl_n;
-        // Load  LD r1r2, load r2 into r1
         op_codes[0x7F] = LDrr_aa;
         op_codes[0x78] = LDrr_ab;
         op_codes[0x79] = LDrr_ac;
@@ -2873,44 +2789,31 @@ namespace CPU {
         op_codes[0x75] = LDrr_HLl;
         op_codes[0x36] = LDrr_HLn;
 
-        op_codes[0xF2] = LDa_c; // put value at address 0xFF00 + reg 
-        op_codes[0xE2] = LDc_a; // put A into address (0xFF00 + reg C)
-        op_codes[0x3A] = LDDaHL; // put value at address HL into A th 
-        op_codes[0x32] = LDDHLa; // Put A into memory address HL th 
-        op_codes[0x2A] = LDI_aHL; // Put value at address HL into A then increment HL
-        op_codes[0x22] = LDI_HLa; // put A into mem address . 
-        op_codes[0xE0] = LDH_nA; // Put A into memory address 0xFF00 + n
-        op_codes[0xF0] = LDH_a_ffn; // Put memory address 0xFF00 + 
+        op_codes[0xF2] = LDa_c;
+        op_codes[0xE2] = LDc_a;
+        op_codes[0x3A] = LDDaHL;
+        op_codes[0x32] = LDDHLa;
+        op_codes[0x2A] = LDI_aHL;
+        op_codes[0x22] = LDI_HLa;
+        op_codes[0xE0] = LDH_nA;
+        op_codes[0xF0] = LDH_a_ffn;
 
-
-        // --------- 16-Bit Loads --------- //
-
-          // LDnn,n put value nn into n
         op_codes[0x01] = LD_nn_BC;
         op_codes[0x11] = LD_nn_DE;
         op_codes[0x21] = LD_nn_HL;
         op_codes[0x31] = LD_nn_SP;
 
-        // LD SP,HL put HL into SP
         op_codes[0xF9] = LD_SPHL;
-        op_codes[0xF8] = LDHL_SPn; // Put SP+n effective address into HL, n is signed, fla 
-        op_codes[0x08] = LD_nnSP; //nn two byte immediate address, Put SP at address n
-
-        // Push register pair nn onto stack decrement SP twice
+        op_codes[0xF8] = LDHL_SPn;
+        op_codes[0x08] = LD_nnSP;
         op_codes[0xF5] = PUSH_AF;
         op_codes[0xC5] = PUSH_BC;
         op_codes[0xD5] = PUSH_DE;
         op_codes[0xE5] = PUSH_HL;
-
-        // Pop nn, pop two bytes off stack into register pair nn, increment Stack pointer twice
         op_codes[0xF1] = POP_AF;
         op_codes[0xC1] = POP_BC;
         op_codes[0xD1] = POP_DE;
         op_codes[0xE1] = POP_HL;
-
-        // 8-Bit ALU
-        // ADD A,n -- add n to A
-
         op_codes[0x87] = ADD_aa;
         op_codes[0x80] = ADD_ab;
         op_codes[0x81] = ADD_ac;
@@ -2920,8 +2823,6 @@ namespace CPU {
         op_codes[0x85] = ADD_al;
         op_codes[0x86] = ADD_aH;
         op_codes[0xC6] = ADD_a_hash;
-
-        // ADC A,n -- add n + carry flag to A
         op_codes[0x8f] = ADC_aa;
         op_codes[0x88] = ADC_ab;
         op_codes[0x89] = ADC_ac;
@@ -2931,8 +2832,6 @@ namespace CPU {
         op_codes[0x8D] = ADC_al;
         op_codes[0x8E] = ADC_aHL;
         op_codes[0xCE] = ADC_a_hash;
-
-        // SUB n, subtract n from A
         op_codes[0x97] = SUB_a;
         op_codes[0x90] = SUB_b;
         op_codes[0x91] = SUB_c;
@@ -2942,7 +2841,6 @@ namespace CPU {
         op_codes[0x95] = SUB_l;
         op_codes[0x96] = SUB_HL;
         op_codes[0xD6] = SUB_hash;
-
         op_codes[0x9F] = SBC_a;
         op_codes[0x98] = SBC_b;
         op_codes[0x99] = SBC_c;
@@ -2952,11 +2850,6 @@ namespace CPU {
         op_codes[0x9D] = SBC_l;
         op_codes[0x9E] = SBC_HL;
         op_codes[0xDE] = SBC_hash;
-
-        // ------ Logical Operations ------ //
-        // Check flags in each operation
-
-        // AND n, logically AND n with A, result in A
         op_codes[0xA7] = AND_a;
         op_codes[0xA0] = AND_b;
         op_codes[0xA1] = AND_c;
@@ -2966,8 +2859,6 @@ namespace CPU {
         op_codes[0xA5] = AND_l;
         op_codes[0xA6] = AND_HL;
         op_codes[0xE6] = AND_hash;
-
-        // Logical OR with register A, result in A
         op_codes[0xB7] = OR_a;
         op_codes[0xB0] = OR_b;
         op_codes[0xB1] = OR_c;
@@ -2977,9 +2868,6 @@ namespace CPU {
         op_codes[0xB5] = OR_l;
         op_codes[0xB6] = OR_HL;
         op_codes[0xF6] = OR_hash;
-
-        // Logical exclusive OR n with register A, result in A
-
         op_codes[0xAF] = XOR_a;
         op_codes[0xA8] = XOR_b;
         op_codes[0xA9] = XOR_c;
@@ -2989,9 +2877,6 @@ namespace CPU {
         op_codes[0xAD] = XOR_l;
         op_codes[0xAE] = XOR_HL;
         op_codes[0xEE] = XOR_hash;
-
-        // Copmare A with n. Basically an A - n subtraction instruct but no results
-        // I think the point is to set flags here 
         op_codes[0xBF] = CP_a;
         op_codes[0xB8] = CP_b;
         op_codes[0xB9] = CP_c;
@@ -3001,8 +2886,6 @@ namespace CPU {
         op_codes[0xBD] = CP_l;
         op_codes[0xBE] = CP_HL;
         op_codes[0xFE] = CP_hash;
-
-        // increment, pretty self explanatory
         op_codes[0x3C] = INC_a;
         op_codes[0x04] = INC_b;
         op_codes[0x0C] = INC_c;
@@ -3011,7 +2894,6 @@ namespace CPU {
         op_codes[0x24] = INC_h;
         op_codes[0x2C] = INC_l;
         op_codes[0x34] = INC_HLad;
-
         op_codes[0x3D] = DEC_a;
         op_codes[0x05] = DEC_b;
         op_codes[0x0D] = DEC_c;
@@ -3020,18 +2902,10 @@ namespace CPU {
         op_codes[0x25] = DEC_h;
         op_codes[0x2D] = DEC_l;
         op_codes[0x35] = DEC_HLad;
-
-        // --16-bit arith-- //
-
-        // add n to HL and set some flags
         op_codes[0x09] = ADD_BC;
         op_codes[0x19] = ADD_DE;
         op_codes[0x29] = ADD_HL;
         op_codes[0x39] = ADD_SP;
-
-
-        // -------------------------------//
-        // In this section i'm just going to implement opcodes until I can get the boot process of the gb going
         op_codes[0xC7] = RST_00;
         op_codes[0xCF] = RST_08;
         op_codes[0xD7] = RST_10;
@@ -3040,7 +2914,6 @@ namespace CPU {
         op_codes[0xEF] = RST_28;
         op_codes[0xF7] = RST_30;
         op_codes[0xFF] = RST_38;
-
         op_codes[0xCB] = run_cb;
         op_codes[0x30] = JR_NC;
         op_codes[0x38] = JR_C;
@@ -3053,8 +2926,6 @@ namespace CPU {
         op_codes[0xD2] = JP_NC;
         op_codes[0xDA] = JP_C;
         op_codes[0xE9] = JP_HL;
-
-
         op_codes[0x77] = LD_HL_a;
         op_codes[0x02] = LD_BC_a;
         op_codes[0x12] = LD_DE_a;
@@ -3065,7 +2936,7 @@ namespace CPU {
         op_codes[0xD4] = CALL_NC;
         op_codes[0xDc] = CALL_C;
 
-        op_codes[0xEA] = LD_nn_a; // put value A into the address nn 
+        op_codes[0xEA] = LD_nn_a;
         op_codes[0xC9] = RET;
         op_codes[0xC0] = RET_NZ;
         op_codes[0xC8] = RET_Z;
@@ -3075,7 +2946,7 @@ namespace CPU {
         op_codes[0x17] = RLA;
         op_codes[0x07] = RLCA;
         op_codes[0x0F] = RRCA;
-        op_codes[0xF3] = DI; // TODO: Disable interrupts after the next  instruction
+        op_codes[0xF3] = DI;
         op_codes[0xFB] = EI;
         op_codes[0xE8] = ADD_n_SP;
         op_codes[0x03] = INC_BC;
@@ -3091,7 +2962,6 @@ namespace CPU {
         op_codes[0x2F] = CPL;
         op_codes[0x3F] = CCF;
         op_codes[0x37] = SCF;
-
         op_codes[0x1F] = RR_A;
 
         cb_codes[0x00] = RLC_B;
@@ -3102,7 +2972,6 @@ namespace CPU {
         cb_codes[0x05] = RLC_L;
         cb_codes[0x06] = RLC_HL;
         cb_codes[0x07] = RLC_A;
-
         cb_codes[0x08] = RRC_B;
         cb_codes[0x09] = RRC_C;
         cb_codes[0x0A] = RRC_D;
@@ -3111,7 +2980,6 @@ namespace CPU {
         cb_codes[0x0D] = RRC_L;
         cb_codes[0x0E] = RRC_HL;
         cb_codes[0x0F] = RRC_A;
-
         cb_codes[0x20] = SLA_B;
         cb_codes[0x21] = SLA_C;
         cb_codes[0x22] = SLA_D;
@@ -3120,7 +2988,6 @@ namespace CPU {
         cb_codes[0x25] = SLA_L;
         cb_codes[0x26] = SLA_HL;
         cb_codes[0x27] = SLA_A;
-
         cb_codes[0x28] = SRA_B;
         cb_codes[0x29] = SRA_C;
         cb_codes[0x2A] = SRA_D;
@@ -3129,7 +2996,6 @@ namespace CPU {
         cb_codes[0x2D] = SRA_L;
         cb_codes[0x2E] = SRA_HL;
         cb_codes[0x2F] = SRA_A;
-
         cb_codes[0x40] = BIT_0B;
         cb_codes[0x41] = BIT_0C;
         cb_codes[0x42] = BIT_0D;
@@ -3194,7 +3060,6 @@ namespace CPU {
         cb_codes[0x7D] = BIT_7L;
         cb_codes[0x7E] = BIT_7HL;
         cb_codes[0x7F] = BIT_7A;
-
         cb_codes[0x80] = RES_0B;
         cb_codes[0x81] = RES_0C;
         cb_codes[0x82] = RES_0D;
@@ -3259,7 +3124,6 @@ namespace CPU {
         cb_codes[0xBD] = RES_7L;
         cb_codes[0xBE] = RES_7HL;
         cb_codes[0xBF] = RES_7A;
-
         cb_codes[0xC0] = SET_0B;
         cb_codes[0xC1] = SET_0C;
         cb_codes[0xC2] = SET_0D;
@@ -3324,7 +3188,6 @@ namespace CPU {
         cb_codes[0xFD] = SET_7L;
         cb_codes[0xFE] = SET_7HL;
         cb_codes[0xFF] = SET_7A;
-
         cb_codes[0x17] = RL_A;
         cb_codes[0x10] = RL_B;
         cb_codes[0x11] = RL_C;
@@ -3341,9 +3204,7 @@ namespace CPU {
         cb_codes[0x34] = SWAP_h;
         cb_codes[0x35] = SWAP_l;
         cb_codes[0x36] = SWAP_HL;
-
         cb_codes[0x87] = RES_0_a;
-
         cb_codes[0x38] = SRL_B;
         cb_codes[0x39] = SRL_C;
         cb_codes[0x3A] = SRL_D;
@@ -3352,7 +3213,6 @@ namespace CPU {
         cb_codes[0x3D] = SRL_L;
         cb_codes[0x3E] = SRL_HL;
         cb_codes[0x3F] = SRL_A;
-
         cb_codes[0x1F] = CB_RR_A;
         cb_codes[0x18] = RR_B;
         cb_codes[0x19] = RR_C;
