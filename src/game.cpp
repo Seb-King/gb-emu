@@ -23,7 +23,6 @@ void handle_inputs() {
 }
 
 void tick(RunOptions options, PPU* ppu) {
-
     if (options.LOG_STATE || INPUTS::toggle_logging) {
         CPU::print_registers();
     }
@@ -62,14 +61,13 @@ void game_loop(RunOptions options) {
     PPU* ppu = buildPPU();
 
     int input_time = 0;
-    int cnt = 0;
 
     bool render_next_vblank = true;
 
     while (!INPUTS::getQuit()) {
         input_time++;
 
-        if (input_time == 100) {
+        if (input_time == 1000) {
             input_time = 0;
             handle_inputs();
         }
