@@ -32,3 +32,7 @@ Then run the executable:
 ```sh
 > ./build/tests/tests
 ```
+
+## How to play
+
+'Z' and 'X' on the keyboard are mapped to the 'A' and 'B' buttons on the gameboy, respectively. The arrow keys are mapped to the d-pad.
