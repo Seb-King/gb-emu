@@ -27,3 +27,4 @@ CMakeCache.txt
 Makefile
 **/CMakeFiles/*
 _deps/
+.cache/

@@ -35,6 +35,7 @@ add_library(
   emulator.cpp
   run_options.cpp
   ppu.cpp
+  input_handler.cpp
 )
 
 cmake_minimum_required(VERSION 3.25)
