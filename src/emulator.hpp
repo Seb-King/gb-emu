@@ -1,4 +1,3 @@
-#include "game.hpp"
 #include "run_options.hpp"
 #include "input_handler.hpp"
 #include "ppu.hpp"
