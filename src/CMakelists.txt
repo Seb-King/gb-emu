@@ -22,7 +22,6 @@ add_library(
   emulator_core 
   SHARED
   cpu.cpp
-  debug_display.cpp
   file_handling.cpp
   ram.cpp
   render.cpp

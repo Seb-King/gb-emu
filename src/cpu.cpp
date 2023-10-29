@@ -6,7 +6,6 @@
 #include "cpu.hpp"
 #include "ram.hpp"
 
-int flag = 0;
 const int clockrate = 4194304;
 
 u16 reg::val() { return lo + (hi << 8); }
@@ -30,6 +29,99 @@ u16 LYC = 0xFF45;
 
 u16 DMA = 0xFF46;
 u16 BGP = 0xFF47;
+
+GB_CPU::GB_CPU() {
+    this->halt = false;
+    this->halt_bug = false;
+    this->IME = 0;
+    this->PC = 0;
+    this->interrupt_mode = 0;
+    this->count = 1;
+    this->cycles = 4;
+    this->timing = 0;
+
+    std::vector<std::string> decoder(256);
+    std::vector<void (*)()> op_codes(256);
+    std::vector<void (*)()> cb_codes(256);
+};
+
+int GB_CPU::get_cycles() {
+    return this->cycles;
+}
+
+int GB_CPU::get_timing() {
+    return this->timing;
+}
+
+void GB_CPU::init_codes() {
+    this->init_opcodes();
+    this->init_decoder();
+}
+
+void GB_CPU::init_opcodes() {
+    throw std::runtime_error("Not implemented");
+}
+
+void GB_CPU::init_decoder() {
+    throw std::runtime_error("Not implemented");
+}
+
+void GB_CPU::disable_boot_rom() {
+    RAM::write(0x01, 0xFF50);
+}
+
+void GB_CPU::init_registers_to_skip_boot() {
+    this->PC = 0x0100;
+    this->SP = 0xFFFE;
+    this->AF.set(0x01B0);
+    this->BC.set(0x0013);
+    this->DE.set(0x00D8);
+    this->HL.set(0x014D);
+    this->disable_boot_rom();
+}
+
+void GB_CPU::push_byte_onto_stack(u8 val) {
+    this->SP--;
+    this->write(val, SP);
+}
+
+void GB_CPU::push_onto_stack(u16 val) {
+    u8 lowerByte = val & 0x00FF;
+    u8 higherByte = (val & 0xFF00) >> 8;
+
+    this->push_byte_onto_stack(higherByte);
+    this->push_byte_onto_stack(lowerByte);
+}
+
+u8 GB_CPU::pop_byte_from_stack() {
+    u8 value = RAM::readAt(this->SP);
+    this->SP++;
+    return value;
+}
+
+void GB_CPU::write(u8 val, u16 addr) {
+    RAM::write(val, addr);
+
+    if (addr == DMA) {
+        this->DMA_routine();
+    }
+}
+
+u8 GB_CPU::read() {
+    u8 byte = RAM::readAt(this->PC);
+    ++this->PC;
+    return byte;
+}
+
+void GB_CPU::DMA_routine() {
+    u16 source = (RAM::readAt(DMA) << 8);
+    u8 data;
+    for (int idx = 0; idx < 0xF1; idx++) {
+        data = RAM::readAt(source + idx);
+
+        this->write(data, 0xFE00 + idx);
+    }
+}
 
 namespace CPU {
     std::vector<std::string> decoder(256);

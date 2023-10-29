@@ -3,7 +3,6 @@
 #include "ram.hpp"
 #include "cpu.hpp"
 #include "sprite_renderer.hpp"
-#include "debug_display.hpp"
 #include "ppu.hpp"
 
 namespace TIMER {
@@ -78,7 +77,6 @@ void v_blank() {
 
     CPU::push_onto_stack(CPU::PC);
     CPU::PC = 0x0040;
-    flag = 0;
 
     RUPS::IF = RAM::readAt(0xFF0F);
     RUPS::IF &= 0b11111110;
