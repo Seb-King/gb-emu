@@ -2,6 +2,7 @@
 
 #include "typedefs.hpp"
 #include <vector>
+#include "functional"
 
 extern u16 LCDC;
 extern u16 STAT;
@@ -20,9 +21,6 @@ public:
 };
 
 class GB_CPU {
-    std::vector<std::string> decoder;
-    std::vector<void (*)()> op_codes;
-    std::vector<void (*)()> cb_codes;
 public:
     GB_CPU();
 
@@ -41,7 +39,7 @@ public:
     int interrupt_mode;
 
     void execute_next_operation();
-    void runOPCode(u8 op_code);
+    void run_opcode(u8 op_code);
     void init_registers_to_skip_boot();
     void print_registers();
 
@@ -65,11 +63,25 @@ public:
     void run_cb(u8);
 
 private:
+    typedef std::function<void(GB_CPU*)> operation;
+    std::vector<std::string> decoder;
+    std::vector<operation> op_codes;
+    std::vector<operation> cb_codes;
     reg AF, BC, DE, HL;
     void disable_boot_rom();
     void init_codes();
     void push_byte_onto_stack(u8 val);
     u8 pop_byte_from_stack();
+    bool half_carry_add(u8 a, u8 b);
+    bool half_carry_sub(u8 a, u8 b);
+    void set_z(bool val);
+    void set_n(bool val);
+    void set_h(bool val);
+    void set_c(bool val);
+    bool get_z();
+    bool get_n();
+    bool get_h();
+    bool get_c();
 };
 
 namespace RUPS {

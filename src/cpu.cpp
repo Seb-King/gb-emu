@@ -5,6 +5,7 @@
 #include <vector>
 #include "cpu.hpp"
 #include "ram.hpp"
+#include "functional"
 
 const int clockrate = 4194304;
 
@@ -41,8 +42,8 @@ GB_CPU::GB_CPU() {
     this->timing = 0;
 
     std::vector<std::string> decoder(256);
-    std::vector<void (*)()> op_codes(256);
-    std::vector<void (*)()> cb_codes(256);
+
+    this->init_codes();
 };
 
 int GB_CPU::get_cycles() {
@@ -53,7 +54,14 @@ int GB_CPU::get_timing() {
     return this->timing;
 }
 
+
 void GB_CPU::init_codes() {
+    std::vector<operation> op_codes(256, std::mem_fn(&GB_CPU::op_not_imp));
+    std::vector<operation> cb_codes(256, std::mem_fn(&GB_CPU::cb_not_imp));
+
+    this->op_codes = op_codes;
+    this->cb_codes = cb_codes;
+
     this->init_opcodes();
     this->init_decoder();
 }
@@ -99,6 +107,10 @@ u8 GB_CPU::pop_byte_from_stack() {
     return value;
 }
 
+u16 GB_CPU::pop_from_stack() {
+    return this->pop_byte_from_stack() + (this->pop_byte_from_stack() << 8);
+}
+
 void GB_CPU::write(u8 val, u16 addr) {
     RAM::write(val, addr);
 
@@ -122,6 +134,123 @@ void GB_CPU::DMA_routine() {
         this->write(data, 0xFE00 + idx);
     }
 }
+
+bool GB_CPU::half_carry_add(u8 a, u8 b) {
+    return ((((a & 0x0F) + (b & 0x0F)) & 0x10) == 0x10);
+}
+
+bool GB_CPU::half_carry_sub(u8 a, u8 b) {
+    return ((a & 0x0F) < (b & 0x0F));
+}
+
+void GB_CPU::set_z(bool x) {
+    if (x) this->AF.lo |= 0x80;
+    else this->AF.lo &= 0x70;
+}
+
+void GB_CPU::set_n(bool x) {
+    if (x) this->AF.lo |= 0x40;
+    else this->AF.lo &= 0xBF;
+}
+
+void GB_CPU::set_h(bool x) {
+    if (x) this->AF.lo |= 0x20;
+    else this->AF.lo &= 0xDF;
+}
+
+void GB_CPU::set_c(bool x) {
+    if (x) this->AF.lo |= 0x10;
+    else this->AF.lo &= 0xEF;
+}
+
+bool GB_CPU::get_c() { return (this->AF.lo & 0b00010000) == 0b00010000; }
+bool GB_CPU::get_z() { return (this->AF.lo & 0b10000000) == 0b10000000; }
+bool GB_CPU::get_h() { return (this->AF.lo & 0b00100000) == 0b00100000; }
+bool GB_CPU::get_n() { return (this->AF.lo & 0b01000000) == 0b01000000; }
+
+void GB_CPU::print_registers() {
+    std::cout << "A:";
+    std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(this->AF.hi);
+    std::cout << " F:" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(this->AF.lo);
+
+    std::cout << " B:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(this->BC.hi);
+    std::cout << " C:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(this->BC.lo);
+
+    std::cout << " D:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(this->DE.hi);
+    std::cout << " E:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(this->DE.lo);
+
+    std::cout << " H:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << std::uppercase << int(this->HL.hi);
+    std::cout << " L:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(this->HL.lo);
+
+    std::cout << " SP:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(this->SP);
+    std::cout << " PC:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(this->PC);
+
+    std::cout << " PCMEM:";
+    std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC));
+    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC + 1));
+    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC + 2));
+    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC + 3));
+
+    std::cout << std::endl;
+}
+
+void GB_CPU::STAT() {
+    this->push_onto_stack(this->PC);
+    this->PC = 0x0048;
+
+    this->IF = RAM::readAt(0xFF0F);
+    this->IF &= 0b11111101;
+    this->write(this->IF, 0xFF0F);
+}
+
+void GB_CPU::op_not_imp() {
+    u8 opcode = RAM::readAt(PC - 1);
+    std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
+    std::cout << "PC:" << std::hex << unsigned(this->PC) << std::endl;
+    exit(0);
+}
+
+void GB_CPU::cb_not_imp() {
+    u8 opcode = RAM::readAt(this->PC - 1);
+    std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
+    exit(0);
+}
+
+void GB_CPU::execute_next_operation() {
+    if (!CPU::halt) {
+        if (halt_bug) {
+            halt_bug = false;
+            u16 prevPC = PC;
+            u8 opcode = this->read();
+            this->run_opcode(opcode);
+            PC = prevPC;
+        } else {
+            u8 opcode = this->read();
+            this->run_opcode(opcode);
+        }
+    }
+}
+
+void GB_CPU::run_opcode(u8 op_code) {
+    ((*this->op_codes[op_code]))(&this);
+
+    if (interrupt_mode > 0) {
+        if (interrupt_mode == 1) {
+            IME = 0;
+            interrupt_mode = 0;
+        } else if (interrupt_mode == 2) {
+            interrupt_mode--;
+        }
+
+        if (interrupt_mode == 3) {
+            IME = 1;
+            interrupt_mode = 0;
+        } else if (interrupt_mode == 4) {
+            interrupt_mode--;
+        }
+    }
+}
+
 
 namespace CPU {
     std::vector<std::string> decoder(256);
