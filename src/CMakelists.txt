@@ -9,6 +9,11 @@ FetchContent_Declare(
     GIT_PROGRESS    TRUE
 )
 
+if(EMPSCRIPTEN)
+  set(CMAKE_EXECUTABLE_SUFFIX ".html")
+  
+endif()
+
 FetchContent_MakeAvailable(SDL2)
 
 set(SDL_LIBRARIES ${SDL_LIBRARIES} SDL2main SDL2-static)
@@ -54,7 +59,7 @@ add_executable(
 
 set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
 set_property(TARGET emulator_core PROPERTY CXX_STANDARD 17)
-set_property(TARGET tests PROPERTY CXX_STANDARD 17)
+# set_property(TARGET tests PROPERTY CXX_STANDARD 17)
 
 target_link_libraries(
   tests
