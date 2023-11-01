@@ -54,7 +54,6 @@ int GB_CPU::get_timing() {
     return this->timing;
 }
 
-
 void GB_CPU::init_codes() {
     std::vector<operation> op_codes(256, std::mem_fn(&GB_CPU::op_not_imp));
     std::vector<operation> cb_codes(256, std::mem_fn(&GB_CPU::cb_not_imp));
@@ -90,7 +89,7 @@ void GB_CPU::init_registers_to_skip_boot() {
 
 void GB_CPU::push_byte_onto_stack(u8 val) {
     this->SP--;
-    this->write(val, SP);
+    this->write(val, this->SP);
 }
 
 void GB_CPU::push_onto_stack(u16 val) {
@@ -204,7 +203,7 @@ void GB_CPU::STAT() {
 }
 
 void GB_CPU::op_not_imp() {
-    u8 opcode = RAM::readAt(PC - 1);
+    u8 opcode = RAM::readAt(this->PC - 1);
     std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
     std::cout << "PC:" << std::hex << unsigned(this->PC) << std::endl;
     exit(0);
@@ -217,13 +216,13 @@ void GB_CPU::cb_not_imp() {
 }
 
 void GB_CPU::execute_next_operation() {
-    if (!CPU::halt) {
+    if (!this->halt) {
         if (halt_bug) {
             halt_bug = false;
-            u16 prevPC = PC;
+            u16 prevPC = this->PC;
             u8 opcode = this->read();
             this->run_opcode(opcode);
-            PC = prevPC;
+            this->PC = prevPC;
         } else {
             u8 opcode = this->read();
             this->run_opcode(opcode);
@@ -232,3215 +231,2216 @@ void GB_CPU::execute_next_operation() {
 }
 
 void GB_CPU::run_opcode(u8 op_code) {
-    ((*this->op_codes[op_code]))(&this);
+    this->op_code_switch(op_code);
 
-    if (interrupt_mode > 0) {
-        if (interrupt_mode == 1) {
-            IME = 0;
-            interrupt_mode = 0;
-        } else if (interrupt_mode == 2) {
-            interrupt_mode--;
+    if (this->interrupt_mode > 0) {
+        if (this->interrupt_mode == 1) {
+            this->IME = 0;
+            this->interrupt_mode = 0;
+        } else if (this->interrupt_mode == 2) {
+            this->interrupt_mode--;
         }
 
-        if (interrupt_mode == 3) {
-            IME = 1;
-            interrupt_mode = 0;
-        } else if (interrupt_mode == 4) {
-            interrupt_mode--;
+        if (this->interrupt_mode == 3) {
+            this->IME = 1;
+            this->interrupt_mode = 0;
+        } else if (this->interrupt_mode == 4) {
+            this->interrupt_mode--;
         }
     }
 }
 
-
-namespace CPU {
-    std::vector<std::string> decoder(256);
-    std::vector<void (*)()> op_codes(256, op_not_imp);
-    std::vector<void (*)()> cb_codes(256, cb_not_imp);
-
-    bool halt = false;
-    bool halt_bug = false;
-    u8 IME = 0;
-    u16 PC = 0;
-    u16 SP;
-    reg AF, BC, DE, HL;
-
-    int interrupt_mode = 0;
-
-    int count = 1;
-
-
-    int cycles = 4;
-    int timing = 0;
-
-    int getCyles() { return cycles; }
-    int getTiming() { return timing; }
-
-    void init_codes() {
-        init_opcodes();
-        init_decoder();
+void GB_CPU::op_code_switch(u8 op_code) {
+    switch (op_code) {
+    default:
+        this->op_not_imp();
     }
+}
 
-    void disable_boot_rom() {
-        RAM::write(0x01, 0xFF50);
+void GB_CPU::SRL_A() {
+    u8 oldValue = this->AF.hi;
+    u8 newValue = oldValue >> 1;
+    this->AF.hi = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_B() {
+    u8 oldValue = this->BC.hi;
+    u8 newValue = oldValue >> 1;
+    this->BC.hi = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_C() {
+    u8 oldValue = this->BC.lo;
+    u8 newValue = oldValue >> 1;
+    this->BC.lo = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_D() {
+    u8 oldValue = this->DE.hi;
+    u8 newValue = oldValue >> 1;
+    this->DE.hi = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_E() {
+    u8 oldValue = this->DE.lo;
+    u8 newValue = oldValue >> 1;
+    this->DE.lo = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_H() {
+    u8 oldValue = this->HL.hi;
+    u8 newValue = oldValue >> 1;
+    this->HL.hi = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_L() {
+    u8 oldValue = this->HL.lo;
+    u8 newValue = oldValue >> 1;
+    this->HL.lo = newValue;
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::SRL_HL() {
+    u8 oldValue = RAM::readAt(this->HL.val());
+    u8 newValue = oldValue >> 1;
+    RAM::write(newValue, this->HL.val());
+
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_A() {
+    u8 oldValue = this->AF.hi;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->AF.hi = newValue;
 
-    void init_registers_to_skip_boot() {
-        PC = 0x0100;
-        SP = 0xFFFE;
-        AF.set(0x01B0);
-        BC.set(0x0013);
-        DE.set(0x00D8);
-        HL.set(0x014D);
-        disable_boot_rom();
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(false);
+    this->set_n(false);
+    this->set_h(false);
+    this->cycles = 4;
+}
+
+void GB_CPU::CB_RR_A() {
+    u8 oldValue = this->AF.hi;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->AF.hi = newValue;
 
-    void push_byte_onto_stack(u8 val) {
-        SP--;
-        write(val, SP);
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_B() {
+    u8 oldValue = this->BC.hi;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->BC.hi = newValue;
 
-    void push_onto_stack(u16 val) {
-        u8 lowerByte = val & 0x00FF;
-        u8 higherByte = (val & 0xFF00) >> 8;
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
 
-        push_byte_onto_stack(higherByte);
-        push_byte_onto_stack(lowerByte);
+void GB_CPU::RR_C() {
+    u8 oldValue = this->BC.lo;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->BC.lo = newValue;
 
-    u8 pop_byte_from_stack() {
-        u8 value = RAM::readAt(SP);
-        SP++;
-        return value;
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_D() {
+    u8 oldValue = this->DE.hi;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->DE.hi = newValue;
 
-    u16 pop_from_stack() {
-        return pop_byte_from_stack() + (pop_byte_from_stack() << 8);
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_E() {
+    u8 oldValue = this->DE.lo;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->DE.lo = newValue;
 
-    bool halfCarryAdd(u8 a, u8 b) {
-        return ((((a & 0x0F) + (b & 0x0F)) & 0x10) == 0x10);
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_H() {
+    u8 oldValue = this->HL.hi;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->HL.hi = newValue;
 
-    bool halfCarrySub(u8 a, u8 b) {
-        return ((a & 0x0F) < (b & 0x0F));
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_L() {
+    u8 oldValue = this->HL.lo;
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    this->HL.lo = newValue;
 
-    void init() {
-        init_opcodes();
-        init_decoder();
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::RR_HL() {
+    u8 oldValue = RAM::readAt(this->HL.val());
+    u8 newValue = (oldValue >> 1);
+    if (this->get_c()) {
+        newValue |= 0b10000000;
     }
+    RAM::write(newValue, this->HL.val());
 
-    void setZ(bool x) {
-        if (x) AF.lo |= 0x80;
-        else AF.lo &= 0x70;
+    this->set_c(oldValue & 0b00000001);
+    this->set_z(newValue == 0);
+    this->set_n(false);
+    this->set_h(false);
+}
+
+void GB_CPU::CCF() {
+    this->AF.lo &= 0b10010000;
+    if ((this->AF.lo & 0b00010000) == 0b00010000) {
+        this->AF.lo -= 0b00010000;
+    } else {
+        this->AF.lo += 0b00010000;
     }
-
-    void setN(bool x) {
-        if (x) AF.lo |= 0x40;
-        else AF.lo &= 0xBF;
-    }
-
-    void setH(bool x) {
-        if (x) AF.lo |= 0x20;
-        else AF.lo &= 0xDF;
-    }
-
-    void setC(bool x) {
-        if (x) AF.lo |= 0x10;
-        else AF.lo &= 0xEF;
-    }
-
-    bool getC() { return (AF.lo & 0b00010000) == 0b00010000; }
-    bool getZ() { return (AF.lo & 0b10000000) == 0b10000000; }
-    bool getH() { return (AF.lo & 0b00100000) == 0b00100000; }
-    bool getN() { return (AF.lo & 0b01000000) == 0b01000000; }
-
-
-    void print_registers() {
-        std::cout << "A:";
-        std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(AF.hi);
-        std::cout << " F:" << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << int(AF.lo);
-
-        std::cout << " B:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(BC.hi);
-        std::cout << " C:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(BC.lo);
-
-        std::cout << " D:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(DE.hi);
-        std::cout << " E:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(DE.lo);
-
-        std::cout << " H:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << std::uppercase << int(HL.hi);
-        std::cout << " L:" << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(HL.lo);
-
-        std::cout << " SP:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(SP);
-        std::cout << " PC:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(PC);
-
-        std::cout << " PCMEM:";
-        std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC));
-        std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 1));
-        std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 2));
-        std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(PC + 3));
-
-        std::cout << std::endl;
-    }
-
-    void write(u8 val, u16 addr) {
-        RAM::write(val, addr);
-
-        if (addr == DMA) {
-            DMA_routine();
-        }
-    }
-
-    u8 read() {
-        u8 byte = RAM::readAt(CPU::PC);
-        ++CPU::PC;
-        return byte;
-    }
-
-    void DMA_routine() {
-        u16 source = (RAM::readAt(DMA) << 8);
-        u8 data;
-        for (int idx = 0; idx < 0xF1; idx++) {
-
-            data = RAM::readAt(source + idx);
-
-            write(data, 0xFE00 + idx);
-        }
-    }
-
-    void STAT() {
-        push_onto_stack(PC);
-        CPU::PC = 0x0048;
-
-        RUPS::IF = RAM::readAt(0xFF0F);
-        RUPS::IF &= 0b11111101;
-        write(RUPS::IF, 0xFF0F);
-    }
-
-    void op_not_imp() {
-        u8 opcode = RAM::readAt(PC - 1);
-        std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
-        std::cout << "PC:" << std::hex << unsigned(PC) << std::endl;
-        exit(0);
-    }
-
-
-    void cb_not_imp() {
-        u8 opcode = RAM::readAt(PC - 1);
-        std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
-        exit(0);
-    }
-
-    void run_cb() {
-        u8 op_code = read();
-        cb_codes[op_code]();
-    }
-
-    void executeNextOperation() {
-        if (!CPU::halt) {
-            if (halt_bug) {
-                halt_bug = false;
-                u16 prevPC = PC;
-                u8 opcode = read();
-                runOPCode(opcode);
-                PC = prevPC;
-            } else {
-                u8 opcode = read();
-                runOPCode(opcode);
-            }
-        }
-    }
-
-    void runOPCode(u8 op_code) {
-        op_codes[op_code]();
-
-        if (interrupt_mode > 0) {
-            if (interrupt_mode == 1) {
-                IME = 0;
-                interrupt_mode = 0;
-            } else if (interrupt_mode == 2) {
-                interrupt_mode--;
-            }
-
-            if (interrupt_mode == 3) {
-                IME = 1;
-                interrupt_mode = 0;
-            } else if (interrupt_mode == 4) {
-                interrupt_mode--;
-            }
-        }
-    }
-
-    void SRL_A() {
-        u8 oldValue = AF.hi;
-        u8 newValue = oldValue >> 1;
-        AF.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_B() {
-        u8 oldValue = BC.hi;
-        u8 newValue = oldValue >> 1;
-        BC.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_C() {
-        u8 oldValue = BC.lo;
-        u8 newValue = oldValue >> 1;
-        BC.lo = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_D() {
-        u8 oldValue = DE.hi;
-        u8 newValue = oldValue >> 1;
-        DE.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_E() {
-        u8 oldValue = DE.lo;
-        u8 newValue = oldValue >> 1;
-        DE.lo = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_H() {
-        u8 oldValue = HL.hi;
-        u8 newValue = oldValue >> 1;
-        HL.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_L() {
-        u8 oldValue = HL.lo;
-        u8 newValue = oldValue >> 1;
-        HL.lo = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void SRL_HL() {
-        u8 oldValue = RAM::readAt(HL.val());
-        u8 newValue = oldValue >> 1;
-        RAM::write(newValue, HL.val());
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_A() {
-        u8 oldValue = AF.hi;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        AF.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(false);
-        setN(false);
-        setH(false);
-        cycles = 4;
-    }
-
-    void CB_RR_A() {
-        u8 oldValue = AF.hi;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        AF.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_B() {
-        u8 oldValue = BC.hi;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        BC.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_C() {
-        u8 oldValue = BC.lo;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        BC.lo = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_D() {
-        u8 oldValue = DE.hi;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        DE.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_E() {
-        u8 oldValue = DE.lo;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        DE.lo = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_H() {
-        u8 oldValue = HL.hi;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        HL.hi = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_L() {
-        u8 oldValue = HL.lo;
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        HL.lo = newValue;
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void RR_HL() {
-        u8 oldValue = RAM::readAt(HL.val());
-        u8 newValue = (oldValue >> 1);
-        if (getC()) {
-            newValue |= 0b10000000;
-        }
-        RAM::write(newValue, HL.val());
-
-        setC(oldValue & 0b00000001);
-        setZ(newValue == 0);
-        setN(false);
-        setH(false);
-    }
-
-    void CCF() {
-        AF.lo &= 0b10010000;
-        if ((AF.lo & 0b00010000) == 0b00010000) {
-            AF.lo -= 0b00010000;
-        } else {
-            AF.lo += 0b00010000;
-        }
-        cycles = 4;
-    }
-
-    void SCF() {
-        AF.lo &= 0b10010000;
-        AF.lo |= 0b00010000;
-        cycles = 4;
-    }
-
-    void NOP() {
-        cycles = 4;
-    }
-
-    void RET() {
+    this->cycles = 4;
+}
+
+void GB_CPU::SCF() {
+    this->AF.lo &= 0b10010000;
+    this->AF.lo |= 0b00010000;
+    this->cycles = 4;
+}
+
+void GB_CPU::NOP() {
+    this->cycles = 4;
+}
+
+void GB_CPU::RET() {
+    u8 n1 = RAM::readAt(SP);
+    ++this->SP;
+    u16 n2 = RAM::readAt(SP);
+    ++this->SP;
+    u16 addr = n1 + (n2 << 8);
+    this->PC = addr;
+    this->cycles = 16;
+}
+
+void GB_CPU::RET_NZ() {
+    this->cycles = 8;
+    if (!this->get_z()) {
+        this->cycles = 20;
         u8 n1 = RAM::readAt(SP);
-        ++SP;
+        ++this->SP;
         u16 n2 = RAM::readAt(SP);
-        ++SP;
+        ++this->SP;
         u16 addr = n1 + (n2 << 8);
-        PC = addr;
-        cycles = 16;
+        this->PC = addr;
     }
+}
 
-    void RET_NZ() {
-        cycles = 8;
-        if (!getZ()) {
-            cycles = 20;
-            u8 n1 = RAM::readAt(SP);
-            ++SP;
-            u16 n2 = RAM::readAt(SP);
-            ++SP;
-            u16 addr = n1 + (n2 << 8);
-            PC = addr;
-        }
-    }
-
-    void RET_Z() {
-        cycles = 8;
-        if (getZ()) {
-            cycles = 20;
-            u8 n1 = RAM::readAt(SP);
-            ++SP;
-            u16 n2 = RAM::readAt(SP);
-            ++SP;
-            u16 addr = n1 + (n2 << 8);
-            PC = addr;
-        }
-    }
-    void RET_NC() {
-        cycles = 8;
-        if (!getC()) {
-            cycles = 20;
-            u8 n1 = RAM::readAt(SP);
-            ++SP;
-            u16 n2 = RAM::readAt(SP);
-            ++SP;
-            u16 addr = n1 + (n2 << 8);
-            PC = addr;
-        }
-    }
-    void RET_C() {
-        cycles = 8;
-        if (getC()) {
-            cycles = 20;
-            u8 n1 = RAM::readAt(SP);
-            ++SP;
-            u16 n2 = RAM::readAt(SP);
-            ++SP;
-            u16 addr = n1 + (n2 << 8);
-            PC = addr;
-        }
-    }
-
-    void RETI() {
+void GB_CPU::RET_Z() {
+    this->cycles = 8;
+    if (this->get_z()) {
+        this->cycles = 20;
         u8 n1 = RAM::readAt(SP);
-        ++SP;
+        ++this->SP;
         u16 n2 = RAM::readAt(SP);
-        ++SP;
+        ++this->SP;
         u16 addr = n1 + (n2 << 8);
-        PC = addr;
-        write(0xFF, 0xFFFF);
-        cycles = 16;
+        this->PC = addr;
     }
-
-    void BIT(u8 bit, u8 reg_) {
-        u8 test = reg_ & bit;
-
-        setZ(test != bit);
-        setN(false);
-        setH(true);
-        cycles = 8;
-    }
-
-    void BIT_0A() { BIT(1, AF.hi); }
-    void BIT_1A() { BIT(0b00000010, AF.hi); }
-    void BIT_2A() { BIT(0b00000100, AF.hi); }
-    void BIT_3A() { BIT(0b00001000, AF.hi); }
-    void BIT_4A() { BIT(0b00010000, AF.hi); }
-    void BIT_5A() { BIT(0b00100000, AF.hi); }
-    void BIT_6A() { BIT(0b01000000, AF.hi); }
-    void BIT_7A() { BIT(0b10000000, AF.hi); }
-
-    void BIT_0B() { BIT(1, BC.hi); }
-    void BIT_1B() { BIT(0b00000010, BC.hi); }
-    void BIT_2B() { BIT(0b00000100, BC.hi); }
-    void BIT_3B() { BIT(0b00001000, BC.hi); }
-    void BIT_4B() { BIT(0b00010000, BC.hi); }
-    void BIT_5B() { BIT(0b00100000, BC.hi); }
-    void BIT_6B() { BIT(0b01000000, BC.hi); }
-    void BIT_7B() { BIT(0b10000000, BC.hi); }
-
-    void BIT_0C() { BIT(1, BC.lo); }
-    void BIT_1C() { BIT(0b00000010, BC.lo); }
-    void BIT_2C() { BIT(0b00000100, BC.lo); }
-    void BIT_3C() { BIT(0b00001000, BC.lo); }
-    void BIT_4C() { BIT(0b00010000, BC.lo); }
-    void BIT_5C() { BIT(0b00100000, BC.lo); }
-    void BIT_6C() { BIT(0b01000000, BC.lo); }
-    void BIT_7C() { BIT(0b10000000, BC.lo); }
-
-    void BIT_0D() { BIT(1, DE.hi); }
-    void BIT_1D() { BIT(0b00000010, DE.hi); }
-    void BIT_2D() { BIT(0b00000100, DE.hi); }
-    void BIT_3D() { BIT(0b00001000, DE.hi); }
-    void BIT_4D() { BIT(0b00010000, DE.hi); }
-    void BIT_5D() { BIT(0b00100000, DE.hi); }
-    void BIT_6D() { BIT(0b01000000, DE.hi); }
-    void BIT_7D() { BIT(0b10000000, DE.hi); }
-
-    void BIT_0E() { BIT(1, DE.lo); }
-    void BIT_1E() { BIT(0b00000010, DE.lo); }
-    void BIT_2E() { BIT(0b00000100, DE.lo); }
-    void BIT_3E() { BIT(0b00001000, DE.lo); }
-    void BIT_4E() { BIT(0b00010000, DE.lo); }
-    void BIT_5E() { BIT(0b00100000, DE.lo); }
-    void BIT_6E() { BIT(0b01000000, DE.lo); }
-    void BIT_7E() { BIT(0b10000000, DE.lo); }
-
-    void BIT_0H() { BIT(1, HL.hi); }
-    void BIT_1H() { BIT(0b00000010, HL.hi); }
-    void BIT_2H() { BIT(0b00000100, HL.hi); }
-    void BIT_3H() { BIT(0b00001000, HL.hi); }
-    void BIT_4H() { BIT(0b00010000, HL.hi); }
-    void BIT_5H() { BIT(0b00100000, HL.hi); }
-    void BIT_6H() { BIT(0b01000000, HL.hi); }
-    void BIT_7H() { BIT(0b10000000, HL.hi); }
-
-    void BIT_0L() { BIT(1, HL.lo); }
-    void BIT_1L() { BIT(0b00000010, HL.lo); }
-    void BIT_2L() { BIT(0b00000100, HL.lo); }
-    void BIT_3L() { BIT(0b00001000, HL.lo); }
-    void BIT_4L() { BIT(0b00010000, HL.lo); }
-    void BIT_5L() { BIT(0b00100000, HL.lo); }
-    void BIT_6L() { BIT(0b01000000, HL.lo); }
-    void BIT_7L() { BIT(0b10000000, HL.lo); }
-
-    void BIT_0HL() { BIT(1, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_1HL() { BIT(0b00000010, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_2HL() { BIT(0b00000100, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_3HL() { BIT(0b00001000, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_4HL() { BIT(0b00010000, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_5HL() { BIT(0b00100000, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_6HL() { BIT(0b01000000, RAM::readAt(HL.val())); cycles = 12; }
-    void BIT_7HL() { BIT(0b10000000, RAM::readAt(HL.val())); cycles = 12; }
-
-
-    u8 AssignReg(u8 mask, u8 reg_, bool val) {
-        if (val) {
-            return reg_ | mask;
-        } else {
-            return reg_ & ~mask;
-        }
-    }
-
-    u8 RES(u8 bit, u8 reg_) {
-        cycles = 8;
-        return AssignReg(bit, reg_, false);
-    }
-
-    void RES_0A() { AF.hi = RES(1, AF.hi); }
-    void RES_1A() { AF.hi = RES(0b00000010, AF.hi); }
-    void RES_2A() { AF.hi = RES(0b00000100, AF.hi); }
-    void RES_3A() { AF.hi = RES(0b00001000, AF.hi); }
-    void RES_4A() { AF.hi = RES(0b00010000, AF.hi); }
-    void RES_5A() { AF.hi = RES(0b00100000, AF.hi); }
-    void RES_6A() { AF.hi = RES(0b01000000, AF.hi); }
-    void RES_7A() { AF.hi = RES(0b10000000, AF.hi); }
-
-    void RES_0B() { BC.hi = RES(1, BC.hi); }
-    void RES_1B() { BC.hi = RES(0b00000010, BC.hi); }
-    void RES_2B() { BC.hi = RES(0b00000100, BC.hi); }
-    void RES_3B() { BC.hi = RES(0b00001000, BC.hi); }
-    void RES_4B() { BC.hi = RES(0b00010000, BC.hi); }
-    void RES_5B() { BC.hi = RES(0b00100000, BC.hi); }
-    void RES_6B() { BC.hi = RES(0b01000000, BC.hi); }
-    void RES_7B() { BC.hi = RES(0b10000000, BC.hi); }
-
-    void RES_0C() { BC.lo = RES(1, BC.lo); }
-    void RES_1C() { BC.lo = RES(0b00000010, BC.lo); }
-    void RES_2C() { BC.lo = RES(0b00000100, BC.lo); }
-    void RES_3C() { BC.lo = RES(0b00001000, BC.lo); }
-    void RES_4C() { BC.lo = RES(0b00010000, BC.lo); }
-    void RES_5C() { BC.lo = RES(0b00100000, BC.lo); }
-    void RES_6C() { BC.lo = RES(0b01000000, BC.lo); }
-    void RES_7C() { BC.lo = RES(0b10000000, BC.lo); }
-
-    void RES_0D() { DE.hi = RES(1, DE.hi); }
-    void RES_1D() { DE.hi = RES(0b00000010, DE.hi); }
-    void RES_2D() { DE.hi = RES(0b00000100, DE.hi); }
-    void RES_3D() { DE.hi = RES(0b00001000, DE.hi); }
-    void RES_4D() { DE.hi = RES(0b00010000, DE.hi); }
-    void RES_5D() { DE.hi = RES(0b00100000, DE.hi); }
-    void RES_6D() { DE.hi = RES(0b01000000, DE.hi); }
-    void RES_7D() { DE.hi = RES(0b10000000, DE.hi); }
-
-    void RES_0E() { DE.lo = RES(1, DE.lo); }
-    void RES_1E() { DE.lo = RES(0b00000010, DE.lo); }
-    void RES_2E() { DE.lo = RES(0b00000100, DE.lo); }
-    void RES_3E() { DE.lo = RES(0b00001000, DE.lo); }
-    void RES_4E() { DE.lo = RES(0b00010000, DE.lo); }
-    void RES_5E() { DE.lo = RES(0b00100000, DE.lo); }
-    void RES_6E() { DE.lo = RES(0b01000000, DE.lo); }
-    void RES_7E() { DE.lo = RES(0b10000000, DE.lo); }
-
-    void RES_0H() { HL.hi = RES(1, HL.hi); }
-    void RES_1H() { HL.hi = RES(0b00000010, HL.hi); }
-    void RES_2H() { HL.hi = RES(0b00000100, HL.hi); }
-    void RES_3H() { HL.hi = RES(0b00001000, HL.hi); }
-    void RES_4H() { HL.hi = RES(0b00010000, HL.hi); }
-    void RES_5H() { HL.hi = RES(0b00100000, HL.hi); }
-    void RES_6H() { HL.hi = RES(0b01000000, HL.hi); }
-    void RES_7H() { HL.hi = RES(0b10000000, HL.hi); }
-
-    void RES_0L() { HL.lo = RES(1, HL.lo); }
-    void RES_1L() { HL.lo = RES(0b00000010, HL.lo); }
-    void RES_2L() { HL.lo = RES(0b00000100, HL.lo); }
-    void RES_3L() { HL.lo = RES(0b00001000, HL.lo); }
-    void RES_4L() { HL.lo = RES(0b00010000, HL.lo); }
-    void RES_5L() { HL.lo = RES(0b00100000, HL.lo); }
-    void RES_6L() { HL.lo = RES(0b01000000, HL.lo); }
-    void RES_7L() { HL.lo = RES(0b10000000, HL.lo); }
-
-    void RES_0HL() { RAM::write(RES(1, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_1HL() { RAM::write(RES(0b00000010, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_2HL() { RAM::write(RES(0b00000100, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_3HL() { RAM::write(RES(0b00001000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_4HL() { RAM::write(RES(0b00010000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_5HL() { RAM::write(RES(0b00100000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_6HL() { RAM::write(RES(0b01000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void RES_7HL() { RAM::write(RES(0b10000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-
-    u8 SET(u8 bit, u8 reg_) {
-        cycles = 8;
-        return AssignReg(bit, reg_, true);
-    }
-
-    void SET_0A() { AF.hi = SET(1, AF.hi); }
-    void SET_1A() { AF.hi = SET(0b00000010, AF.hi); }
-    void SET_2A() { AF.hi = SET(0b00000100, AF.hi); }
-    void SET_3A() { AF.hi = SET(0b00001000, AF.hi); }
-    void SET_4A() { AF.hi = SET(0b00010000, AF.hi); }
-    void SET_5A() { AF.hi = SET(0b00100000, AF.hi); }
-    void SET_6A() { AF.hi = SET(0b01000000, AF.hi); }
-    void SET_7A() { AF.hi = SET(0b10000000, AF.hi); }
-
-    void SET_0B() { BC.hi = SET(1, BC.hi); }
-    void SET_1B() { BC.hi = SET(0b00000010, BC.hi); }
-    void SET_2B() { BC.hi = SET(0b00000100, BC.hi); }
-    void SET_3B() { BC.hi = SET(0b00001000, BC.hi); }
-    void SET_4B() { BC.hi = SET(0b00010000, BC.hi); }
-    void SET_5B() { BC.hi = SET(0b00100000, BC.hi); }
-    void SET_6B() { BC.hi = SET(0b01000000, BC.hi); }
-    void SET_7B() { BC.hi = SET(0b10000000, BC.hi); }
-
-    void SET_0C() { BC.lo = SET(1, BC.lo); }
-    void SET_1C() { BC.lo = SET(0b00000010, BC.lo); }
-    void SET_2C() { BC.lo = SET(0b00000100, BC.lo); }
-    void SET_3C() { BC.lo = SET(0b00001000, BC.lo); }
-    void SET_4C() { BC.lo = SET(0b00010000, BC.lo); }
-    void SET_5C() { BC.lo = SET(0b00100000, BC.lo); }
-    void SET_6C() { BC.lo = SET(0b01000000, BC.lo); }
-    void SET_7C() { BC.lo = SET(0b10000000, BC.lo); }
-
-    void SET_0D() { DE.hi = SET(1, DE.hi); }
-    void SET_1D() { DE.hi = SET(0b00000010, DE.hi); }
-    void SET_2D() { DE.hi = SET(0b00000100, DE.hi); }
-    void SET_3D() { DE.hi = SET(0b00001000, DE.hi); }
-    void SET_4D() { DE.hi = SET(0b00010000, DE.hi); }
-    void SET_5D() { DE.hi = SET(0b00100000, DE.hi); }
-    void SET_6D() { DE.hi = SET(0b01000000, DE.hi); }
-    void SET_7D() { DE.hi = SET(0b10000000, DE.hi); }
-
-    void SET_0E() { DE.lo = SET(1, DE.lo); }
-    void SET_1E() { DE.lo = SET(0b00000010, DE.lo); }
-    void SET_2E() { DE.lo = SET(0b00000100, DE.lo); }
-    void SET_3E() { DE.lo = SET(0b00001000, DE.lo); }
-    void SET_4E() { DE.lo = SET(0b00010000, DE.lo); }
-    void SET_5E() { DE.lo = SET(0b00100000, DE.lo); }
-    void SET_6E() { DE.lo = SET(0b01000000, DE.lo); }
-    void SET_7E() { DE.lo = SET(0b10000000, DE.lo); }
-
-    void SET_0H() { HL.hi = SET(1, HL.hi); }
-    void SET_1H() { HL.hi = SET(0b00000010, HL.hi); }
-    void SET_2H() { HL.hi = SET(0b00000100, HL.hi); }
-    void SET_3H() { HL.hi = SET(0b00001000, HL.hi); }
-    void SET_4H() { HL.hi = SET(0b00010000, HL.hi); }
-    void SET_5H() { HL.hi = SET(0b00100000, HL.hi); }
-    void SET_6H() { HL.hi = SET(0b01000000, HL.hi); }
-    void SET_7H() { HL.hi = SET(0b10000000, HL.hi); }
-
-    void SET_0L() { HL.lo = SET(1, HL.lo); }
-    void SET_1L() { HL.lo = SET(0b00000010, HL.lo); }
-    void SET_2L() { HL.lo = SET(0b00000100, HL.lo); }
-    void SET_3L() { HL.lo = SET(0b00001000, HL.lo); }
-    void SET_4L() { HL.lo = SET(0b00010000, HL.lo); }
-    void SET_5L() { HL.lo = SET(0b00100000, HL.lo); }
-    void SET_6L() { HL.lo = SET(0b01000000, HL.lo); }
-    void SET_7L() { HL.lo = SET(0b10000000, HL.lo); }
-
-    void SET_0HL() { RAM::write(SET(1, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_1HL() { RAM::write(SET(0b00000010, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_2HL() { RAM::write(SET(0b00000100, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_3HL() { RAM::write(SET(0b00001000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_4HL() { RAM::write(SET(0b00010000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_5HL() { RAM::write(SET(0b00100000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_6HL() { RAM::write(SET(0b01000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-    void SET_7HL() { RAM::write(SET(0b10000000, RAM::readAt(HL.val())), HL.val()); cycles = 16; }
-
-    void RLA() {
-        u8 bit7 = AF.hi & 0b10000000;
-        AF.hi = (AF.hi << 1) + getC();
-
-        setZ(false);
-        setN(false);
-        setH(false);
-        setC(bit7 == 0b10000000);
-        cycles = 4;
-    }
-    void RLCA() {
-        u8 bit7 = AF.hi & 0b10000000;
-        AF.hi = (AF.hi << 1) + (bit7 >> 7);
-        setZ(false);
-        setN(false);
-        setH(false);
-        setC(bit7 == 0b10000000);
-        cycles = 4;
-    }
-
-    void RRCA() {
-        u8 bit0 = AF.hi & 0b00000001;
-        AF.hi = (AF.hi >> 1) + (bit0 << 7);
-
-        setZ(false);
-        setN(false);
-        setH(false);
-        setC(bit0);
-        cycles = 4;
-    }
-
-    void RRA() {
-        u8 carry = (AF.lo & 0b00010000) << 3;
-        AF.lo = (AF.hi & 0b00000001) << 4;
-        AF.lo &= 0b10010000;
-        AF.hi = (AF.hi >> 1) + carry;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 4;
-    }
-
-    void RLC_A() {
-        u8 carry = (AF.hi & 0b10000000) >> 7;
-        AF.lo = (AF.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        AF.hi = (AF.hi << 1) + carry;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-    void RLC_B() {
-        u8 carry = (BC.hi & 0b10000000) >> 7;
-        AF.lo = (BC.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        BC.hi = (BC.hi << 1) + carry;
-        if (BC.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-    void RLC_C() {
-        u8 carry = (BC.lo & 0b10000000) >> 7;
-        AF.lo = (BC.lo & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        BC.lo = (BC.lo << 1) + carry;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-    void RLC_D() {
-        u8 carry = (DE.hi & 0b10000000) >> 7;
-        AF.lo = (DE.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        DE.hi = (DE.hi << 1) + carry;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-    void RLC_E() {
-        u8 carry = (DE.lo & 0b10000000) >> 7;
-        AF.lo = (DE.lo & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        DE.lo = (DE.lo << 1) + carry;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-    void RLC_H() {
-        u8 carry = (HL.hi & 0b10000000) >> 7;
-        AF.lo = (HL.hi & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        HL.hi = (HL.hi << 1) + carry;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-    void RLC_L() {
-        u8 carry = (HL.lo & 0b10000000) >> 7;
-        AF.lo = (HL.lo & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        HL.lo = (HL.lo << 1) + carry;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 8;
-    }
-
-    u8 RL_generic(u8 val) {
-        u8 bit7 = val & 0b10000000;
-        u8 newVal = (val << 1) + getC();
-        setZ(newVal == 0);
-        setN(false);
-        setH(false);
-        setC(bit7 == 0b10000000);
-        return newVal;
-    }
-
-    void RL_A() {
-        AF.hi = RL_generic(AF.hi);
-        cycles = 8;
-    }
-
-    void RL_B() {
-        BC.hi = RL_generic(BC.hi);
-        cycles = 8;
-    }
-
-    void RL_C() {
-        BC.lo = RL_generic(BC.lo);
-        cycles = 8;
-    }
-
-    void RL_D() {
-        DE.hi = RL_generic(DE.hi);
-        cycles = 8;
-    }
-    void RL_E() {
-        DE.lo = RL_generic(DE.lo);
-        cycles = 8;
-    }
-    void RL_H() {
-        HL.hi = RL_generic(HL.hi);
-        cycles = 8;
-    }
-    void RL_L() {
-        HL.lo = RL_generic(HL.lo);
-        cycles = 8;
-    }
-    void RL_addr_HL() {
-        u8 readVal = RAM::readAt(HL.val());
-        RAM::write(RL_generic(readVal), HL.val());
-        cycles = 16;
-    }
-    void RLC_HL() {
-        u8 x = RAM::readAt(HL.val());
-        u8 carry = (x & 0b10000000) >> 7;
-        AF.lo = (x & 0b10000000) >> 3;
-        AF.lo &= 0b10010000;
-        x = (x << 1) + carry;
-        write(x, HL.val());
-        if (x == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        cycles = 16;
-    }
-
-    void JR_NZ() {
-        if (!getZ()) {
-            s8 b = read();
-            PC += b;
-            cycles = 12;
-
-        } else {
-            ++PC;
-            cycles = 8;
-        }
-    }
-
-    void JR_Z() {
-        if ((AF.lo >> 7) == 1) {
-            s8 b = read();
-            PC += b;
-            cycles = 12;
-        } else {
-            ++PC;
-            cycles = 8;
-        }
-    }
-
-    void JR_NC() {
-        if (!getC()) {
-            s8 b = read();
-            PC += b;
-            cycles = 12;
-        } else {
-            ++PC;
-            cycles = 8;
-        }
-    }
-
-    void JR_C() {
-        if (getC()) {
-            s8 b = read();
-            PC += b;
-            cycles = 12;
-        } else {
-            ++PC;
-            cycles = 8;
-        }
-    }
-
-    void JR_n() {
-        s8 jump = read();
-        PC += jump;
-        cycles = 12;
-    }
-
-    void JP() {
-        u8 n1, n2;
-        n1 = read();
-        n2 = read();
-        PC = n1 + (n2 << 8);
-        cycles = 12;
-    }
-
-    void JP_NZ() {
-        u8 n1, n2;
-        if (!getZ()) {
-            n1 = read();
-            n2 = read();
-            PC = n1 + (n2 << 8);
-        } else { PC += 2; }
-        cycles = 12;
-    }
-
-    void JP_Z() {
-        u8 n1, n2;
-        if (getZ()) {
-            n1 = read();
-            n2 = read();
-            PC = n1 + (n2 << 8);
-        } else { PC += 2; }
-        cycles = 12;
-    }
-
-    void JP_NC() {
-        u8 n1, n2;
-        if (!getC()) {
-            n1 = read();
-            n2 = read();
-            PC = n1 + (n2 << 8);
-        } else { PC += 2; }
-        cycles = 12;
-    }
-    void JP_C() {
-        u8 n1, n2;
-        if (getC()) {
-            n1 = read();
-            n2 = read();
-            PC = n1 + (n2 << 8);
-        } else { PC += 2; }
-        cycles = 12;
-    }
-
-    void JP_HL() {
-        PC = HL.val();
-        cycles = 4;
-    }
-
-    void LDc_n() {
-        u8 n = read();
-        BC.lo = n;
-    }
-
-    void LDb_n() {
-        u8 n = read();
-        BC.hi = n;
-    }
-    void LDd_n() {
-        u8 n = read();
-        DE.hi = n;
-    }
-    void LDe_n() {
-        u8 n = read();
-        DE.lo = n;
-    }
-    void LDh_n() {
-        u8 n = read();
-        HL.hi = n;
-    }
-
-    void LDl_n() {
-        u8 n = read();
-        HL.lo = n;
-    }
-
-    void  LDrr_a_hash() {
-        u8 byte = read();
-        AF.hi = byte;
-    }
-
-    void LD_HL_a() {
-        write(AF.hi, HL.val());
-    }
-    void LD_BC_a() { write(AF.hi, BC.val()); }
-    void LD_DE_a() { write(AF.hi, DE.val()); }
-
-    void LDad_n_a() { u8 add = read(); u16 addr = add + 0xFF00; write(AF.hi, addr); cycles = 12; }
-
-    void CALL_nn() {
-        u8 n1 = read();
-        u8 n2 = read();
-
-        u8 loNib = PC & 0xFF;
-        u8 hiNib = (PC >> 8) & 0xFF;
-
-        --SP;
-        write(hiNib, SP);
-        --SP;
-        write(loNib, SP);
-
-        PC = n1 + (n2 << 8);
-        cycles = 12;
-    }
-
-    void CALL_NZ() {
-        u8 F = AF.lo;
-        u8 Z = (F & 0b10000000) >> 7;
-        u8 n1 = read();
-        u8 n2 = read();
-        if (Z == 0) {
-            u8 loNib = PC & 0xFF;
-            u8 hiNib = (PC >> 8) & 0xFF;
-
-            --SP;
-            write(hiNib, SP);
-            --SP;
-            write(loNib, SP);
-
-            PC = n1 + (n2 << 8);
-            cycles = 12;
-        }
-    }
-    void CALL_Z() {
-        u8 F = AF.lo;
-        u8 Z = (F & 0b10000000) >> 7;
-        u8 n1 = read();
-        u8 n2 = read();
-        if (Z == 1) {
-            u8 loNib = PC & 0xFF;
-            u8 hiNib = (PC >> 8) & 0xFF;
-
-            --SP;
-            write(hiNib, SP);
-            --SP;
-            write(loNib, SP);
-
-            PC = n1 + (n2 << 8);
-            cycles = 12;
-        }
-    }
-    void CALL_NC() {
-        u8 n1 = read();
-        u8 n2 = read();
-        if (!getC()) {
-            u8 loNib = PC & 0xFF;
-            u8 hiNib = (PC >> 8) & 0xFF;
-
-            --SP;
-            write(hiNib, SP);
-            --SP;
-            write(loNib, SP);
-
-            PC = n1 + (n2 << 8);
-            cycles = 12;
-        }
-    }
-    void CALL_C() {
-        u8 n1 = read();
-        u8 n2 = read();
-        if (getC()) {
-            u8 loNib = PC & 0xFF;
-            u8 hiNib = (PC >> 8) & 0xFF;
-
-            --SP;
-            write(hiNib, SP);
-            --SP;
-            write(loNib, SP);
-
-            PC = n1 + (n2 << 8);
-            cycles = 12;
-        }
-    }
-    void LDI_HLa() {
-        write(AF.hi, HL.val());
-        u16 x = HL.val() + 1;
-        HL.set(x);
-    }
-
-    void LD_nn_a() {
-        u8 n1 = read();
-        u8 n2 = read();
+}
+void GB_CPU::RET_NC() {
+    this->cycles = 8;
+    if (!this->get_c()) {
+        this->cycles = 20;
+        u8 n1 = RAM::readAt(SP);
+        ++this->SP;
+        u16 n2 = RAM::readAt(SP);
+        ++this->SP;
         u16 addr = n1 + (n2 << 8);
-        write(AF.hi, addr);
+        this->PC = addr;
     }
-
-    void LDH_a_ffn() {
-        u8 n = read();
-        AF.hi = RAM::readAt(0xFF00 + n);
-        cycles = 12;
-    }
-
-    void LDrr_aa() { cycles = 4; }
-    void LDrr_ab() { AF.hi = BC.hi; cycles = 4; }
-    void LDrr_ac() { AF.hi = BC.lo; cycles = 4; }
-    void LDrr_ad() { AF.hi = DE.hi; cycles = 4; }
-    void LDrr_ae() { AF.hi = DE.lo; cycles = 4; }
-    void LDrr_ah() { AF.hi = HL.hi; cycles = 4; }
-    void LDrr_al() { AF.hi = HL.lo; cycles = 4; }
-    void LDrr_aBC() { AF.hi = RAM::readAt(BC.val()); }
-    void LDrr_aDE() { AF.hi = RAM::readAt(DE.val()); }
-    void LDrr_aHL() { AF.hi = RAM::readAt(HL.val()); }
-    void LDrr_bb() { cycles = 4; }
-    void LDrr_ba() { BC.hi = AF.hi; cycles = 4; }
-    void LDrr_bc() { BC.hi = BC.lo; cycles = 4; }
-    void LDrr_bd() { BC.hi = DE.hi; cycles = 4; }
-    void LDrr_be() { BC.hi = DE.lo; cycles = 4; }
-    void LDrr_bh() { BC.hi = HL.hi; cycles = 4; }
-    void LDrr_bl() { BC.hi = HL.lo; cycles = 4; }
-    void LDrr_bHL() { BC.hi = RAM::readAt(HL.val()); }
-    void LDrr_cc() { cycles = 4; }
-    void LDrr_ca() { BC.lo = AF.hi; cycles = 4; }
-    void LDrr_cb() { BC.lo = BC.hi; cycles = 4; }
-    void LDrr_cd() { BC.lo = DE.hi; cycles = 4; }
-    void LDrr_ce() { BC.lo = DE.lo; cycles = 4; }
-    void LDrr_ch() { BC.lo = HL.hi; cycles = 4; }
-    void LDrr_cl() { BC.lo = HL.lo; cycles = 4; }
-    void LDrr_cHL() { BC.lo = RAM::readAt(HL.val()); }
-    void LDrr_dd() { cycles = 4; }
-    void LDrr_da() { DE.hi = AF.hi; cycles = 4; }
-    void LDrr_db() { DE.hi = BC.hi; cycles = 4; }
-    void LDrr_dc() { DE.hi = BC.lo; cycles = 4; }
-    void LDrr_de() { DE.hi = DE.lo; cycles = 4; }
-    void LDrr_dh() { DE.hi = HL.hi; cycles = 4; }
-    void LDrr_dl() { DE.hi = HL.lo; cycles = 4; }
-    void LDrr_dHL() { DE.hi = RAM::readAt(HL.val()); }
-    void LDrr_ee() { cycles = 4; }
-    void LDrr_ea() { DE.lo = AF.hi; cycles = 4; }
-    void LDrr_eb() { DE.lo = BC.hi; cycles = 4; }
-    void LDrr_ec() { DE.lo = BC.lo; cycles = 4; }
-    void LDrr_ed() { DE.lo = DE.hi; cycles = 4; }
-    void LDrr_eh() { DE.lo = HL.hi; cycles = 4; }
-    void LDrr_el() { DE.lo = HL.lo; cycles = 4; }
-    void LDrr_eHL() { DE.lo = RAM::readAt(HL.val()); }
-    void LDrr_hh() { cycles = 4; }
-    void LDrr_ha() { HL.hi = AF.hi; cycles = 4; }
-    void LDrr_hb() { HL.hi = BC.hi; cycles = 4; }
-    void LDrr_hc() { HL.hi = BC.lo; cycles = 4; }
-    void LDrr_hd() { HL.hi = DE.hi; cycles = 4; }
-    void LDrr_he() { HL.hi = DE.lo; cycles = 4; }
-    void LDrr_hl() { HL.hi = HL.lo; cycles = 4; }
-    void LDrr_hHL() { HL.hi = RAM::readAt(HL.val()); }
-    void LDrr_ll() { cycles = 4; }
-    void LDrr_la() { HL.lo = AF.hi; cycles = 4; }
-    void LDrr_lb() { HL.lo = BC.hi; cycles = 4; }
-    void LDrr_lc() { HL.lo = BC.lo; cycles = 4; }
-    void LDrr_ld() { HL.lo = DE.hi; cycles = 4; }
-    void LDrr_le() { HL.lo = DE.lo; cycles = 4; }
-    void LDrr_lh() { HL.lo = HL.hi; cycles = 4; }
-    void LDrr_lHL() { HL.lo = RAM::readAt(HL.val()); }
-    void LDrr_HLb() { write(BC.hi, HL.val()); cycles = 8; }
-    void LDrr_HLc() { write(BC.lo, HL.val()); cycles = 8; }
-    void LDrr_HLd() { write(DE.hi, HL.val()); cycles = 8; }
-    void LDrr_HLe() { write(DE.lo, HL.val()); cycles = 8; }
-    void LDrr_HLh() { write(HL.hi, HL.val()); cycles = 8; }
-    void LDrr_HLl() { write(HL.lo, HL.val()); cycles = 8; }
-    void LDrr_HLn() { write(read(), HL.val()); cycles = 12; }
-    void LDrr_ann() {
-        u8 n1 = read(), n2 = read();
+}
+void GB_CPU::RET_C() {
+    this->cycles = 8;
+    if (this->get_c()) {
+        this->cycles = 20;
+        u8 n1 = RAM::readAt(SP);
+        ++this->SP;
+        u16 n2 = RAM::readAt(SP);
+        ++this->SP;
         u16 addr = n1 + (n2 << 8);
-        AF.hi = RAM::readAt(addr);
-        cycles = 16;
+        this->PC = addr;
+    }
+}
+
+void GB_CPU::RETI() {
+    u8 n1 = RAM::readAt(SP);
+    ++this->SP;
+    u16 n2 = RAM::readAt(SP);
+    ++this->SP;
+    u16 addr = n1 + (n2 << 8);
+    this->PC = addr;
+    this->write(0xFF, 0xFFFF);
+    this->cycles = 16;
+}
+
+void GB_CPU::BIT(u8 bit, u8 reg_) {
+    u8 test = reg_ & bit;
+
+    this->set_z(test != bit);
+    this->set_n(false);
+    this->set_h(true);
+    this->cycles = 8;
+}
+
+void GB_CPU::BIT_0A() { this->BIT(1, this->AF.hi); }
+void GB_CPU::BIT_1A() { this->BIT(0b00000010, this->AF.hi); }
+void GB_CPU::BIT_2A() { this->BIT(0b00000100, this->AF.hi); }
+void GB_CPU::BIT_3A() { this->BIT(0b00001000, this->AF.hi); }
+void GB_CPU::BIT_4A() { this->BIT(0b00010000, this->AF.hi); }
+void GB_CPU::BIT_5A() { this->BIT(0b00100000, this->AF.hi); }
+void GB_CPU::BIT_6A() { this->BIT(0b01000000, this->AF.hi); }
+void GB_CPU::BIT_7A() { this->BIT(0b10000000, this->AF.hi); }
+
+void GB_CPU::BIT_0B() { this->BIT(1, this->BC.hi); }
+void GB_CPU::BIT_1B() { this->BIT(0b00000010, this->BC.hi); }
+void GB_CPU::BIT_2B() { this->BIT(0b00000100, this->BC.hi); }
+void GB_CPU::BIT_3B() { this->BIT(0b00001000, this->BC.hi); }
+void GB_CPU::BIT_4B() { this->BIT(0b00010000, this->BC.hi); }
+void GB_CPU::BIT_5B() { this->BIT(0b00100000, this->BC.hi); }
+void GB_CPU::BIT_6B() { this->BIT(0b01000000, this->BC.hi); }
+void GB_CPU::BIT_7B() { this->BIT(0b10000000, this->BC.hi); }
+
+void GB_CPU::BIT_0C() { this->BIT(1, this->BC.lo); }
+void GB_CPU::BIT_1C() { this->BIT(0b00000010, this->BC.lo); }
+void GB_CPU::BIT_2C() { this->BIT(0b00000100, this->BC.lo); }
+void GB_CPU::BIT_3C() { this->BIT(0b00001000, this->BC.lo); }
+void GB_CPU::BIT_4C() { this->BIT(0b00010000, this->BC.lo); }
+void GB_CPU::BIT_5C() { this->BIT(0b00100000, this->BC.lo); }
+void GB_CPU::BIT_6C() { this->BIT(0b01000000, this->BC.lo); }
+void GB_CPU::BIT_7C() { this->BIT(0b10000000, this->BC.lo); }
+
+void GB_CPU::BIT_0D() { this->BIT(1, this->DE.hi); }
+void GB_CPU::BIT_1D() { this->BIT(0b00000010, this->DE.hi); }
+void GB_CPU::BIT_2D() { this->BIT(0b00000100, this->DE.hi); }
+void GB_CPU::BIT_3D() { this->BIT(0b00001000, this->DE.hi); }
+void GB_CPU::BIT_4D() { this->BIT(0b00010000, this->DE.hi); }
+void GB_CPU::BIT_5D() { this->BIT(0b00100000, this->DE.hi); }
+void GB_CPU::BIT_6D() { this->BIT(0b01000000, this->DE.hi); }
+void GB_CPU::BIT_7D() { this->BIT(0b10000000, this->DE.hi); }
+
+void GB_CPU::BIT_0E() { this->BIT(1, this->DE.lo); }
+void GB_CPU::BIT_1E() { this->BIT(0b00000010, this->DE.lo); }
+void GB_CPU::BIT_2E() { this->BIT(0b00000100, this->DE.lo); }
+void GB_CPU::BIT_3E() { this->BIT(0b00001000, this->DE.lo); }
+void GB_CPU::BIT_4E() { this->BIT(0b00010000, this->DE.lo); }
+void GB_CPU::BIT_5E() { this->BIT(0b00100000, this->DE.lo); }
+void GB_CPU::BIT_6E() { this->BIT(0b01000000, this->DE.lo); }
+void GB_CPU::BIT_7E() { this->BIT(0b10000000, this->DE.lo); }
+
+void GB_CPU::BIT_0H() { this->BIT(1, this->HL.hi); }
+void GB_CPU::BIT_1H() { this->BIT(0b00000010, this->HL.hi); }
+void GB_CPU::BIT_2H() { this->BIT(0b00000100, this->HL.hi); }
+void GB_CPU::BIT_3H() { this->BIT(0b00001000, this->HL.hi); }
+void GB_CPU::BIT_4H() { this->BIT(0b00010000, this->HL.hi); }
+void GB_CPU::BIT_5H() { this->BIT(0b00100000, this->HL.hi); }
+void GB_CPU::BIT_6H() { this->BIT(0b01000000, this->HL.hi); }
+void GB_CPU::BIT_7H() { this->BIT(0b10000000, this->HL.hi); }
+
+void GB_CPU::BIT_0L() { this->BIT(1, this->HL.lo); }
+void GB_CPU::BIT_1L() { this->BIT(0b00000010, this->HL.lo); }
+void GB_CPU::BIT_2L() { this->BIT(0b00000100, this->HL.lo); }
+void GB_CPU::BIT_3L() { this->BIT(0b00001000, this->HL.lo); }
+void GB_CPU::BIT_4L() { this->BIT(0b00010000, this->HL.lo); }
+void GB_CPU::BIT_5L() { this->BIT(0b00100000, this->HL.lo); }
+void GB_CPU::BIT_6L() { this->BIT(0b01000000, this->HL.lo); }
+void GB_CPU::BIT_7L() { this->BIT(0b10000000, this->HL.lo); }
+
+void GB_CPU::BIT_0HL() { this->BIT(1, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_1HL() { this->BIT(0b00000010, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_2HL() { this->BIT(0b00000100, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_3HL() { this->BIT(0b00001000, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_4HL() { this->BIT(0b00010000, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_5HL() { this->BIT(0b00100000, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_6HL() { this->BIT(0b01000000, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_7HL() { this->BIT(0b10000000, RAM::readAt(this->HL.val())); this->cycles = 12; }
+
+u8 GB_CPU::AssignReg(u8 mask, u8 reg_, bool val) {
+    if (val) {
+        return reg_ | mask;
+    } else {
+        return reg_ & ~mask;
+    }
+}
+
+u8 GB_CPU::RES(u8 bit, u8 reg_) {
+    this->cycles = 8;
+    return AssignReg(bit, reg_, false);
+}
+
+void GB_CPU::RES_0A() { this->AF.hi = this->RES(1, this->AF.hi); }
+void GB_CPU::RES_1A() { this->AF.hi = this->RES(0b00000010, this->AF.hi); }
+void GB_CPU::RES_2A() { this->AF.hi = this->RES(0b00000100, this->AF.hi); }
+void GB_CPU::RES_3A() { this->AF.hi = this->RES(0b00001000, this->AF.hi); }
+void GB_CPU::RES_4A() { this->AF.hi = this->RES(0b00010000, this->AF.hi); }
+void GB_CPU::RES_5A() { this->AF.hi = this->RES(0b00100000, this->AF.hi); }
+void GB_CPU::RES_6A() { this->AF.hi = this->RES(0b01000000, this->AF.hi); }
+void GB_CPU::RES_7A() { this->AF.hi = this->RES(0b10000000, this->AF.hi); }
+
+void GB_CPU::RES_0B() { this->BC.hi = this->RES(1, this->BC.hi); }
+void GB_CPU::RES_1B() { this->BC.hi = this->RES(0b00000010, this->BC.hi); }
+void GB_CPU::RES_2B() { this->BC.hi = this->RES(0b00000100, this->BC.hi); }
+void GB_CPU::RES_3B() { this->BC.hi = this->RES(0b00001000, this->BC.hi); }
+void GB_CPU::RES_4B() { this->BC.hi = this->RES(0b00010000, this->BC.hi); }
+void GB_CPU::RES_5B() { this->BC.hi = this->RES(0b00100000, this->BC.hi); }
+void GB_CPU::RES_6B() { this->BC.hi = this->RES(0b01000000, this->BC.hi); }
+void GB_CPU::RES_7B() { this->BC.hi = this->RES(0b10000000, this->BC.hi); }
+
+void GB_CPU::RES_0C() { this->BC.lo = this->RES(1, this->BC.lo); }
+void GB_CPU::RES_1C() { this->BC.lo = this->RES(0b00000010, this->BC.lo); }
+void GB_CPU::RES_2C() { this->BC.lo = this->RES(0b00000100, this->BC.lo); }
+void GB_CPU::RES_3C() { this->BC.lo = this->RES(0b00001000, this->BC.lo); }
+void GB_CPU::RES_4C() { this->BC.lo = this->RES(0b00010000, this->BC.lo); }
+void GB_CPU::RES_5C() { this->BC.lo = this->RES(0b00100000, this->BC.lo); }
+void GB_CPU::RES_6C() { this->BC.lo = this->RES(0b01000000, this->BC.lo); }
+void GB_CPU::RES_7C() { this->BC.lo = this->RES(0b10000000, this->BC.lo); }
+
+void GB_CPU::RES_0D() { this->DE.hi = this->RES(1, this->DE.hi); }
+void GB_CPU::RES_1D() { this->DE.hi = this->RES(0b00000010, this->DE.hi); }
+void GB_CPU::RES_2D() { this->DE.hi = this->RES(0b00000100, this->DE.hi); }
+void GB_CPU::RES_3D() { this->DE.hi = this->RES(0b00001000, this->DE.hi); }
+void GB_CPU::RES_4D() { this->DE.hi = this->RES(0b00010000, this->DE.hi); }
+void GB_CPU::RES_5D() { this->DE.hi = this->RES(0b00100000, this->DE.hi); }
+void GB_CPU::RES_6D() { this->DE.hi = this->RES(0b01000000, this->DE.hi); }
+void GB_CPU::RES_7D() { this->DE.hi = this->RES(0b10000000, this->DE.hi); }
+
+void GB_CPU::RES_0E() { this->DE.lo = this->RES(1, this->DE.lo); }
+void GB_CPU::RES_1E() { this->DE.lo = this->RES(0b00000010, this->DE.lo); }
+void GB_CPU::RES_2E() { this->DE.lo = this->RES(0b00000100, this->DE.lo); }
+void GB_CPU::RES_3E() { this->DE.lo = this->RES(0b00001000, this->DE.lo); }
+void GB_CPU::RES_4E() { this->DE.lo = this->RES(0b00010000, this->DE.lo); }
+void GB_CPU::RES_5E() { this->DE.lo = this->RES(0b00100000, this->DE.lo); }
+void GB_CPU::RES_6E() { this->DE.lo = this->RES(0b01000000, this->DE.lo); }
+void GB_CPU::RES_7E() { this->DE.lo = this->RES(0b10000000, this->DE.lo); }
+
+void GB_CPU::RES_0H() { this->HL.hi = this->RES(1, this->HL.hi); }
+void GB_CPU::RES_1H() { this->HL.hi = this->RES(0b00000010, this->HL.hi); }
+void GB_CPU::RES_2H() { this->HL.hi = this->RES(0b00000100, this->HL.hi); }
+void GB_CPU::RES_3H() { this->HL.hi = this->RES(0b00001000, this->HL.hi); }
+void GB_CPU::RES_4H() { this->HL.hi = this->RES(0b00010000, this->HL.hi); }
+void GB_CPU::RES_5H() { this->HL.hi = this->RES(0b00100000, this->HL.hi); }
+void GB_CPU::RES_6H() { this->HL.hi = this->RES(0b01000000, this->HL.hi); }
+void GB_CPU::RES_7H() { this->HL.hi = this->RES(0b10000000, this->HL.hi); }
+
+void GB_CPU::RES_0L() { this->HL.lo = this->RES(1, this->HL.lo); }
+void GB_CPU::RES_1L() { this->HL.lo = this->RES(0b00000010, this->HL.lo); }
+void GB_CPU::RES_2L() { this->HL.lo = this->RES(0b00000100, this->HL.lo); }
+void GB_CPU::RES_3L() { this->HL.lo = this->RES(0b00001000, this->HL.lo); }
+void GB_CPU::RES_4L() { this->HL.lo = this->RES(0b00010000, this->HL.lo); }
+void GB_CPU::RES_5L() { this->HL.lo = this->RES(0b00100000, this->HL.lo); }
+void GB_CPU::RES_6L() { this->HL.lo = this->RES(0b01000000, this->HL.lo); }
+void GB_CPU::RES_7L() { this->HL.lo = this->RES(0b10000000, this->HL.lo); }
+
+void GB_CPU::RES_0HL() { RAM::write(this->RES(1, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_1HL() { RAM::write(this->RES(0b00000010, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_2HL() { RAM::write(this->RES(0b00000100, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_3HL() { RAM::write(this->RES(0b00001000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_4HL() { RAM::write(this->RES(0b00010000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_5HL() { RAM::write(this->RES(0b00100000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_6HL() { RAM::write(this->RES(0b01000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_7HL() { RAM::write(this->RES(0b10000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+
+u8 GB_CPU::SET(u8 bit, u8 reg_) {
+    this->cycles = 8;
+    return AssignReg(bit, reg_, true);
+}
+
+void GB_CPU::SET_0A() { this->AF.hi = this->SET(1, this->AF.hi); }
+void GB_CPU::SET_1A() { this->AF.hi = this->SET(0b00000010, this->AF.hi); }
+void GB_CPU::SET_2A() { this->AF.hi = this->SET(0b00000100, this->AF.hi); }
+void GB_CPU::SET_3A() { this->AF.hi = this->SET(0b00001000, this->AF.hi); }
+void GB_CPU::SET_4A() { this->AF.hi = this->SET(0b00010000, this->AF.hi); }
+void GB_CPU::SET_5A() { this->AF.hi = this->SET(0b00100000, this->AF.hi); }
+void GB_CPU::SET_6A() { this->AF.hi = this->SET(0b01000000, this->AF.hi); }
+void GB_CPU::SET_7A() { this->AF.hi = this->SET(0b10000000, this->AF.hi); }
+
+void GB_CPU::SET_0B() { this->BC.hi = this->SET(1, this->BC.hi); }
+void GB_CPU::SET_1B() { this->BC.hi = this->SET(0b00000010, this->BC.hi); }
+void GB_CPU::SET_2B() { this->BC.hi = this->SET(0b00000100, this->BC.hi); }
+void GB_CPU::SET_3B() { this->BC.hi = this->SET(0b00001000, this->BC.hi); }
+void GB_CPU::SET_4B() { this->BC.hi = this->SET(0b00010000, this->BC.hi); }
+void GB_CPU::SET_5B() { this->BC.hi = this->SET(0b00100000, this->BC.hi); }
+void GB_CPU::SET_6B() { this->BC.hi = this->SET(0b01000000, this->BC.hi); }
+void GB_CPU::SET_7B() { this->BC.hi = this->SET(0b10000000, this->BC.hi); }
+
+void GB_CPU::SET_0C() { this->BC.lo = this->SET(1, this->BC.lo); }
+void GB_CPU::SET_1C() { this->BC.lo = this->SET(0b00000010, this->BC.lo); }
+void GB_CPU::SET_2C() { this->BC.lo = this->SET(0b00000100, this->BC.lo); }
+void GB_CPU::SET_3C() { this->BC.lo = this->SET(0b00001000, this->BC.lo); }
+void GB_CPU::SET_4C() { this->BC.lo = this->SET(0b00010000, this->BC.lo); }
+void GB_CPU::SET_5C() { this->BC.lo = this->SET(0b00100000, this->BC.lo); }
+void GB_CPU::SET_6C() { this->BC.lo = this->SET(0b01000000, this->BC.lo); }
+void GB_CPU::SET_7C() { this->BC.lo = this->SET(0b10000000, this->BC.lo); }
+
+void GB_CPU::SET_0D() { this->DE.hi = this->SET(1, this->DE.hi); }
+void GB_CPU::SET_1D() { this->DE.hi = this->SET(0b00000010, this->DE.hi); }
+void GB_CPU::SET_2D() { this->DE.hi = this->SET(0b00000100, this->DE.hi); }
+void GB_CPU::SET_3D() { this->DE.hi = this->SET(0b00001000, this->DE.hi); }
+void GB_CPU::SET_4D() { this->DE.hi = this->SET(0b00010000, this->DE.hi); }
+void GB_CPU::SET_5D() { this->DE.hi = this->SET(0b00100000, this->DE.hi); }
+void GB_CPU::SET_6D() { this->DE.hi = this->SET(0b01000000, this->DE.hi); }
+void GB_CPU::SET_7D() { this->DE.hi = this->SET(0b10000000, this->DE.hi); }
+
+void GB_CPU::SET_0E() { this->DE.lo = this->SET(1, this->DE.lo); }
+void GB_CPU::SET_1E() { this->DE.lo = this->SET(0b00000010, this->DE.lo); }
+void GB_CPU::SET_2E() { this->DE.lo = this->SET(0b00000100, this->DE.lo); }
+void GB_CPU::SET_3E() { this->DE.lo = this->SET(0b00001000, this->DE.lo); }
+void GB_CPU::SET_4E() { this->DE.lo = this->SET(0b00010000, this->DE.lo); }
+void GB_CPU::SET_5E() { this->DE.lo = this->SET(0b00100000, this->DE.lo); }
+void GB_CPU::SET_6E() { this->DE.lo = this->SET(0b01000000, this->DE.lo); }
+void GB_CPU::SET_7E() { this->DE.lo = this->SET(0b10000000, this->DE.lo); }
+
+void GB_CPU::SET_0H() { this->HL.hi = this->SET(1, this->HL.hi); }
+void GB_CPU::SET_1H() { this->HL.hi = this->SET(0b00000010, this->HL.hi); }
+void GB_CPU::SET_2H() { this->HL.hi = this->SET(0b00000100, this->HL.hi); }
+void GB_CPU::SET_3H() { this->HL.hi = this->SET(0b00001000, this->HL.hi); }
+void GB_CPU::SET_4H() { this->HL.hi = this->SET(0b00010000, this->HL.hi); }
+void GB_CPU::SET_5H() { this->HL.hi = this->SET(0b00100000, this->HL.hi); }
+void GB_CPU::SET_6H() { this->HL.hi = this->SET(0b01000000, this->HL.hi); }
+void GB_CPU::SET_7H() { this->HL.hi = this->SET(0b10000000, this->HL.hi); }
+
+void GB_CPU::SET_0L() { this->HL.lo = this->SET(1, this->HL.lo); }
+void GB_CPU::SET_1L() { this->HL.lo = this->SET(0b00000010, this->HL.lo); }
+void GB_CPU::SET_2L() { this->HL.lo = this->SET(0b00000100, this->HL.lo); }
+void GB_CPU::SET_3L() { this->HL.lo = this->SET(0b00001000, this->HL.lo); }
+void GB_CPU::SET_4L() { this->HL.lo = this->SET(0b00010000, this->HL.lo); }
+void GB_CPU::SET_5L() { this->HL.lo = this->SET(0b00100000, this->HL.lo); }
+void GB_CPU::SET_6L() { this->HL.lo = this->SET(0b01000000, this->HL.lo); }
+void GB_CPU::SET_7L() { this->HL.lo = this->SET(0b10000000, this->HL.lo); }
+
+void GB_CPU::SET_0HL() { RAM::write(this->SET(1, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_1HL() { RAM::write(this->SET(0b00000010, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_2HL() { RAM::write(this->SET(0b00000100, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_3HL() { RAM::write(this->SET(0b00001000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_4HL() { RAM::write(this->SET(0b00010000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_5HL() { RAM::write(this->SET(0b00100000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_6HL() { RAM::write(this->SET(0b01000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_7HL() { RAM::write(this->SET(0b10000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+
+void GB_CPU::RRA() {
+    u8 carry = (this->AF.lo & 0b00010000) << 3;
+    this->AF.lo = (this->AF.hi & 0b00000001) << 4;
+    this->AF.lo &= 0b10010000;
+    this->AF.hi = (this->AF.hi >> 1) + carry;
+    if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 4;
+}
+
+void GB_CPU::RLC_A() {
+    u8 carry = (this->AF.hi & 0b10000000) >> 7;
+    this->AF.lo = (this->AF.hi & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->AF.hi = (this->AF.hi << 1) + carry;
+    if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+void GB_CPU::RLC_B() {
+    u8 carry = (this->BC.hi & 0b10000000) >> 7;
+    this->AF.lo = (this->BC.hi & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->BC.hi = (this->BC.hi << 1) + carry;
+    if (this->BC.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+void GB_CPU::RLC_C() {
+    u8 carry = (this->BC.lo & 0b10000000) >> 7;
+    this->AF.lo = (this->BC.lo & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->BC.lo = (this->BC.lo << 1) + carry;
+    if (this->BC.lo == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+void GB_CPU::RLC_D() {
+    u8 carry = (this->DE.hi & 0b10000000) >> 7;
+    this->AF.lo = (this->DE.hi & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->DE.hi = (this->DE.hi << 1) + carry;
+    if (this->DE.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+void GB_CPU::RLC_E() {
+    u8 carry = (this->DE.lo & 0b10000000) >> 7;
+    this->AF.lo = (this->DE.lo & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->DE.lo = (this->DE.lo << 1) + carry;
+    if (this->DE.lo == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+void GB_CPU::RLC_H() {
+    u8 carry = (this->HL.hi & 0b10000000) >> 7;
+    this->AF.lo = (this->HL.hi & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->HL.hi = (this->HL.hi << 1) + carry;
+    if (this->HL.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+void GB_CPU::RLC_L() {
+    u8 carry = (this->HL.lo & 0b10000000) >> 7;
+    this->AF.lo = (this->HL.lo & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    this->HL.lo = (this->HL.lo << 1) + carry;
+    if (this->HL.lo == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 8;
+}
+
+u8 GB_CPU::RL_generic(u8 val) {
+    u8 bit7 = val & 0b10000000;
+    u8 newVal = (val << 1) + this->get_c();
+    this->set_z(newVal == 0);
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(bit7 == 0b10000000);
+    return newVal;
+}
+
+void GB_CPU::RL_A() {
+    this->AF.hi = this->RL_generic(this->AF.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::RL_B() {
+    this->BC.hi = this->RL_generic(this->BC.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::RL_C() {
+    this->BC.lo = this->RL_generic(this->BC.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::RL_D() {
+    this->DE.hi = this->RL_generic(this->DE.hi);
+    this->cycles = 8;
+}
+void GB_CPU::RL_E() {
+    this->DE.lo = this->RL_generic(this->DE.lo);
+    this->cycles = 8;
+}
+void GB_CPU::RL_H() {
+    this->HL.hi = this->RL_generic(this->HL.hi);
+    this->cycles = 8;
+}
+void GB_CPU::RL_L() {
+    this->HL.lo = this->RL_generic(this->HL.lo);
+    this->cycles = 8;
+}
+void GB_CPU::RL_addr_HL() {
+    u8 readVal = RAM::readAt(this->HL.val());
+    RAM::write(this->RL_generic(readVal), this->HL.val());
+    this->cycles = 16;
+}
+void GB_CPU::RLC_HL() {
+    u8 x = RAM::readAt(this->HL.val());
+    u8 carry = (x & 0b10000000) >> 7;
+    this->AF.lo = (x & 0b10000000) >> 3;
+    this->AF.lo &= 0b10010000;
+    x = (x << 1) + carry;
+    this->write(x, this->HL.val());
+    if (x == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->cycles = 16;
+}
+
+
+void GB_CPU::JR_NZ() {
+    if (!this->get_z()) {
+        s8 b = this->read();
+        this->PC += b;
+        this->cycles = 12;
+
+    } else {
+        ++this->PC;
+        this->cycles = 8;
+    }
+}
+
+void GB_CPU::JR_Z() {
+    if ((this->AF.lo >> 7) == 1) {
+        s8 b = this->read();
+        this->PC += b;
+        this->cycles = 12;
+    } else {
+        ++this->PC;
+        this->cycles = 8;
+    }
+}
+
+void GB_CPU::JR_NC() {
+    if (!this->get_c()) {
+        s8 b = this->read();
+        this->PC += b;
+        this->cycles = 12;
+    } else {
+        ++this->PC;
+        this->cycles = 8;
+    }
+}
+
+void GB_CPU::JR_C() {
+    if (this->get_c()) {
+        s8 b = this->read();
+        this->PC += b;
+        this->cycles = 12;
+    } else {
+        ++this->PC;
+        this->cycles = 8;
+    }
+}
+
+void GB_CPU::JR_n() {
+    s8 jump = this->read();
+    this->PC += jump;
+    this->cycles = 12;
+}
+
+void GB_CPU::JP() {
+    u8 n1, n2;
+    n1 = this->read();
+    n2 = this->read();
+    this->PC = n1 + (n2 << 8);
+    this->cycles = 12;
+}
+
+void GB_CPU::JP_NZ() {
+    u8 n1, n2;
+    if (!this->get_z()) {
+        n1 = this->read();
+        n2 = this->read();
+        this->PC = n1 + (n2 << 8);
+    } else { this->PC += 2; }
+    this->cycles = 12;
+}
+
+void GB_CPU::JP_Z() {
+    u8 n1, n2;
+    if (this->get_z()) {
+        n1 = this->read();
+        n2 = this->read();
+        this->PC = n1 + (n2 << 8);
+    } else { this->PC += 2; }
+    this->cycles = 12;
+}
+
+void GB_CPU::JP_NC() {
+    u8 n1, n2;
+    if (!this->get_c()) {
+        n1 = this->read();
+        n2 = this->read();
+        this->PC = n1 + (n2 << 8);
+    } else { this->PC += 2; }
+    this->cycles = 12;
+}
+void GB_CPU::JP_C() {
+    u8 n1, n2;
+    if (this->get_c()) {
+        n1 = this->read();
+        n2 = this->read();
+        this->PC = n1 + (n2 << 8);
+    } else { this->PC += 2; }
+    this->cycles = 12;
+}
+
+void GB_CPU::JP_HL() {
+    this->PC = this->HL.val();
+    this->cycles = 4;
+}
+
+void GB_CPU::LDc_n() {
+    u8 n = this->read();
+    this->BC.lo = n;
+}
+
+void GB_CPU::LDb_n() {
+    u8 n = this->read();
+    this->BC.hi = n;
+}
+void GB_CPU::LDd_n() {
+    u8 n = this->read();
+    this->DE.hi = n;
+}
+void GB_CPU::LDe_n() {
+    u8 n = this->read();
+    this->DE.lo = n;
+}
+void GB_CPU::LDh_n() {
+    u8 n = this->read();
+    this->HL.hi = n;
+}
+
+void GB_CPU::LDl_n() {
+    u8 n = this->read();
+    this->HL.lo = n;
+}
+
+void  GB_CPU::LDrr_a_hash() {
+    u8 byte = this->read();
+    this->AF.hi = byte;
+}
+
+void GB_CPU::LD_HL_a() {
+    this->write(this->AF.hi, this->HL.val());
+}
+void GB_CPU::LD_BC_a() { this->write(this->AF.hi, this->BC.val()); }
+void GB_CPU::LD_DE_a() { this->write(this->AF.hi, this->DE.val()); }
+
+void GB_CPU::LDad_n_a() { u8 add = this->read(); u16 addr = add + 0xFF00; this->write(this->AF.hi, addr); this->cycles = 12; }
+
+void GB_CPU::CALL_nn() {
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+
+    u8 loNib = this->PC & 0xFF;
+    u8 hiNib = (this->PC >> 8) & 0xFF;
+
+    --this->SP;
+    this->write(hiNib, this->SP);
+    --this->SP;
+    this->write(loNib, this->SP);
+
+    this->PC = n1 + (n2 << 8);
+    this->cycles = 12;
+}
+
+void GB_CPU::CALL_NZ() {
+    u8 F = this->AF.lo;
+    u8 Z = (F & 0b10000000) >> 7;
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    if (Z == 0) {
+        u8 loNib = this->PC & 0xFF;
+        u8 hiNib = (this->PC >> 8) & 0xFF;
+
+        --this->SP;
+        this->write(hiNib, this->SP);
+        --this->SP;
+        this->write(loNib, this->SP);
+
+        this->PC = n1 + (n2 << 8);
+        this->cycles = 12;
+    }
+}
+void GB_CPU::CALL_Z() {
+    u8 F = this->AF.lo;
+    u8 Z = (F & 0b10000000) >> 7;
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    if (Z == 1) {
+        u8 loNib = this->PC & 0xFF;
+        u8 hiNib = (this->PC >> 8) & 0xFF;
+
+        --this->SP;
+        this->write(hiNib, this->SP);
+        --this->SP;
+        this->write(loNib, this->SP);
+
+        this->PC = n1 + (n2 << 8);
+        this->cycles = 12;
+    }
+}
+void GB_CPU::CALL_NC() {
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    if (!this->get_c()) {
+        u8 loNib = this->PC & 0xFF;
+        u8 hiNib = (this->PC >> 8) & 0xFF;
+
+        --this->SP;
+        this->write(hiNib, this->SP);
+        --this->SP;
+        this->write(loNib, this->SP);
+
+        this->PC = n1 + (n2 << 8);
+        this->cycles = 12;
+    }
+}
+
+void GB_CPU::CALL_C() {
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    if (this->get_c()) {
+        u8 loNib = this->PC & 0xFF;
+        u8 hiNib = (this->PC >> 8) & 0xFF;
+
+        --this->SP;
+        this->write(hiNib, this->SP);
+        --this->SP;
+        this->write(loNib, this->SP);
+
+        this->PC = n1 + (n2 << 8);
+        this->cycles = 12;
+    }
+}
+
+void GB_CPU::LDI_HLa() {
+    this->write(this->AF.hi, this->HL.val());
+    u16 x = this->HL.val() + 1;
+    this->HL.set(x);
+}
+
+void GB_CPU::LD_nn_a() {
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    u16 addr = n1 + (n2 << 8);
+    this->write(this->AF.hi, addr);
+}
+
+void GB_CPU::LDH_a_ffn() {
+    u8 n = this->read();
+    this->AF.hi = RAM::readAt(0xFF00 + n);
+    this->cycles = 12;
+}
+
+void GB_CPU::LDrr_aa() { this->cycles = 4; }
+void GB_CPU::LDrr_ab() { this->AF.hi = this->BC.hi; this->cycles = 4; }
+void GB_CPU::LDrr_ac() { this->AF.hi = this->BC.lo; this->cycles = 4; }
+void GB_CPU::LDrr_ad() { this->AF.hi = this->DE.hi; this->cycles = 4; }
+void GB_CPU::LDrr_ae() { this->AF.hi = this->DE.lo; this->cycles = 4; }
+void GB_CPU::LDrr_ah() { this->AF.hi = this->HL.hi; this->cycles = 4; }
+void GB_CPU::LDrr_al() { this->AF.hi = this->HL.lo; this->cycles = 4; }
+void GB_CPU::LDrr_aBC() { this->AF.hi = RAM::readAt(this->BC.val()); }
+void GB_CPU::LDrr_aDE() { this->AF.hi = RAM::readAt(this->DE.val()); }
+void GB_CPU::LDrr_aHL() { this->AF.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_bb() { this->cycles = 4; }
+void GB_CPU::LDrr_ba() { this->BC.hi = this->AF.hi; this->cycles = 4; }
+void GB_CPU::LDrr_bc() { this->BC.hi = this->BC.lo; this->cycles = 4; }
+void GB_CPU::LDrr_bd() { this->BC.hi = this->DE.hi; this->cycles = 4; }
+void GB_CPU::LDrr_be() { this->BC.hi = this->DE.lo; this->cycles = 4; }
+void GB_CPU::LDrr_bh() { this->BC.hi = this->HL.hi; this->cycles = 4; }
+void GB_CPU::LDrr_bl() { this->BC.hi = this->HL.lo; this->cycles = 4; }
+void GB_CPU::LDrr_bHL() { this->BC.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_cc() { this->cycles = 4; }
+void GB_CPU::LDrr_ca() { this->BC.lo = this->AF.hi; this->cycles = 4; }
+void GB_CPU::LDrr_cb() { this->BC.lo = this->BC.hi; this->cycles = 4; }
+void GB_CPU::LDrr_cd() { this->BC.lo = this->DE.hi; this->cycles = 4; }
+void GB_CPU::LDrr_ce() { this->BC.lo = this->DE.lo; this->cycles = 4; }
+void GB_CPU::LDrr_ch() { this->BC.lo = this->HL.hi; this->cycles = 4; }
+void GB_CPU::LDrr_cl() { this->BC.lo = this->HL.lo; this->cycles = 4; }
+void GB_CPU::LDrr_cHL() { this->BC.lo = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_dd() { this->cycles = 4; }
+void GB_CPU::LDrr_da() { this->DE.hi = this->AF.hi; this->cycles = 4; }
+void GB_CPU::LDrr_db() { this->DE.hi = this->BC.hi; this->cycles = 4; }
+void GB_CPU::LDrr_dc() { this->DE.hi = this->BC.lo; this->cycles = 4; }
+void GB_CPU::LDrr_de() { this->DE.hi = this->DE.lo; this->cycles = 4; }
+void GB_CPU::LDrr_dh() { this->DE.hi = this->HL.hi; this->cycles = 4; }
+void GB_CPU::LDrr_dl() { this->DE.hi = this->HL.lo; this->cycles = 4; }
+void GB_CPU::LDrr_dHL() { this->DE.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_ee() { this->cycles = 4; }
+void GB_CPU::LDrr_ea() { this->DE.lo = this->AF.hi; this->cycles = 4; }
+void GB_CPU::LDrr_eb() { this->DE.lo = this->BC.hi; this->cycles = 4; }
+void GB_CPU::LDrr_ec() { this->DE.lo = this->BC.lo; this->cycles = 4; }
+void GB_CPU::LDrr_ed() { this->DE.lo = this->DE.hi; this->cycles = 4; }
+void GB_CPU::LDrr_eh() { this->DE.lo = this->HL.hi; this->cycles = 4; }
+void GB_CPU::LDrr_el() { this->DE.lo = this->HL.lo; this->cycles = 4; }
+void GB_CPU::LDrr_eHL() { this->DE.lo = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_hh() { this->cycles = 4; }
+void GB_CPU::LDrr_ha() { this->HL.hi = this->AF.hi; this->cycles = 4; }
+void GB_CPU::LDrr_hb() { this->HL.hi = this->BC.hi; this->cycles = 4; }
+void GB_CPU::LDrr_hc() { this->HL.hi = this->BC.lo; this->cycles = 4; }
+void GB_CPU::LDrr_hd() { this->HL.hi = this->DE.hi; this->cycles = 4; }
+void GB_CPU::LDrr_he() { this->HL.hi = this->DE.lo; this->cycles = 4; }
+void GB_CPU::LDrr_hl() { this->HL.hi = this->HL.lo; this->cycles = 4; }
+void GB_CPU::LDrr_hHL() { this->HL.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_ll() { this->cycles = 4; }
+void GB_CPU::LDrr_la() { this->HL.lo = this->AF.hi; this->cycles = 4; }
+void GB_CPU::LDrr_lb() { this->HL.lo = this->BC.hi; this->cycles = 4; }
+void GB_CPU::LDrr_lc() { this->HL.lo = this->BC.lo; this->cycles = 4; }
+void GB_CPU::LDrr_ld() { this->HL.lo = this->DE.hi; this->cycles = 4; }
+void GB_CPU::LDrr_le() { this->HL.lo = this->DE.lo; this->cycles = 4; }
+void GB_CPU::LDrr_lh() { this->HL.lo = this->HL.hi; this->cycles = 4; }
+void GB_CPU::LDrr_lHL() { this->HL.lo = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_HLb() { this->write(this->BC.hi, this->HL.val()); this->cycles = 8; }
+void GB_CPU::LDrr_HLc() { this->write(this->BC.lo, this->HL.val()); this->cycles = 8; }
+void GB_CPU::LDrr_HLd() { this->write(this->DE.hi, this->HL.val()); this->cycles = 8; }
+void GB_CPU::LDrr_HLe() { this->write(this->DE.lo, this->HL.val()); this->cycles = 8; }
+void GB_CPU::LDrr_HLh() { this->write(this->HL.hi, this->HL.val()); this->cycles = 8; }
+void GB_CPU::LDrr_HLl() { this->write(this->HL.lo, this->HL.val()); this->cycles = 8; }
+void GB_CPU::LDrr_HLn() { this->write(read(), this->HL.val()); this->cycles = 12; }
+void GB_CPU::LDrr_ann() {
+    u8 n1 = this->read(), n2 = this->read();
+    u16 addr = n1 + (n2 << 8);
+    this->AF.hi = RAM::readAt(addr);
+    this->cycles = 16;
+}
+
+void GB_CPU::LDa_c() { this->AF.hi = RAM::readAt(0xFF00 + this->BC.lo); }
+void GB_CPU::LDc_a() { this->write(this->AF.hi, 0xFF00 + this->BC.lo); }
+
+void GB_CPU::LDDaHL() { this->AF.hi = RAM::readAt(this->HL.val()); this->HL.set(this->HL.val() - 1); }
+void GB_CPU::LDDHLa() { this->write(this->AF.hi, this->HL.val()); this->HL.set(this->HL.val() - 1); }
+
+void GB_CPU::LD_nn_BC() {
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    u16 nn = n1 + (n2 << 8);
+    this->BC.set(nn);
+}
+void GB_CPU::LD_nn_DE() { u8 n1 = this->read(); u8 n2 = this->read(); u16 nn = n1 + (n2 << 8); this->DE.set(nn); }
+void GB_CPU::LD_nn_HL() { u8 n1 = this->read(); u8 n2 = this->read(); u16 nn = n1 + (n2 << 8); this->HL.set(nn); }
+void GB_CPU::LD_nn_SP() { u8 n1 = this->read(); u8 n2 = this->read(); u16 nn = n1 + (n2 << 8); this->SP = nn; }
+
+void GB_CPU::LD_SPHL() { this->SP = this->HL.val(); }
+
+void GB_CPU::LDHL_SPn() {
+    s8 n = this->read();
+    this->HL.set(SP + n);
+    u8 point = this->SP + n;
+
+    this->set_z(false);
+    this->set_n(false);
+    this->set_c((point & 0xFF) < (SP & 0xFF));
+    this->set_h((SP & 0x0F) + (n & 0x0F) > 0x0F);
+
+    this->cycles = 12;
+}
+
+void GB_CPU::LD_nnSP() {
+    u8 n1 = this->read();
+    u8 n2 = this->read();
+    u16 nn = n1 + (n2 << 8);
+    RAM::write(SP & 0x00FF, nn);
+    RAM::write((SP & 0xFF00) >> 8, nn + 1);
+
+
+    this->cycles = 20;
+}
+
+void GB_CPU::PUSH_AF() {
+    this->SP--;
+    this->write(this->AF.hi, this->SP);
+    this->SP--;
+    this->write(this->AF.lo & 0xF0, this->SP);
+    this->cycles = 16;
+}
+void GB_CPU::PUSH_BC() { this->SP--; this->write(this->BC.hi, this->SP); this->SP--; this->write(this->BC.lo, this->SP); this->cycles = 16; }
+void GB_CPU::PUSH_DE() { this->SP--; this->write(this->DE.hi, this->SP); this->SP--; this->write(this->DE.lo, this->SP); this->cycles = 16; }
+void GB_CPU::PUSH_HL() { this->SP--; this->write(this->HL.hi, this->SP); this->SP--; this->write(this->HL.lo, this->SP); this->cycles = 16; }
+
+void GB_CPU::POP_AF() {
+    u8 n = RAM::readAt(SP);
+    this->AF.lo = n & 0xF0;
+    ++this->SP;
+    u8 m = RAM::readAt(SP);
+    this->AF.hi = m;
+    ++this->SP;
+
+    this->cycles = 12;
+}
+void GB_CPU::POP_BC() { u8 n = RAM::readAt(SP); this->BC.lo = n; ++this->SP; u8 m = RAM::readAt(SP); this->BC.hi = m; ++this->SP; this->cycles = 12; }
+void GB_CPU::POP_DE() { u8 n = RAM::readAt(SP); this->DE.lo = n; ++this->SP; u8 m = RAM::readAt(SP); this->DE.hi = m; ++this->SP; this->cycles = 12; }
+void GB_CPU::POP_HL() { u8 n = RAM::readAt(SP); this->HL.lo = n; ++this->SP; u8 m = RAM::readAt(SP); this->HL.hi = m; ++this->SP; this->cycles = 12; }
+
+
+
+void GB_CPU::ADD_aa() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += this->AF.hi;
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->AF.lo = this->AF.lo & 0b10110000;
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_ab() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += this->BC.hi;
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->AF.lo = this->AF.lo & 0b10110000;
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_ac() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += this->BC.lo;
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->AF.lo = this->AF.lo & 0b10110000;
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_ad() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += this->DE.hi;
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->AF.lo = this->AF.lo & 0b10110000;
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_ae() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->DE.lo & 0x0F;
+    this->AF.hi += this->DE.lo;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(false);
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_ah() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += this->HL.hi;
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->set_n(false);
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_al() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->HL.lo & 0x0F;
+    this->AF.hi += this->HL.lo;
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->set_n(false);
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 4;
+}
+void GB_CPU::ADD_aH() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += RAM::readAt(this->HL.val());
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->set_n(false);
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 8;
+}
+void GB_CPU::ADD_a_hash() {
+    u8 x = this->AF.hi;
+    u8 loNib = this->AF.hi & 0x0F;
+    this->AF.hi += this->read();
+    if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
+    this->AF.lo = this->AF.lo & 0b10110000;
+    this->set_h((this->AF.hi & 0x0F) < loNib);
+    this->set_c(this->AF.hi < x);
+    this->cycles = 8;
+}
+
+void GB_CPU::ADC_generic(u8 add) {
+    u8 a = this->AF.hi;
+    u8 b = add;
+    u8 c = this->get_c();
+    bool carry = false;
+    u8 res = a + b + c;
+
+    this->set_z(res == 0);
+    this->set_n(false);
+    this->set_h((a & 0x0F) + (b & 0x0F) + (c & 0x0F) > 0x0F);
+
+    if (b + c > 0xFF) {
+        carry = true;
     }
 
-    void LDa_c() { AF.hi = RAM::readAt(0xFF00 + BC.lo); }
-    void LDc_a() { write(AF.hi, 0xFF00 + BC.lo); }
-
-    void LDDaHL() { AF.hi = RAM::readAt(HL.val()); HL.set(HL.val() - 1); }
-    void LDDHLa() { write(AF.hi, HL.val()); HL.set(HL.val() - 1); }
-    void LDIaHL() { AF.hi = RAM::readAt(HL.val()); HL.set(HL.val() + 1); }
-    void LDIHLa() { write(AF.hi, HL.val()); HL.set(HL.val() + 1); }
-
-    void LDHnA() { u8 n = read(); write(AF.hi, 0xFF00 + n); }
-    void LDHAn() { u8 n = read(); RAM::readAt(0xFF00 + n); }
-
-    void LD_nn_BC() {
-        u8 n1 = read();
-        u8 n2 = read();
-        u16 nn = n1 + (n2 << 8);
-        BC.set(nn);
+    if (res < a) {
+        carry = true;
     }
-    void LD_nn_DE() { u8 n1 = read(); u8 n2 = read(); u16 nn = n1 + (n2 << 8); DE.set(nn); }
-    void LD_nn_HL() { u8 n1 = read(); u8 n2 = read(); u16 nn = n1 + (n2 << 8); HL.set(nn); }
-    void LD_nn_SP() { u8 n1 = read(); u8 n2 = read(); u16 nn = n1 + (n2 << 8); SP = nn; }
+    this->set_c(carry);
 
-    void LD_SPHL() { SP = HL.val(); }
+    this->AF.hi = res;
+}
 
-    void LDHL_SPn() {
-        s8 n = read();
-        HL.set(SP + n);
-        u8 point = SP + n;
+void GB_CPU::ADC_a_hash() {
+    u8 readValue = this->read();
+    ADC_generic(readValue);
 
-        setZ(false);
-        setN(false);
-        setC((point & 0xFF) < (SP & 0xFF));
-        setH((SP & 0x0F) + (n & 0x0F) > 0x0F);
+    this->cycles = 8;
+}
 
-        cycles = 12;
+void GB_CPU::ADC_aa() {
+    ADC_generic(this->AF.hi);
+    this->cycles = 4;
+
+}
+void GB_CPU::ADC_ab() {
+    ADC_generic(this->BC.hi);
+    this->cycles = 4;
+}
+
+void GB_CPU::ADC_ac() {
+    ADC_generic(this->BC.lo);
+    this->cycles = 4;
+
+}
+void GB_CPU::ADC_ad() {
+    ADC_generic(this->DE.hi);
+    this->cycles = 4;
+
+}
+void GB_CPU::ADC_ae() {
+    ADC_generic(this->DE.lo);
+    this->cycles = 4;
+
+}
+void GB_CPU::ADC_ah() {
+    ADC_generic(this->HL.hi);
+    this->cycles = 4;
+
+}
+void GB_CPU::ADC_al() {
+    ADC_generic(this->HL.lo);
+    this->cycles = 4;
+
+}
+void GB_CPU::ADC_aHL() {
+    u8 readValue = RAM::readAt(this->HL.val());
+    ADC_generic(readValue);
+
+    this->cycles = 8;
+
+}
+
+void GB_CPU::SUB_a() {
+    this->set_z(true);
+    this->set_n(true);
+    this->set_h(false);
+    this->set_c(false);
+
+    this->AF.hi = 0;
+    this->cycles = 4;
+}
+void GB_CPU::SUB_b() {
+    u8 x = this->BC.hi;
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::SUB_c() {
+    u8 x = this->BC.lo;
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::SUB_d() {
+    u8 x = this->DE.hi;
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::SUB_e() {
+    u8 x = this->DE.lo;
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::SUB_h() {
+    u8 x = this->HL.hi;
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::SUB_l() {
+    u8 x = this->HL.lo;
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::SUB_HL() {
+    u8 x = RAM::readAt(this->HL.val());
+    u8 oldValue = this->AF.hi;
+
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 8;
+}
+void GB_CPU::SUB_hash() {
+    u8 x = this->read();
+    u8 oldValue = this->AF.hi;
+    this->AF.hi -= x;
+
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+
+
+void GB_CPU::SBC_generic(u8 sub) {
+    u8 a = this->AF.hi;
+    u8 b = sub;
+    u8 c = this->get_c();
+    bool halfCarry = false;
+    bool carry = false;
+
+    if (a < b || a - b < c) {
+        carry = true;
     }
-    void LD_nnSP() {
-        u8 n1 = read();
-        u8 n2 = read();
-        u16 nn = n1 + (n2 << 8);
-        RAM::write(SP & 0x00FF, nn);
-        RAM::write((SP & 0xFF00) >> 8, nn + 1);
+
+    this->AF.hi -= (b + c);
 
 
-        cycles = 20;
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h(half_carry_sub(a, b) || half_carry_sub(a - b, c));
+    this->set_c(carry);
+}
+
+void GB_CPU::SBC_a() {
+    SBC_generic(this->AF.hi);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_b() {
+    SBC_generic(this->BC.hi);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_c() {
+    SBC_generic(this->BC.lo);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_d() {
+    SBC_generic(this->DE.hi);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_e() {
+    SBC_generic(this->DE.lo);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_h() {
+    SBC_generic(this->HL.hi);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_l() {
+    SBC_generic(this->HL.lo);
+    this->cycles = 4;
+}
+void GB_CPU::SBC_HL() {
+    SBC_generic(RAM::readAt(this->HL.val()));
+    this->cycles = 8;
+}
+
+void GB_CPU::SBC_hash() {
+    u8 oldValue = this->AF.hi;
+    u8 readValue = this->read();
+    u8 change = this->get_c() + readValue;
+    bool halfCarry = false;
+    bool carry = false;
+
+    if (oldValue < readValue || oldValue - readValue < this->get_c()) {
+        carry = true;
     }
 
-    void PUSH_AF() {
-        SP--;
-        write(AF.hi, SP);
-        SP--;
-        write(AF.lo & 0xF0, SP);
-        cycles = 16;
-    }
-    void PUSH_BC() { SP--; write(BC.hi, SP); SP--; write(BC.lo, SP); cycles = 16; }
-    void PUSH_DE() { SP--; write(DE.hi, SP); SP--; write(DE.lo, SP); cycles = 16; }
-    void PUSH_HL() { SP--; write(HL.hi, SP); SP--; write(HL.lo, SP); cycles = 16; }
-
-    void POP_AF() {
-        u8 n = RAM::readAt(SP);
-        AF.lo = n & 0xF0;
-        ++SP;
-        u8 m = RAM::readAt(SP);
-        AF.hi = m;
-        ++SP;
-
-        cycles = 12;
-    }
-    void POP_BC() { u8 n = RAM::readAt(SP); BC.lo = n; ++SP; u8 m = RAM::readAt(SP); BC.hi = m; ++SP; cycles = 12; }
-    void POP_DE() { u8 n = RAM::readAt(SP); DE.lo = n; ++SP; u8 m = RAM::readAt(SP); DE.hi = m; ++SP; cycles = 12; }
-    void POP_HL() { u8 n = RAM::readAt(SP); HL.lo = n; ++SP; u8 m = RAM::readAt(SP); HL.hi = m; ++SP; cycles = 12; }
-
-
-
-    void ADD_aa() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += AF.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        AF.lo = AF.lo & 0b10110000;
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_ab() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += BC.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        AF.lo = AF.lo & 0b10110000;
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_ac() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += BC.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        AF.lo = AF.lo & 0b10110000;
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_ad() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += DE.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        AF.lo = AF.lo & 0b10110000;
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_ae() {
-        u8 x = AF.hi;
-        u8 loNib = DE.lo & 0x0F;
-        AF.hi += DE.lo;
-
-        setZ(AF.hi == 0);
-        setN(false);
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_ah() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += HL.hi;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        setN(false);
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_al() {
-        u8 x = AF.hi;
-        u8 loNib = HL.lo & 0x0F;
-        AF.hi += HL.lo;
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        setN(false);
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 4;
-    }
-    void ADD_aH() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += RAM::readAt(HL.val());
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        setN(false);
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 8;
-    }
-    void ADD_a_hash() {
-        u8 x = AF.hi;
-        u8 loNib = AF.hi & 0x0F;
-        AF.hi += read();
-        if (AF.hi == 0) { AF.lo = AF.lo | 0x80; } else { AF.lo = 0; }
-        AF.lo = AF.lo & 0b10110000;
-        setH((AF.hi & 0x0F) < loNib);
-        setC(AF.hi < x);
-        cycles = 8;
+    if ((((oldValue) & 0x0F) - (this->get_c() & 0x0F) - (readValue & 0x0F) & 0x10) == 0x10) {
+        halfCarry = true;
     }
 
-    void ADC_generic(u8 add) {
-        u8 a = AF.hi;
-        u8 b = add;
-        u8 c = getC();
-        bool carry = false;
-        u8 res = a + b + c;
+    this->AF.hi -= change;
 
-        setZ(res == 0);
-        setN(false);
-        setH((a & 0x0F) + (b & 0x0F) + (c & 0x0F) > 0x0F);
+    this->set_z(this->AF.hi == 0);
+    this->set_n(true);
+    this->set_h(half_carry_sub(oldValue, readValue) || half_carry_sub(oldValue - readValue, this->get_c()));
+    this->set_c(carry);
+    this->cycles = 8;
+}
 
-        if (b + c > 0xFF) {
+void GB_CPU::AND_a() { this->AF.hi = this->AF.hi & this->AF.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_b() { this->AF.hi = this->AF.hi & this->BC.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_c() { this->AF.hi = this->AF.hi & this->BC.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_d() { this->AF.hi = this->AF.hi & this->DE.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_e() { this->AF.hi = this->AF.hi & this->DE.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_h() { this->AF.hi = this->AF.hi & this->HL.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_l() { this->AF.hi = this->AF.hi & this->HL.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
+void GB_CPU::AND_HL() { this->AF.hi = this->AF.hi & RAM::readAt(this->HL.val()); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 8; }
+void GB_CPU::AND_hash() { this->AF.hi = this->AF.hi & this->read(); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 8; }
+
+void GB_CPU::OR_a() {
+    this->AF.hi = this->AF.hi | this->AF.hi;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_b() {
+    this->AF.hi = this->AF.hi | this->BC.hi;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_c() {
+    this->AF.hi = this->AF.hi | this->BC.lo;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_d() {
+    this->AF.hi = this->AF.hi | this->DE.hi;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_e() {
+    this->AF.hi = this->AF.hi | this->DE.lo;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_h() {
+    this->AF.hi = this->AF.hi | this->HL.hi;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_l() {
+    this->AF.hi = this->AF.hi | this->HL.lo;
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 4;
+}
+void GB_CPU::OR_HL() {
+    this->AF.hi = this->AF.hi | RAM::readAt(this->HL.val());
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 8;
+}
+void GB_CPU::OR_hash() {
+    this->AF.hi = this->AF.hi | this->read();
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    this->set_z(this->AF.hi == 0);
+    this->cycles = 8;
+}
+
+
+void GB_CPU::XOR_a() { this->AF.hi ^= this->AF.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_b() { this->AF.hi ^= this->BC.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_c() { this->AF.hi ^= this->BC.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_d() { this->AF.hi ^= this->DE.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_e() { this->AF.hi ^= this->DE.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_h() { this->AF.hi ^= this->HL.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_l() { this->AF.hi ^= this->HL.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
+void GB_CPU::XOR_HL() { this->AF.hi ^= (RAM::readAt(this->HL.val())); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 8; }
+void GB_CPU::XOR_hash() { this->AF.hi ^= this->read(); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 8; }
+
+void GB_CPU::CP_a() {
+    this->set_z(true);
+    this->set_n(true);
+    this->set_h(false);
+    this->set_c(false);
+    this->cycles = 4;
+}
+void GB_CPU::CP_b() {
+    u8 x = this->BC.hi;
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::CP_c() {
+    u8 x = this->BC.lo;
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::CP_d() {
+    u8 x = this->DE.hi;
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+
+void GB_CPU::CP_e() {
+    u8 x = this->DE.lo;
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::CP_h() {
+    u8 x = this->HL.hi;
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::CP_l() {
+    u8 x = this->HL.lo;
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 4;
+}
+void GB_CPU::CP_HL() {
+    u8 x = RAM::readAt(this->HL.val());
+    u8 oldValue = this->AF.hi;
+    u8 comparison = this->AF.hi - x;
+
+    this->set_z(comparison == 0);
+    this->set_n(true);
+    this->set_h((oldValue & 0x0F) < (x & 0x0F));
+    this->set_c(oldValue < x);
+
+    this->cycles = 8;
+}
+
+void GB_CPU::CP_hash() {
+    u8 x = this->read();
+    u8 z = this->AF.hi - x;
+    this->set_z(z == 0);
+    this->set_n(true);
+    this->set_h((this->AF.hi & 0x0F) < (x & 0x0F));
+    this->set_c(this->AF.hi < x);
+    this->cycles = 8;
+}
+
+void GB_CPU::INC_a() {
+    u8 loNib = this->AF.hi & 0x0F;
+    ++this->AF.hi;
+    if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->AF.hi & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_b() {
+    u8 loNib = this->BC.hi & 0x0F;
+    ++this->BC.hi;
+    if (this->BC.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->BC.hi & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_c() {
+    u8 loNib = this->BC.lo & 0x0F;
+    ++this->BC.lo;
+    if (this->BC.lo == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->BC.lo & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_d() {
+    u8 loNib = this->DE.hi & 0x0F;
+    ++this->DE.hi;
+    if (this->DE.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->DE.hi & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_e() {
+    u8 loNib = this->DE.lo & 0x0F;
+    ++this->DE.lo;
+    if (this->DE.lo == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->DE.lo & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_h() {
+    u8 loNib = this->HL.hi & 0x0F;
+    ++this->HL.hi;
+    if (this->HL.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->HL.hi & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_l() {
+    u8 loNib = this->HL.lo & 0x0F;
+    ++this->HL.lo;
+    if (this->HL.lo == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (this->HL.lo & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 4;
+}
+void GB_CPU::INC_HLad() {
+    u8 x = RAM::readAt(this->HL.val());
+    u8 loNib = x & 0x0F;
+    ++x;
+    this->write(x, this->HL.val());
+    if (x == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01110000; }
+    this->AF.lo &= 0b10110000;
+    if (loNib > (x & 0x0F)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+    this->cycles = 12;
+}
+
+void GB_CPU::DEC_a() {
+    u8 lowerNib = this->AF.hi & 0x0F;
+    u8 newValue = -- this->AF.hi;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_b() {
+    u8 lowerNib = this->BC.hi & 0x0F;
+    u8 newValue = --this->BC.hi;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_c() {
+    u8 lowerNib = this->BC.lo & 0x0F;
+    u8 newValue = --this->BC.lo;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_d() {
+    u8 lowerNib = this->DE.hi & 0x0F;
+    u8 newValue = --this->DE.hi;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_e() {
+    u8 lowerNib = this->DE.lo & 0x0F;
+    u8 newValue = --this->DE.lo;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_h() {
+    u8 lowerNib = this->HL.hi & 0x0F;
+    u8 newValue = --this->HL.hi;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_l() {
+    u8 lowerNib = this->HL.lo & 0x0F;
+    u8 newValue = --this->HL.lo;
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 4;
+}
+void GB_CPU::DEC_HLad() {
+    u8 x = RAM::readAt(this->HL.val());
+    u8 lowerNib = x & 0x0F;
+    u8 newValue = --x;
+    this->write(x, this->HL.val());
+
+    this->set_n(true);
+    this->set_z(newValue == 0);
+    this->set_h(lowerNib == 0x00);
+    this->cycles = 12;
+}
+
+void GB_CPU::HALT() {
+    halt = true;
+    this->cycles = 4;
+}
+
+void GB_CPU::RST_00() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x00;
+    this->cycles = 32;
+}
+void GB_CPU::RST_08() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x08;
+    this->cycles = 32;
+}
+void GB_CPU::RST_10() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x10;
+    this->cycles = 32;
+}
+void GB_CPU::RST_18() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x18;
+    this->cycles = 32;
+}
+void GB_CPU::RST_20() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x20;
+    this->cycles = 32;
+}
+void GB_CPU::RST_28() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x28;
+    this->cycles = 32;
+}
+void GB_CPU::RST_30() {
+    u8 loNibble = this->PC & 0b00001111;
+    u8 hiNibble = this->PC >> 4;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x30;
+    this->cycles = 32;
+}
+void GB_CPU::RST_38() {
+    u8 loNibble = this->PC & 0x00FF;
+    u8 hiNibble = (this->PC & 0xFF00) >> 8;
+    this->SP--;
+    this->write(hiNibble, this->SP);
+    this->SP--;
+    this->write(loNibble, this->SP);
+
+    this->PC = 0x38;
+    this->cycles = 32;
+}
+
+void GB_CPU::LDI_aHL() {
+    this->AF.hi = RAM::readAt(this->HL.val());
+    this->HL.set(this->HL.val() + 1);
+    this->cycles = 8;
+}
+
+void GB_CPU::LDH_nA() {
+    u8 n = this->read();
+    this->write(this->AF.hi, 0xFF00 + n);
+    this->cycles = 12;
+}
+
+void GB_CPU::ADD_BC() {
+    u16 x = this->HL.val();
+    this->HL.set(x + this->BC.val());
+    this->AF.lo &= 0b10110000;
+
+    if ((this->HL.val() & 0x0FFF) < (x & 0xFFF)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+
+    if (this->HL.val() < x) { this->AF.lo |= 0b00010000; } else { this->AF.lo &= 0b11100000; }
+    this->cycles = 8;
+}
+void GB_CPU::ADD_DE() {
+    u16 x = this->HL.val();
+    this->HL.set(x + this->DE.val());
+    this->AF.lo &= 0b10110000;
+
+    if ((this->HL.val() & 0x0FFF) < (x & 0xFFF)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+
+    if (this->HL.val() < x) { this->AF.lo |= 0b00010000; } else { this->AF.lo &= 0b11100000; }
+    this->cycles = 8;
+}
+void GB_CPU::ADD_HL() {
+    u16 x = this->HL.val();
+    this->HL.set(2 * x);
+    this->AF.lo &= 0b10110000;
+
+    if ((this->HL.val() & 0x0FFF) < (x & 0xFFF)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+
+    if (this->HL.val() < x) { this->AF.lo |= 0b00010000; } else { this->AF.lo &= 0b11100000; }
+    this->cycles = 8;
+}
+void GB_CPU::ADD_SP() {
+    u16 x = this->HL.val();
+    this->HL.set(x + this->SP);
+    this->AF.lo &= 0b10110000;
+
+    if ((this->HL.val() & 0x0FFF) < (x & 0xFFF)) { this->AF.lo |= 0b00100000; } else { this->AF.lo &= 0b11010000; }
+
+    if (this->HL.val() < x) { this->AF.lo |= 0b00010000; } else { this->AF.lo &= 0b11100000; }
+    this->cycles = 8;
+}
+
+void GB_CPU::DI() {
+    this->interrupt_mode = 2;
+    this->cycles = 4;
+}
+
+void GB_CPU::EI() {
+    this->interrupt_mode = 4;
+    this->cycles = 4;
+}
+
+void GB_CPU::ADD_n_SP() {
+    s8 readValue = this->read();
+    u16 oldValue = this->SP;
+    this->AF.lo &= 0b00110000;
+
+    u16 result = this->SP + readValue;
+
+    this->set_z(0);
+    this->set_n(0);
+    this->set_h((SP & 0x0F) + (readValue & 0x0F) > 0x0F);
+    this->set_c((result & 0xFF) < (oldValue & 0xFF));
+
+    this->SP = result;
+    this->cycles = 16;
+}
+
+void GB_CPU::INC_BC() {
+    this->BC.set(this->BC.val() + 1);
+    this->cycles = 8;
+}
+void GB_CPU::INC_DE() {
+    this->DE.set(this->DE.val() + 1);
+    this->cycles = 8;
+}
+void GB_CPU::INC_HL() {
+    this->HL.set(this->HL.val() + 1);
+    this->cycles = 8;
+}
+void GB_CPU::INC_SP() {
+    this->SP++;
+    this->cycles = 8;
+}
+
+void GB_CPU::DEC_BC() {
+    this->BC.set(this->BC.val() - 1);
+    this->cycles = 8;
+}
+void GB_CPU::DEC_DE() {
+    this->DE.set(this->DE.val() - 1);
+    this->cycles = 8;
+}
+void GB_CPU::DEC_HL() {
+    this->HL.set(this->HL.val() - 1);
+    this->cycles = 8;
+}
+void GB_CPU::DEC_SP() {
+    this->SP--;
+    this->cycles = 8;
+}
+
+void GB_CPU::CPL() {
+    this->AF.hi = 0xFF - this->AF.hi;
+    this->AF.lo |= 0b01100000;
+    this->cycles = 4;
+}
+
+u8 GB_CPU::SWAP_gen(u8 val) {
+    u8 res = ((val >> 4) & 0x0F) + ((val << 4) & 0xF0);
+    this->set_z(res == 0);
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(false);
+    return res;
+}
+
+void GB_CPU::SWAP_a() {
+    this->AF.hi = SWAP_gen(this->AF.hi);
+    this->cycles = 8;
+}
+void GB_CPU::SWAP_b() {
+    this->BC.hi = SWAP_gen(this->BC.hi);
+    this->cycles = 8;
+}
+void GB_CPU::SWAP_c() {
+    this->BC.lo = SWAP_gen(this->BC.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SWAP_d() {
+    this->DE.hi = SWAP_gen(this->DE.hi);
+    this->cycles = 8;
+}
+void GB_CPU::SWAP_e() {
+    this->DE.lo = SWAP_gen(this->DE.lo);
+    this->cycles = 8;
+}
+void GB_CPU::SWAP_h() {
+    this->HL.hi = SWAP_gen(this->HL.hi);
+    this->cycles = 8;
+}
+void GB_CPU::SWAP_l() {
+    this->HL.lo = SWAP_gen(this->HL.lo);
+    this->cycles = 8;
+}
+void GB_CPU::SWAP_HL() {
+    u8 value = RAM::readAt(this->HL.val());
+    this->write(SWAP_gen(value), this->HL.val());
+    this->cycles = 16;
+}
+
+void GB_CPU::RES_0_a() {
+    this->AF.hi &= 0b11111110;
+    this->cycles = 8;
+}
+
+void GB_CPU::DAA() {
+    bool carry = false;
+
+    if (!this->get_n()) {
+        if (this->get_c() || this->AF.hi > 0x99) {
+            this->AF.hi += 0x60;
             carry = true;
         }
-
-        if (res < a) {
+        if (this->get_h() || (this->AF.hi & 0x0F) > 0x09) {
+            this->AF.hi += 0x06;
+        }
+    } else {
+        if (this->get_c()) {
+            this->AF.hi -= 0x60;
             carry = true;
         }
-        setC(carry);
-
-        AF.hi = res;
-    }
-
-    void ADC_a_hash() {
-        u8 readValue = read();
-        ADC_generic(readValue);
-
-        cycles = 8;
-    }
-
-    void ADC_aa() {
-        ADC_generic(AF.hi);
-        cycles = 4;
-
-    }
-    void ADC_ab() {
-        ADC_generic(BC.hi);
-        cycles = 4;
-    }
-
-    void ADC_ac() {
-        ADC_generic(BC.lo);
-        cycles = 4;
-
-    }
-    void ADC_ad() {
-        ADC_generic(DE.hi);
-        cycles = 4;
-
-    }
-    void ADC_ae() {
-        ADC_generic(DE.lo);
-        cycles = 4;
-
-    }
-    void ADC_ah() {
-        ADC_generic(HL.hi);
-        cycles = 4;
-
-    }
-    void ADC_al() {
-        ADC_generic(HL.lo);
-        cycles = 4;
-
-    }
-    void ADC_aHL() {
-        u8 readValue = RAM::readAt(HL.val());
-        ADC_generic(readValue);
-
-        cycles = 8;
-
-    }
-
-    void SUB_a() {
-        setZ(true);
-        setN(true);
-        setH(false);
-        setC(false);
-
-        AF.hi = 0;
-        cycles = 4;
-    }
-    void SUB_b() {
-        u8 x = BC.hi;
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void SUB_c() {
-        u8 x = BC.lo;
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void SUB_d() {
-        u8 x = DE.hi;
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void SUB_e() {
-        u8 x = DE.lo;
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void SUB_h() {
-        u8 x = HL.hi;
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void SUB_l() {
-        u8 x = HL.lo;
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void SUB_HL() {
-        u8 x = RAM::readAt(HL.val());
-        u8 oldValue = AF.hi;
-
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 8;
-    }
-    void SUB_hash() {
-        u8 x = read();
-        u8 oldValue = AF.hi;
-        AF.hi -= x;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-
-
-    void SBC_generic(u8 sub) {
-        u8 a = AF.hi;
-        u8 b = sub;
-        u8 c = getC();
-        bool halfCarry = false;
-        bool carry = false;
-
-        if (a < b || a - b < c) {
-            carry = true;
+        if (this->get_h()) {
+            this->AF.hi -= 0x06;
         }
-
-        AF.hi -= (b + c);
-
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH(halfCarrySub(a, b) || halfCarrySub(a - b, c));
-        setC(carry);
-    }
-
-    void SBC_a() {
-        SBC_generic(AF.hi);
-        cycles = 4;
-    }
-    void SBC_b() {
-        SBC_generic(BC.hi);
-        cycles = 4;
-    }
-    void SBC_c() {
-        SBC_generic(BC.lo);
-        cycles = 4;
-    }
-    void SBC_d() {
-        SBC_generic(DE.hi);
-        cycles = 4;
-    }
-    void SBC_e() {
-        SBC_generic(DE.lo);
-        cycles = 4;
-    }
-    void SBC_h() {
-        SBC_generic(HL.hi);
-        cycles = 4;
-    }
-    void SBC_l() {
-        SBC_generic(HL.lo);
-        cycles = 4;
-    }
-    void SBC_HL() {
-        SBC_generic(RAM::readAt(HL.val()));
-        cycles = 8;
-    }
-
-    void SBC_hash() {
-        u8 oldValue = AF.hi;
-        u8 readValue = read();
-        u8 change = getC() + readValue;
-        bool halfCarry = false;
-        bool carry = false;
-
-        if (oldValue < readValue || oldValue - readValue < getC()) {
-            carry = true;
-        }
-
-        if ((((oldValue) & 0x0F) - (getC() & 0x0F) - (readValue & 0x0F) & 0x10) == 0x10) {
-            halfCarry = true;
-        }
-
-        AF.hi -= change;
-
-        setZ(AF.hi == 0);
-        setN(true);
-        setH(halfCarrySub(oldValue, readValue) || halfCarrySub(oldValue - readValue, getC()));
-        setC(carry);
-        cycles = 8;
-    }
-
-    void AND_a() { AF.hi = AF.hi & AF.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_b() { AF.hi = AF.hi & BC.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_c() { AF.hi = AF.hi & BC.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_d() { AF.hi = AF.hi & DE.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_e() { AF.hi = AF.hi & DE.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_h() { AF.hi = AF.hi & HL.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_l() { AF.hi = AF.hi & HL.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 4; }
-    void AND_HL() { AF.hi = AF.hi & RAM::readAt(HL.val()); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 8; }
-    void AND_hash() { AF.hi = AF.hi & read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10100000; AF.lo |= 0b00100000; cycles = 8; }
-
-    void OR_a() {
-        AF.hi = AF.hi | AF.hi;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_b() {
-        AF.hi = AF.hi | BC.hi;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_c() {
-        AF.hi = AF.hi | BC.lo;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_d() {
-        AF.hi = AF.hi | DE.hi;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_e() {
-        AF.hi = AF.hi | DE.lo;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_h() {
-        AF.hi = AF.hi | HL.hi;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_l() {
-        AF.hi = AF.hi | HL.lo;
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 4;
-    }
-    void OR_HL() {
-        AF.hi = AF.hi | RAM::readAt(HL.val());
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 8;
-    }
-    void OR_hash() {
-        AF.hi = AF.hi | read();
-        setN(false);
-        setH(false);
-        setC(false);
-        setZ(AF.hi == 0);
-        cycles = 8;
-    }
-
-
-    void XOR_a() { AF.hi ^= AF.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_b() { AF.hi ^= BC.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_c() { AF.hi ^= BC.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_d() { AF.hi ^= DE.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_e() { AF.hi ^= DE.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_h() { AF.hi ^= HL.hi; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_l() { AF.hi ^= HL.lo; if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 4; }
-    void XOR_HL() { AF.hi ^= (RAM::readAt(HL.val())); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 8; }
-    void XOR_hash() { AF.hi ^= read(); if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01111111; } AF.lo &= 0b10000000; cycles = 8; }
-
-    void CP_a() {
-        setZ(true);
-        setN(true);
-        setH(false);
-        setC(false);
-        cycles = 4;
-    }
-    void CP_b() {
-        u8 x = BC.hi;
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void CP_c() {
-        u8 x = BC.lo;
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void CP_d() {
-        u8 x = DE.hi;
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-
-    void CP_e() {
-        u8 x = DE.lo;
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void CP_h() {
-        u8 x = HL.hi;
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void CP_l() {
-        u8 x = HL.lo;
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 4;
-    }
-    void CP_HL() {
-        u8 x = RAM::readAt(HL.val());
-        u8 oldValue = AF.hi;
-        u8 comparison = AF.hi - x;
-
-        setZ(comparison == 0);
-        setN(true);
-        setH((oldValue & 0x0F) < (x & 0x0F));
-        setC(oldValue < x);
-
-        cycles = 8;
-    }
-
-    void CP_hash() {
-        u8 x = read();
-        u8 z = AF.hi - x;
-        setZ(z == 0);
-        setN(true);
-        setH((AF.hi & 0x0F) < (x & 0x0F));
-        setC(AF.hi < x);
-        cycles = 8;
-    }
-
-    void INC_a() {
-        u8 loNib = AF.hi & 0x0F;
-        ++AF.hi;
-        if (AF.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (AF.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_b() {
-        u8 loNib = BC.hi & 0x0F;
-        ++BC.hi;
-        if (BC.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (BC.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_c() {
-        u8 loNib = BC.lo & 0x0F;
-        ++BC.lo;
-        if (BC.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (BC.lo & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_d() {
-        u8 loNib = DE.hi & 0x0F;
-        ++DE.hi;
-        if (DE.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (DE.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_e() {
-        u8 loNib = DE.lo & 0x0F;
-        ++DE.lo;
-        if (DE.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (DE.lo & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_h() {
-        u8 loNib = HL.hi & 0x0F;
-        ++HL.hi;
-        if (HL.hi == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (HL.hi & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_l() {
-        u8 loNib = HL.lo & 0x0F;
-        ++HL.lo;
-        if (HL.lo == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (HL.lo & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 4;
-    }
-    void INC_HLad() {
-        u8 x = RAM::readAt(HL.val());
-        u8 loNib = x & 0x0F;
-        ++x;
-        write(x, HL.val());
-        if (x == 0) { AF.lo |= 0b10000000; } else { AF.lo &= 0b01110000; }
-        AF.lo &= 0b10110000;
-        if (loNib > (x & 0x0F)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-        cycles = 12;
-    }
-
-    void DEC_a() {
-        u8 lowerNib = AF.hi & 0x0F;
-        u8 newValue = --AF.hi;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_b() {
-        u8 lowerNib = BC.hi & 0x0F;
-        u8 newValue = --BC.hi;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_c() {
-        u8 lowerNib = BC.lo & 0x0F;
-        u8 newValue = --BC.lo;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_d() {
-        u8 lowerNib = DE.hi & 0x0F;
-        u8 newValue = --DE.hi;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_e() {
-        u8 lowerNib = DE.lo & 0x0F;
-        u8 newValue = --DE.lo;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_h() {
-        u8 lowerNib = HL.hi & 0x0F;
-        u8 newValue = --HL.hi;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_l() {
-        u8 lowerNib = HL.lo & 0x0F;
-        u8 newValue = --HL.lo;
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 4;
-    }
-    void DEC_HLad() {
-        u8 x = RAM::readAt(HL.val());
-        u8 lowerNib = x & 0x0F;
-        u8 newValue = --x;
-        write(x, HL.val());
-
-        setN(true);
-        setZ(newValue == 0);
-        setH(lowerNib == 0x00);
-        cycles = 12;
-    }
-
-    void HALT() {
-        halt = true;
-        cycles = 4;
-    }
-
-    void RST_00() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x00;
-        cycles = 32;
-    }
-    void RST_08() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x08;
-        cycles = 32;
-    }
-    void RST_10() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x10;
-        cycles = 32;
-    }
-    void RST_18() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x18;
-        cycles = 32;
-    }
-    void RST_20() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x20;
-        cycles = 32;
-    }
-    void RST_28() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x28;
-        cycles = 32;
-    }
-    void RST_30() {
-        u8 loNibble = PC & 0b00001111;
-        u8 hiNibble = PC >> 4;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x30;
-        cycles = 32;
-    }
-    void RST_38() {
-        u8 loNibble = PC & 0x00FF;
-        u8 hiNibble = (PC & 0xFF00) >> 8;
-        SP--;
-        write(hiNibble, SP);
-        SP--;
-        write(loNibble, SP);
-
-        PC = 0x38;
-        cycles = 32;
-    }
-
-    void LDI_aHL() {
-        AF.hi = RAM::readAt(HL.val());
-        HL.set(HL.val() + 1);
-        cycles = 8;
-    }
-
-    void LDH_nA() {
-        u8 n = read();
-        write(AF.hi, 0xFF00 + n);
-        cycles = 12;
-    }
-
-    void ADD_BC() {
-        u16 x = HL.val();
-        HL.set(x + BC.val());
-        AF.lo &= 0b10110000;
-
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-
-        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
-        cycles = 8;
-    }
-    void ADD_DE() {
-        u16 x = HL.val();
-        HL.set(x + DE.val());
-        AF.lo &= 0b10110000;
-
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-
-        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
-        cycles = 8;
-    }
-    void ADD_HL() {
-        u16 x = HL.val();
-        HL.set(2 * x);
-        AF.lo &= 0b10110000;
-
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-
-        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
-        cycles = 8;
-    }
-    void ADD_SP() {
-        u16 x = HL.val();
-        HL.set(x + SP);
-        AF.lo &= 0b10110000;
-
-        if ((HL.val() & 0x0FFF) < (x & 0xFFF)) { AF.lo |= 0b00100000; } else { AF.lo &= 0b11010000; }
-
-        if (HL.val() < x) { AF.lo |= 0b00010000; } else { AF.lo &= 0b11100000; }
-        cycles = 8;
-    }
-
-    void DI() {
-        interrupt_mode = 2;
-        cycles = 4;
-    }
-
-    void EI() {
-        interrupt_mode = 4;
-        cycles = 4;
-    }
-
-    void ADD_n_SP() {
-        s8 readValue = read();
-        u16 oldValue = SP;
-        AF.lo &= 0b00110000;
-
-        u16 result = SP + readValue;
-
-        setZ(0);
-        setN(0);
-        setH((SP & 0x0F) + (readValue & 0x0F) > 0x0F);
-        setC((result & 0xFF) < (oldValue & 0xFF));
-
-        SP = result;
-        cycles = 16;
-    }
-
-    void INC_BC() {
-        BC.set(BC.val() + 1);
-        cycles = 8;
-    }
-    void INC_DE() {
-        DE.set(DE.val() + 1);
-        cycles = 8;
-    }
-    void INC_HL() {
-        HL.set(HL.val() + 1);
-        cycles = 8;
-    }
-    void INC_SP() {
-        SP++;
-        cycles = 8;
-    }
-
-    void DEC_BC() {
-        BC.set(BC.val() - 1);
-        cycles = 8;
-    }
-    void DEC_DE() {
-        DE.set(DE.val() - 1);
-        cycles = 8;
-    }
-    void DEC_HL() {
-        HL.set(HL.val() - 1);
-        cycles = 8;
-    }
-    void DEC_SP() {
-        SP--;
-        cycles = 8;
-    }
-
-    void CPL() {
-        AF.hi = 0xFF - AF.hi;
-        AF.lo |= 0b01100000;
-        cycles = 4;
-    }
-
-    u8 SWAP_gen(u8 val) {
-        u8 res = ((val >> 4) & 0x0F) + ((val << 4) & 0xF0);
-        setZ(res == 0);
-        setN(false);
-        setH(false);
-        setC(false);
-        return res;
-    }
-
-    void SWAP_a() {
-        AF.hi = SWAP_gen(AF.hi);
-        cycles = 8;
-    }
-    void SWAP_b() {
-        BC.hi = SWAP_gen(BC.hi);
-        cycles = 8;
-    }
-    void SWAP_c() {
-        BC.lo = SWAP_gen(BC.lo);
-        cycles = 8;
-    }
-
-    void SWAP_d() {
-        DE.hi = SWAP_gen(DE.hi);
-        cycles = 8;
-    }
-    void SWAP_e() {
-        DE.lo = SWAP_gen(DE.lo);
-        cycles = 8;
-    }
-    void SWAP_h() {
-        HL.hi = SWAP_gen(HL.hi);
-        cycles = 8;
-    }
-    void SWAP_l() {
-        HL.lo = SWAP_gen(HL.lo);
-        cycles = 8;
-    }
-    void SWAP_HL() {
-        u8 value = RAM::readAt(HL.val());
-        write(SWAP_gen(value), HL.val());
-        cycles = 16;
-    }
-
-    void RES_0_a() {
-        AF.hi &= 0b11111110;
-        cycles = 8;
-    }
-
-    void DAA() {
-        bool carry = false;
-
-        if (!getN()) {
-            if (getC() || AF.hi > 0x99) {
-                AF.hi += 0x60;
-                carry = true;
-            }
-            if (getH() || (AF.hi & 0x0F) > 0x09) {
-                AF.hi += 0x06;
-            }
-        } else {
-            if (getC()) {
-                AF.hi -= 0x60;
-                carry = true;
-            }
-            if (getH()) {
-                AF.hi -= 0x06;
-            }
-        }
-
-        setC(carry);
-        setZ(AF.hi == 0);
-        setH(false);
-
-        cycles = 4;
-    }
-
-    u8 RRC_generic(u8 val) {
-        bool bit0 = val & 1;
-        u8 newVal = (val >> 1) + (bit0 << 7);
-        setZ(newVal == 0);
-        setN(false);
-        setH(false);
-        setC(bit0);
-        return newVal;
-    }
-
-    void RRC_A() {
-        AF.hi = RRC_generic(AF.hi);
-        cycles = 8;
-    }
-
-    void RRC_B() {
-        BC.hi = RRC_generic(BC.hi);
-        cycles = 8;
-    }
-
-    void RRC_C() {
-        BC.lo = RRC_generic(BC.lo);
-        cycles = 8;
-    }
-
-    void RRC_D() {
-        DE.hi = RRC_generic(DE.hi);
-        cycles = 8;
     }
 
-    void RRC_E() {
-        DE.lo = RRC_generic(DE.lo);
-        cycles = 8;
-    }
-
-    void RRC_H() {
-        HL.hi = RRC_generic(HL.hi);
-        cycles = 8;
-    }
-
-    void RRC_L() {
-        HL.lo = RRC_generic(HL.lo);
-        cycles = 8;
-    }
-
-    void RRC_HL() {
-        u8 readVal = RAM::readAt(HL.val());
-        RAM::write(RRC_generic(readVal), HL.val());
-        cycles = 16;
-    }
-
-    u8 SLA_generic(u8 val) {
-        u8 bit7 = val & 0b10000000;
-        u8 newVal = val << 1;
-        setZ(newVal == 0);
-        setN(false);
-        setH(false);
-        setC(bit7 == 0b10000000);
-        return newVal;
-    }
-
-    void SLA_A() {
-        AF.hi = SLA_generic(AF.hi);
-        cycles = 8;
-    }
-
-    void SLA_B() {
-        BC.hi = SLA_generic(BC.hi);
-        cycles = 8;
-    }
-
-    void SLA_C() {
-        BC.lo = SLA_generic(BC.lo);
-        cycles = 8;
-    }
-
-    void SLA_D() {
-        DE.hi = SLA_generic(DE.hi);
-        cycles = 8;
-    }
-
-    void SLA_E() {
-        DE.lo = SLA_generic(DE.lo);
-        cycles = 8;
-    }
-
-    void SLA_H() {
-        HL.hi = SLA_generic(HL.hi);
-        cycles = 8;
-    }
-
-    void SLA_L() {
-        HL.lo = SLA_generic(HL.lo);
-        cycles = 8;
-    }
-
-    void SLA_HL() {
-        u8 readVal = RAM::readAt(HL.val());
-        RAM::write(SLA_generic(readVal), HL.val());
-        cycles = 16;
-    }
-
-    u8 SRA_generic(u8 val) {
-        bool bit0 = val & 1;
-        u8 bit7 = val & 0b10000000;
-        u8 newVal = (val >> 1) + bit7;
-        setZ(newVal == 0);
-        setN(false);
-        setH(false);
-        setC(bit0);
-        return newVal;
-    }
-
-    void SRA_A() {
-        AF.hi = SRA_generic(AF.hi);
-        cycles = 8;
-    }
-
-    void SRA_B() {
-        BC.hi = SRA_generic(BC.hi);
-        cycles = 8;
-    }
-
-    void SRA_C() {
-        BC.lo = SRA_generic(BC.lo);
-        cycles = 8;
-    }
-
-    void SRA_D() {
-        DE.hi = SRA_generic(DE.hi);
-        cycles = 8;
-    }
-
-    void SRA_E() {
-        DE.lo = SRA_generic(DE.lo);
-        cycles = 8;
-    }
-
-    void SRA_H() {
-        HL.hi = SRA_generic(HL.hi);
-        cycles = 8;
-    }
-
-    void SRA_L() {
-        HL.lo = SRA_generic(HL.lo);
-        cycles = 8;
-    }
-
-    void SRA_HL() {
-        u8 readVal = RAM::readAt(HL.val());
-        RAM::write(SRA_generic(readVal), HL.val());
-        cycles = 16;
-    }
-
-    void init_decoder() {
-        decoder[0x00] = "NOP";
-        decoder[0x01] = "LD_nn_BC";
-        decoder[0x02] = "LD_BC_a";
-        decoder[0x03] = "INC_BC";
-        decoder[0x04] = "INC_b";
-        decoder[0x05] = "DEC_b";
-        decoder[0x06] = "LDb_n";
-        decoder[0x07] = "RLCA";
-        decoder[0x08] = "LD_nnSP";
-        decoder[0x09] = "ADD_BC";
-        decoder[0x0A] = "LDrr_aBC";
-        decoder[0x0B] = "DEC_BC";
-        decoder[0x0C] = "INC_c";
-        decoder[0x0D] = "DEC_c";
-        decoder[0x0E] = "LDc_n";
-        decoder[0x0F] = "RRCA";
-        decoder[0x11] = "LD_nn_DE";
-        decoder[0x12] = "LD_DE_a";
-        decoder[0x13] = "INC_DE";
-        decoder[0x14] = "INC_d";
-        decoder[0x15] = "DEC_d";
-        decoder[0x16] = "LDd_n";
-        decoder[0x17] = "RLA";
-        decoder[0x18] = "JR_n";
-        decoder[0x19] = "ADD_DE";
-        decoder[0x1A] = "LDrr_aDE";
-        decoder[0x1B] = "DEC_DE";
-        decoder[0x1C] = "INC_e";
-        decoder[0x1D] = "DEC_e";
-        decoder[0x1E] = "LDe_n";
-
-        decoder[0x20] = "JR_NZ";
-        decoder[0x21] = "LD_nn_HL";
-        decoder[0x22] = "LDI_HLa";
-        decoder[0x23] = "INC_HL";
-        decoder[0x24] = "INC_h";
-        decoder[0x25] = "DEC_h";
-        decoder[0x26] = "LDh_n";
-        decoder[0x27] = "DAA";
-        decoder[0x28] = "JR_Z";
-        decoder[0x29] = "ADD_HL";
-        decoder[0x2A] = "LDI_aHL";
-        decoder[0x2B] = "DEC_HL";
-        decoder[0x2C] = "INC_l";
-        decoder[0x2D] = "DEC_l";
-        decoder[0x2E] = "LDl_n";
-        decoder[0x2F] = "CPL";
-
-        decoder[0x7F] = "Ldrr_aa";
-        decoder[0x78] = "LDrr_ab";
-        decoder[0x79] = "LDrr_ac";
-        decoder[0x7A] = "LDrr_ad";
-        decoder[0x7B] = "LDrr_ae";
-        decoder[0x7C] = "LDrr_ah";
-        decoder[0x7D] = "LDrr_al";
-        decoder[0x7E] = "LDrr_aHL";
-        decoder[0xFA] = "LDrr_ann";
-        decoder[0x3E] = "LDrr_a_hash";
-        decoder[0x40] = "LDrr_bb";
-        decoder[0x41] = "LDrr_bc";
-        decoder[0x42] = "LDrr_bd";
-        decoder[0x43] = "LDrr_be";
-        decoder[0x44] = "LDrr_bh";
-        decoder[0x45] = "LDrr_bl";
-        decoder[0x46] = "LDrr_bHL";
-        decoder[0x47] = "LDrr_ba";
-        decoder[0x48] = "LDrr_cb";
-        decoder[0x49] = "LDrr_cc";
-        decoder[0x4A] = "LDrr_cd";
-        decoder[0x4B] = "LDrr_ce";
-        decoder[0x4C] = "LDrr_ch";
-        decoder[0x4D] = "LDrr_cl";
-        decoder[0x4E] = "LDrr_cHL";
-        decoder[0x4F] = "LDrr_ca";
-        decoder[0x50] = "LDrr_db";
-        decoder[0x51] = "LDrr_dc";
-        decoder[0x52] = "LDrr_dd";
-        decoder[0x53] = "LDrr_de";
-        decoder[0x54] = "LDrr_dh";
-        decoder[0x55] = "LDrr_dl";
-        decoder[0x56] = "LDrr_dHL";
-        decoder[0x57] = "LDrr_da";
-        decoder[0x58] = "LDrr_eb";
-        decoder[0x59] = "LDrr_ec";
-        decoder[0x5A] = "LDrr_ed";
-        decoder[0x5B] = "LDrr_ee";
-        decoder[0x5C] = "LDrr_eh";
-        decoder[0x5D] = "LDrr_el";
-        decoder[0x5E] = "LDrr_eHL";
-        decoder[0x5F] = "LDrr_ea";
-        decoder[0x60] = "LDrr_hb";
-        decoder[0x61] = "LDrr_hc";
-        decoder[0x62] = "LDrr_hd";
-        decoder[0x63] = "LDrr_he";
-        decoder[0x64] = "LDrr_hh";
-        decoder[0x65] = "LDrr_hl";
-        decoder[0x66] = "LDrr_hHL";
-        decoder[0x67] = "LDrr_ha";
-        decoder[0x68] = "LDrr_lb";
-        decoder[0x69] = "LDrr_lc";
-        decoder[0x6A] = "LDrr_ld";
-        decoder[0x6B] = "LDrr_le";
-        decoder[0x6C] = "LDrr_lh";
-        decoder[0x6D] = "LDrr_ll";
-        decoder[0x6E] = "LDrr_lHL";
-        decoder[0x6F] = "LDrr_la";
-        decoder[0x70] = "LDrr_HLb";
-        decoder[0x71] = "LDrr_HLc";
-        decoder[0x72] = "LDrr_HLd";
-        decoder[0x73] = "LDrr_HLe";
-        decoder[0x74] = "LDrr_HLh";
-        decoder[0x75] = "LDrr_HLl";
-        decoder[0x36] = "LDrr_HLn";
-        decoder[0xF2] = "LDa_c";
-        decoder[0xE2] = "LDc_a";
-        decoder[0x3A] = "LDDaHL";
-        decoder[0x32] = "LDDHLa";
-        decoder[0xE0] = "LDH_nA";
-        decoder[0xF0] = "LDH_a_ffn";
-        decoder[0x31] = "LD_nn_SP";
-        decoder[0xF9] = "LD_SPHL";
-        decoder[0xF8] = "LDHL_SPn";
-        decoder[0xF5] = "PUSH_AF";
-        decoder[0xC5] = "PUSH_BC";
-        decoder[0xD5] = "PUSH_DE";
-        decoder[0xE5] = "PUSH_HL";
-        decoder[0xF1] = "POP_AF";
-        decoder[0xC1] = "POP_BC";
-        decoder[0xD1] = "POP_DE";
-        decoder[0xE1] = "POP_HL";
-        decoder[0x87] = "ADD_aa";
-        decoder[0x80] = "ADD_ab";
-        decoder[0x81] = "ADD_ac";
-        decoder[0x82] = "ADD_ad";
-        decoder[0x83] = "ADD_ae";
-        decoder[0x84] = "ADD_ah";
-        decoder[0x85] = "ADD_al";
-        decoder[0x86] = "ADD_aH";
-        decoder[0xC6] = "ADD_a_hash";
-        decoder[0x8f] = "ADC_aa";
-        decoder[0x88] = "ADC_ab";
-        decoder[0x89] = "ADC_ac";
-        decoder[0x8A] = "ADC_ad";
-        decoder[0x8B] = "ADC_ae";
-        decoder[0x8C] = "ADC_ah";
-        decoder[0x8D] = "ADC_al";
-        decoder[0x8E] = "ADC_aHL";
-        decoder[0xCE] = "ADC_a_hash";
-        decoder[0x97] = "SUB_a";
-        decoder[0x90] = "SUB_b";
-        decoder[0x91] = "SUB_c";
-        decoder[0x92] = "SUB_d";
-        decoder[0x93] = "SUB_e";
-        decoder[0x94] = "SUB_h";
-        decoder[0x95] = "SUB_l";
-        decoder[0x96] = "SUB_HL";
-        decoder[0xD6] = "SUB_hash";
-        decoder[0x9F] = "SBC_a";
-        decoder[0x98] = "SBC_b";
-        decoder[0x99] = "SBC_c";
-        decoder[0x9A] = "SBC_d";
-        decoder[0x9B] = "SBC_e";
-        decoder[0x9C] = "SBC_h";
-        decoder[0x9D] = "SBC_l";
-        decoder[0x9E] = "SBC_HL";
-        decoder[0xDE] = "SBC_hash";
-        decoder[0xA7] = "AND_a";
-        decoder[0xA0] = "AND_b";
-        decoder[0xA1] = "AND_c";
-        decoder[0xA2] = "AND_d";
-        decoder[0xA3] = "AND_e";
-        decoder[0xA4] = "AND_h";
-        decoder[0xA5] = "AND_l";
-        decoder[0xA6] = "AND_HL";
-        decoder[0xE6] = "AND_hash";
-        decoder[0xB7] = "OR_a";
-        decoder[0xB0] = "OR_b";
-        decoder[0xB1] = "OR_c";
-        decoder[0xB2] = "OR_d";
-        decoder[0xB3] = "OR_e";
-        decoder[0xB4] = "OR_h";
-        decoder[0xB5] = "OR_l";
-        decoder[0xB6] = "OR_HL";
-        decoder[0xAF] = "XOR_a";
-        decoder[0xA8] = "XOR_b";
-        decoder[0xA9] = "XOR_c";
-        decoder[0xAA] = "XOR_d";
-        decoder[0xAB] = "XOR_e";
-        decoder[0xAC] = "XOR_h";
-        decoder[0xAD] = "XOR_l";
-        decoder[0xAE] = "XOR_HL";
-        decoder[0xEE] = "XOR_hash";
-        decoder[0xBF] = "CP_a";
-        decoder[0xB8] = "CP_b";
-        decoder[0xB9] = "CP_c";
-        decoder[0xBA] = "CP_d";
-        decoder[0xBB] = "CP_e";
-        decoder[0xBC] = "CP_h";
-        decoder[0xBD] = "CP_l";
-        decoder[0xBE] = "CP_HL";
-        decoder[0xFE] = "CP_hash";
-        decoder[0x3C] = "INC_a";
-        decoder[0x34] = "INC_HLad";
-        decoder[0x3D] = "DEC_a";
-        decoder[0x35] = "DEC_HLad";
-        decoder[0x39] = "ADD_SP";
-        decoder[0xC7] = "RST_00";
-        decoder[0xCF] = "RST_08";
-        decoder[0xD7] = "RST_10";
-        decoder[0xDF] = "RST_18";
-        decoder[0xE7] = "RST_20";
-        decoder[0xEF] = "RST_28";
-        decoder[0xF7] = "RST_30";
-        decoder[0xFF] = "RST_38";
-        decoder[0xCB] = "run_cb";
-        decoder[0xC3] = "JP";
-        decoder[0xC2] = "JP_NZ";
-        decoder[0xCA] = "JP_Z";
-        decoder[0xD2] = "JP_NC";
-        decoder[0xDA] = "JP_C";
-        decoder[0xE9] = "JP_HL";
-        decoder[0x77] = "LD_HL_a";
-        decoder[0xE0] = "LDad_n_a";
-        decoder[0xCD] = "CALL_nn";
-        decoder[0xC4] = "CALL_NZ";
-        decoder[0xCC] = "CALL_Z";
-        decoder[0xD4] = "CALL_NC";
-        decoder[0xDC] = "CALL_C";
-        decoder[0xEA] = "LD_nn_a";
-        decoder[0xC9] = "RET";
-        decoder[0xC0] = "RET_NZ";
-        decoder[0xC8] = "RET_Z";
-        decoder[0xD0] = "RET_NC";
-        decoder[0xD8] = "RET_C";
-        decoder[0xD9] = "RETI";
-        decoder[0xF3] = "DI";
-        decoder[0xFB] = "EI";
-        decoder[0xE8] = "ADD_n_SP";
-        decoder[0x33] = "INC_SP";
-        decoder[0x3B] = "DEC_SP";
-    }
-
-    void init_opcodes() {
-        op_codes[0x00] = NOP;
-        op_codes[0x06] = LDb_n;
-        op_codes[0x0E] = LDc_n;
-        op_codes[0x16] = LDd_n;
-        op_codes[0x1E] = LDe_n;
-        op_codes[0x26] = LDh_n;
-        op_codes[0x2E] = LDl_n;
-        op_codes[0x7F] = LDrr_aa;
-        op_codes[0x78] = LDrr_ab;
-        op_codes[0x79] = LDrr_ac;
-        op_codes[0x7A] = LDrr_ad;
-        op_codes[0x7B] = LDrr_ae;
-        op_codes[0x7C] = LDrr_ah;
-        op_codes[0x7D] = LDrr_al;
-        op_codes[0x7E] = LDrr_aHL;
-        op_codes[0x0A] = LDrr_aBC;
-        op_codes[0x1A] = LDrr_aDE;
-        op_codes[0xFA] = LDrr_ann;
-        op_codes[0x3E] = LDrr_a_hash;
-        op_codes[0x40] = LDrr_bb;
-        op_codes[0x41] = LDrr_bc;
-        op_codes[0x42] = LDrr_bd;
-        op_codes[0x43] = LDrr_be;
-        op_codes[0x44] = LDrr_bh;
-        op_codes[0x45] = LDrr_bl;
-        op_codes[0x46] = LDrr_bHL;
-        op_codes[0x47] = LDrr_ba;
-        op_codes[0x48] = LDrr_cb;
-        op_codes[0x49] = LDrr_cc;
-        op_codes[0x4A] = LDrr_cd;
-        op_codes[0x4B] = LDrr_ce;
-        op_codes[0x4C] = LDrr_ch;
-        op_codes[0x4D] = LDrr_cl;
-        op_codes[0x4E] = LDrr_cHL;
-        op_codes[0x4F] = LDrr_ca;
-        op_codes[0x50] = LDrr_db;
-        op_codes[0x51] = LDrr_dc;
-        op_codes[0x52] = LDrr_dd;
-        op_codes[0x53] = LDrr_de;
-        op_codes[0x54] = LDrr_dh;
-        op_codes[0x55] = LDrr_dl;
-        op_codes[0x56] = LDrr_dHL;
-        op_codes[0x57] = LDrr_da;
-        op_codes[0x58] = LDrr_eb;
-        op_codes[0x59] = LDrr_ec;
-        op_codes[0x5A] = LDrr_ed;
-        op_codes[0x5B] = LDrr_ee;
-        op_codes[0x5C] = LDrr_eh;
-        op_codes[0x5D] = LDrr_el;
-        op_codes[0x5E] = LDrr_eHL;
-        op_codes[0x5F] = LDrr_ea;
-        op_codes[0x60] = LDrr_hb;
-        op_codes[0x61] = LDrr_hc;
-        op_codes[0x62] = LDrr_hd;
-        op_codes[0x63] = LDrr_he;
-        op_codes[0x64] = LDrr_hh;
-        op_codes[0x65] = LDrr_hl;
-        op_codes[0x66] = LDrr_hHL;
-        op_codes[0x67] = LDrr_ha;
-        op_codes[0x68] = LDrr_lb;
-        op_codes[0x69] = LDrr_lc;
-        op_codes[0x6A] = LDrr_ld;
-        op_codes[0x6B] = LDrr_le;
-        op_codes[0x6C] = LDrr_lh;
-        op_codes[0x6D] = LDrr_ll;
-        op_codes[0x6E] = LDrr_lHL;
-        op_codes[0x6F] = LDrr_la;
-        op_codes[0x70] = LDrr_HLb;
-        op_codes[0x71] = LDrr_HLc;
-        op_codes[0x72] = LDrr_HLd;
-        op_codes[0x73] = LDrr_HLe;
-        op_codes[0x74] = LDrr_HLh;
-        op_codes[0x75] = LDrr_HLl;
-        op_codes[0x36] = LDrr_HLn;
-
-        op_codes[0xF2] = LDa_c;
-        op_codes[0xE2] = LDc_a;
-        op_codes[0x3A] = LDDaHL;
-        op_codes[0x32] = LDDHLa;
-        op_codes[0x2A] = LDI_aHL;
-        op_codes[0x22] = LDI_HLa;
-        op_codes[0xE0] = LDH_nA;
-        op_codes[0xF0] = LDH_a_ffn;
-
-        op_codes[0x01] = LD_nn_BC;
-        op_codes[0x11] = LD_nn_DE;
-        op_codes[0x21] = LD_nn_HL;
-        op_codes[0x31] = LD_nn_SP;
-
-        op_codes[0xF9] = LD_SPHL;
-        op_codes[0xF8] = LDHL_SPn;
-        op_codes[0x08] = LD_nnSP;
-        op_codes[0xF5] = PUSH_AF;
-        op_codes[0xC5] = PUSH_BC;
-        op_codes[0xD5] = PUSH_DE;
-        op_codes[0xE5] = PUSH_HL;
-        op_codes[0xF1] = POP_AF;
-        op_codes[0xC1] = POP_BC;
-        op_codes[0xD1] = POP_DE;
-        op_codes[0xE1] = POP_HL;
-        op_codes[0x87] = ADD_aa;
-        op_codes[0x80] = ADD_ab;
-        op_codes[0x81] = ADD_ac;
-        op_codes[0x82] = ADD_ad;
-        op_codes[0x83] = ADD_ae;
-        op_codes[0x84] = ADD_ah;
-        op_codes[0x85] = ADD_al;
-        op_codes[0x86] = ADD_aH;
-        op_codes[0xC6] = ADD_a_hash;
-        op_codes[0x8f] = ADC_aa;
-        op_codes[0x88] = ADC_ab;
-        op_codes[0x89] = ADC_ac;
-        op_codes[0x8A] = ADC_ad;
-        op_codes[0x8B] = ADC_ae;
-        op_codes[0x8C] = ADC_ah;
-        op_codes[0x8D] = ADC_al;
-        op_codes[0x8E] = ADC_aHL;
-        op_codes[0xCE] = ADC_a_hash;
-        op_codes[0x97] = SUB_a;
-        op_codes[0x90] = SUB_b;
-        op_codes[0x91] = SUB_c;
-        op_codes[0x92] = SUB_d;
-        op_codes[0x93] = SUB_e;
-        op_codes[0x94] = SUB_h;
-        op_codes[0x95] = SUB_l;
-        op_codes[0x96] = SUB_HL;
-        op_codes[0xD6] = SUB_hash;
-        op_codes[0x9F] = SBC_a;
-        op_codes[0x98] = SBC_b;
-        op_codes[0x99] = SBC_c;
-        op_codes[0x9A] = SBC_d;
-        op_codes[0x9B] = SBC_e;
-        op_codes[0x9C] = SBC_h;
-        op_codes[0x9D] = SBC_l;
-        op_codes[0x9E] = SBC_HL;
-        op_codes[0xDE] = SBC_hash;
-        op_codes[0xA7] = AND_a;
-        op_codes[0xA0] = AND_b;
-        op_codes[0xA1] = AND_c;
-        op_codes[0xA2] = AND_d;
-        op_codes[0xA3] = AND_e;
-        op_codes[0xA4] = AND_h;
-        op_codes[0xA5] = AND_l;
-        op_codes[0xA6] = AND_HL;
-        op_codes[0xE6] = AND_hash;
-        op_codes[0xB7] = OR_a;
-        op_codes[0xB0] = OR_b;
-        op_codes[0xB1] = OR_c;
-        op_codes[0xB2] = OR_d;
-        op_codes[0xB3] = OR_e;
-        op_codes[0xB4] = OR_h;
-        op_codes[0xB5] = OR_l;
-        op_codes[0xB6] = OR_HL;
-        op_codes[0xF6] = OR_hash;
-        op_codes[0xAF] = XOR_a;
-        op_codes[0xA8] = XOR_b;
-        op_codes[0xA9] = XOR_c;
-        op_codes[0xAA] = XOR_d;
-        op_codes[0xAB] = XOR_e;
-        op_codes[0xAC] = XOR_h;
-        op_codes[0xAD] = XOR_l;
-        op_codes[0xAE] = XOR_HL;
-        op_codes[0xEE] = XOR_hash;
-        op_codes[0xBF] = CP_a;
-        op_codes[0xB8] = CP_b;
-        op_codes[0xB9] = CP_c;
-        op_codes[0xBA] = CP_d;
-        op_codes[0xBB] = CP_e;
-        op_codes[0xBC] = CP_h;
-        op_codes[0xBD] = CP_l;
-        op_codes[0xBE] = CP_HL;
-        op_codes[0xFE] = CP_hash;
-        op_codes[0x3C] = INC_a;
-        op_codes[0x04] = INC_b;
-        op_codes[0x0C] = INC_c;
-        op_codes[0x14] = INC_d;
-        op_codes[0x1C] = INC_e;
-        op_codes[0x24] = INC_h;
-        op_codes[0x2C] = INC_l;
-        op_codes[0x34] = INC_HLad;
-        op_codes[0x3D] = DEC_a;
-        op_codes[0x05] = DEC_b;
-        op_codes[0x0D] = DEC_c;
-        op_codes[0x15] = DEC_d;
-        op_codes[0x1D] = DEC_e;
-        op_codes[0x25] = DEC_h;
-        op_codes[0x2D] = DEC_l;
-        op_codes[0x35] = DEC_HLad;
-        op_codes[0x09] = ADD_BC;
-        op_codes[0x19] = ADD_DE;
-        op_codes[0x29] = ADD_HL;
-        op_codes[0x39] = ADD_SP;
-        op_codes[0xC7] = RST_00;
-        op_codes[0xCF] = RST_08;
-        op_codes[0xD7] = RST_10;
-        op_codes[0xDF] = RST_18;
-        op_codes[0xE7] = RST_20;
-        op_codes[0xEF] = RST_28;
-        op_codes[0xF7] = RST_30;
-        op_codes[0xFF] = RST_38;
-        op_codes[0xCB] = run_cb;
-        op_codes[0x30] = JR_NC;
-        op_codes[0x38] = JR_C;
-        op_codes[0x20] = JR_NZ;
-        op_codes[0x28] = JR_Z;
-        op_codes[0x18] = JR_n;
-        op_codes[0xC3] = JP;
-        op_codes[0xC2] = JP_NZ;
-        op_codes[0xCA] = JP_Z;
-        op_codes[0xD2] = JP_NC;
-        op_codes[0xDA] = JP_C;
-        op_codes[0xE9] = JP_HL;
-        op_codes[0x77] = LD_HL_a;
-        op_codes[0x02] = LD_BC_a;
-        op_codes[0x12] = LD_DE_a;
-        op_codes[0xE0] = LDad_n_a;
-        op_codes[0xCD] = CALL_nn;
-        op_codes[0xC4] = CALL_NZ;
-        op_codes[0xCC] = CALL_Z;
-        op_codes[0xD4] = CALL_NC;
-        op_codes[0xDc] = CALL_C;
-
-        op_codes[0xEA] = LD_nn_a;
-        op_codes[0xC9] = RET;
-        op_codes[0xC0] = RET_NZ;
-        op_codes[0xC8] = RET_Z;
-        op_codes[0xD0] = RET_NC;
-        op_codes[0xD8] = RET_C;
-        op_codes[0xD9] = RETI;
-        op_codes[0x17] = RLA;
-        op_codes[0x07] = RLCA;
-        op_codes[0x0F] = RRCA;
-        op_codes[0xF3] = DI;
-        op_codes[0xFB] = EI;
-        op_codes[0xE8] = ADD_n_SP;
-        op_codes[0x03] = INC_BC;
-        op_codes[0x13] = INC_DE;
-        op_codes[0x23] = INC_HL;
-        op_codes[0x33] = INC_SP;
-        op_codes[0x0B] = DEC_BC;
-        op_codes[0x1B] = DEC_DE;
-        op_codes[0x2B] = DEC_HL;
-        op_codes[0x3B] = DEC_SP;
-        op_codes[0x76] = HALT;
-        op_codes[0x27] = DAA;
-        op_codes[0x2F] = CPL;
-        op_codes[0x3F] = CCF;
-        op_codes[0x37] = SCF;
-        op_codes[0x1F] = RR_A;
-
-        cb_codes[0x00] = RLC_B;
-        cb_codes[0x01] = RLC_C;
-        cb_codes[0x02] = RLC_D;
-        cb_codes[0x03] = RLC_E;
-        cb_codes[0x04] = RLC_H;
-        cb_codes[0x05] = RLC_L;
-        cb_codes[0x06] = RLC_HL;
-        cb_codes[0x07] = RLC_A;
-        cb_codes[0x08] = RRC_B;
-        cb_codes[0x09] = RRC_C;
-        cb_codes[0x0A] = RRC_D;
-        cb_codes[0x0B] = RRC_E;
-        cb_codes[0x0C] = RRC_H;
-        cb_codes[0x0D] = RRC_L;
-        cb_codes[0x0E] = RRC_HL;
-        cb_codes[0x0F] = RRC_A;
-        cb_codes[0x20] = SLA_B;
-        cb_codes[0x21] = SLA_C;
-        cb_codes[0x22] = SLA_D;
-        cb_codes[0x23] = SLA_E;
-        cb_codes[0x24] = SLA_H;
-        cb_codes[0x25] = SLA_L;
-        cb_codes[0x26] = SLA_HL;
-        cb_codes[0x27] = SLA_A;
-        cb_codes[0x28] = SRA_B;
-        cb_codes[0x29] = SRA_C;
-        cb_codes[0x2A] = SRA_D;
-        cb_codes[0x2B] = SRA_E;
-        cb_codes[0x2C] = SRA_H;
-        cb_codes[0x2D] = SRA_L;
-        cb_codes[0x2E] = SRA_HL;
-        cb_codes[0x2F] = SRA_A;
-        cb_codes[0x40] = BIT_0B;
-        cb_codes[0x41] = BIT_0C;
-        cb_codes[0x42] = BIT_0D;
-        cb_codes[0x43] = BIT_0E;
-        cb_codes[0x44] = BIT_0H;
-        cb_codes[0x45] = BIT_0L;
-        cb_codes[0x46] = BIT_0HL;
-        cb_codes[0x47] = BIT_0A;
-        cb_codes[0x48] = BIT_1B;
-        cb_codes[0x49] = BIT_1C;
-        cb_codes[0x4A] = BIT_1D;
-        cb_codes[0x4B] = BIT_1E;
-        cb_codes[0x4C] = BIT_1H;
-        cb_codes[0x4D] = BIT_1L;
-        cb_codes[0x4E] = BIT_1HL;
-        cb_codes[0x4F] = BIT_1A;
-        cb_codes[0x50] = BIT_2B;
-        cb_codes[0x51] = BIT_2C;
-        cb_codes[0x52] = BIT_2D;
-        cb_codes[0x53] = BIT_2E;
-        cb_codes[0x54] = BIT_2H;
-        cb_codes[0x55] = BIT_2L;
-        cb_codes[0x56] = BIT_2HL;
-        cb_codes[0x57] = BIT_2A;
-        cb_codes[0x58] = BIT_3B;
-        cb_codes[0x59] = BIT_3C;
-        cb_codes[0x5A] = BIT_3D;
-        cb_codes[0x5B] = BIT_3E;
-        cb_codes[0x5C] = BIT_3H;
-        cb_codes[0x5D] = BIT_3L;
-        cb_codes[0x5E] = BIT_3HL;
-        cb_codes[0x5F] = BIT_3A;
-        cb_codes[0x60] = BIT_4B;
-        cb_codes[0x61] = BIT_4C;
-        cb_codes[0x62] = BIT_4D;
-        cb_codes[0x63] = BIT_4E;
-        cb_codes[0x64] = BIT_4H;
-        cb_codes[0x65] = BIT_4L;
-        cb_codes[0x66] = BIT_4HL;
-        cb_codes[0x67] = BIT_4A;
-        cb_codes[0x68] = BIT_5B;
-        cb_codes[0x69] = BIT_5C;
-        cb_codes[0x6A] = BIT_5D;
-        cb_codes[0x6B] = BIT_5E;
-        cb_codes[0x6C] = BIT_5H;
-        cb_codes[0x6D] = BIT_5L;
-        cb_codes[0x6E] = BIT_5HL;
-        cb_codes[0x6F] = BIT_5A;
-        cb_codes[0x70] = BIT_6B;
-        cb_codes[0x71] = BIT_6C;
-        cb_codes[0x72] = BIT_6D;
-        cb_codes[0x73] = BIT_6E;
-        cb_codes[0x74] = BIT_6H;
-        cb_codes[0x75] = BIT_6L;
-        cb_codes[0x76] = BIT_6HL;
-        cb_codes[0x77] = BIT_6A;
-        cb_codes[0x78] = BIT_7B;
-        cb_codes[0x79] = BIT_7C;
-        cb_codes[0x7A] = BIT_7D;
-        cb_codes[0x7B] = BIT_7E;
-        cb_codes[0x7C] = BIT_7H;
-        cb_codes[0x7D] = BIT_7L;
-        cb_codes[0x7E] = BIT_7HL;
-        cb_codes[0x7F] = BIT_7A;
-        cb_codes[0x80] = RES_0B;
-        cb_codes[0x81] = RES_0C;
-        cb_codes[0x82] = RES_0D;
-        cb_codes[0x83] = RES_0E;
-        cb_codes[0x84] = RES_0H;
-        cb_codes[0x85] = RES_0L;
-        cb_codes[0x86] = RES_0HL;
-        cb_codes[0x87] = RES_0A;
-        cb_codes[0x88] = RES_1B;
-        cb_codes[0x89] = RES_1C;
-        cb_codes[0x8A] = RES_1D;
-        cb_codes[0x8B] = RES_1E;
-        cb_codes[0x8C] = RES_1H;
-        cb_codes[0x8D] = RES_1L;
-        cb_codes[0x8E] = RES_1HL;
-        cb_codes[0x8F] = RES_1A;
-        cb_codes[0x90] = RES_2B;
-        cb_codes[0x91] = RES_2C;
-        cb_codes[0x92] = RES_2D;
-        cb_codes[0x93] = RES_2E;
-        cb_codes[0x94] = RES_2H;
-        cb_codes[0x95] = RES_2L;
-        cb_codes[0x96] = RES_2HL;
-        cb_codes[0x97] = RES_2A;
-        cb_codes[0x98] = RES_3B;
-        cb_codes[0x99] = RES_3C;
-        cb_codes[0x9A] = RES_3D;
-        cb_codes[0x9B] = RES_3E;
-        cb_codes[0x9C] = RES_3H;
-        cb_codes[0x9D] = RES_3L;
-        cb_codes[0x9E] = RES_3HL;
-        cb_codes[0x9F] = RES_3A;
-        cb_codes[0xA0] = RES_4B;
-        cb_codes[0xA1] = RES_4C;
-        cb_codes[0xA2] = RES_4D;
-        cb_codes[0xA3] = RES_4E;
-        cb_codes[0xA4] = RES_4H;
-        cb_codes[0xA5] = RES_4L;
-        cb_codes[0xA6] = RES_4HL;
-        cb_codes[0xA7] = RES_4A;
-        cb_codes[0xA8] = RES_5B;
-        cb_codes[0xA9] = RES_5C;
-        cb_codes[0xAA] = RES_5D;
-        cb_codes[0xAB] = RES_5E;
-        cb_codes[0xAC] = RES_5H;
-        cb_codes[0xAD] = RES_5L;
-        cb_codes[0xAE] = RES_5HL;
-        cb_codes[0xAF] = RES_5A;
-        cb_codes[0xB0] = RES_6B;
-        cb_codes[0xB1] = RES_6C;
-        cb_codes[0xB2] = RES_6D;
-        cb_codes[0xB3] = RES_6E;
-        cb_codes[0xB4] = RES_6H;
-        cb_codes[0xB5] = RES_6L;
-        cb_codes[0xB6] = RES_6HL;
-        cb_codes[0xB7] = RES_6A;
-        cb_codes[0xB8] = RES_7B;
-        cb_codes[0xB9] = RES_7C;
-        cb_codes[0xBA] = RES_7D;
-        cb_codes[0xBB] = RES_7E;
-        cb_codes[0xBC] = RES_7H;
-        cb_codes[0xBD] = RES_7L;
-        cb_codes[0xBE] = RES_7HL;
-        cb_codes[0xBF] = RES_7A;
-        cb_codes[0xC0] = SET_0B;
-        cb_codes[0xC1] = SET_0C;
-        cb_codes[0xC2] = SET_0D;
-        cb_codes[0xC3] = SET_0E;
-        cb_codes[0xC4] = SET_0H;
-        cb_codes[0xC5] = SET_0L;
-        cb_codes[0xC6] = SET_0HL;
-        cb_codes[0xC7] = SET_0A;
-        cb_codes[0xC8] = SET_1B;
-        cb_codes[0xC9] = SET_1C;
-        cb_codes[0xCA] = SET_1D;
-        cb_codes[0xCB] = SET_1E;
-        cb_codes[0xCC] = SET_1H;
-        cb_codes[0xCD] = SET_1L;
-        cb_codes[0xCE] = SET_1HL;
-        cb_codes[0xCF] = SET_1A;
-        cb_codes[0xD0] = SET_2B;
-        cb_codes[0xD1] = SET_2C;
-        cb_codes[0xD2] = SET_2D;
-        cb_codes[0xD3] = SET_2E;
-        cb_codes[0xD4] = SET_2H;
-        cb_codes[0xD5] = SET_2L;
-        cb_codes[0xD6] = SET_2HL;
-        cb_codes[0xD7] = SET_2A;
-        cb_codes[0xD8] = SET_3B;
-        cb_codes[0xD9] = SET_3C;
-        cb_codes[0xDA] = SET_3D;
-        cb_codes[0xDB] = SET_3E;
-        cb_codes[0xDC] = SET_3H;
-        cb_codes[0xDD] = SET_3L;
-        cb_codes[0xDE] = SET_3HL;
-        cb_codes[0xDF] = SET_3A;
-        cb_codes[0xE0] = SET_4B;
-        cb_codes[0xE1] = SET_4C;
-        cb_codes[0xE2] = SET_4D;
-        cb_codes[0xE3] = SET_4E;
-        cb_codes[0xE4] = SET_4H;
-        cb_codes[0xE5] = SET_4L;
-        cb_codes[0xE6] = SET_4HL;
-        cb_codes[0xE7] = SET_4A;
-        cb_codes[0xE8] = SET_5B;
-        cb_codes[0xE9] = SET_5C;
-        cb_codes[0xEA] = SET_5D;
-        cb_codes[0xEB] = SET_5E;
-        cb_codes[0xEC] = SET_5H;
-        cb_codes[0xED] = SET_5L;
-        cb_codes[0xEE] = SET_5HL;
-        cb_codes[0xEF] = SET_5A;
-        cb_codes[0xF0] = SET_6B;
-        cb_codes[0xF1] = SET_6C;
-        cb_codes[0xF2] = SET_6D;
-        cb_codes[0xF3] = SET_6E;
-        cb_codes[0xF4] = SET_6H;
-        cb_codes[0xF5] = SET_6L;
-        cb_codes[0xF6] = SET_6HL;
-        cb_codes[0xF7] = SET_6A;
-        cb_codes[0xF8] = SET_7B;
-        cb_codes[0xF9] = SET_7C;
-        cb_codes[0xFA] = SET_7D;
-        cb_codes[0xFB] = SET_7E;
-        cb_codes[0xFC] = SET_7H;
-        cb_codes[0xFD] = SET_7L;
-        cb_codes[0xFE] = SET_7HL;
-        cb_codes[0xFF] = SET_7A;
-        cb_codes[0x17] = RL_A;
-        cb_codes[0x10] = RL_B;
-        cb_codes[0x11] = RL_C;
-        cb_codes[0x12] = RL_D;
-        cb_codes[0x13] = RL_E;
-        cb_codes[0x14] = RL_H;
-        cb_codes[0x15] = RL_L;
-        cb_codes[0x16] = RL_addr_HL;
-        cb_codes[0x37] = SWAP_a;
-        cb_codes[0x30] = SWAP_b;
-        cb_codes[0x31] = SWAP_c;
-        cb_codes[0x32] = SWAP_d;
-        cb_codes[0x33] = SWAP_e;
-        cb_codes[0x34] = SWAP_h;
-        cb_codes[0x35] = SWAP_l;
-        cb_codes[0x36] = SWAP_HL;
-        cb_codes[0x87] = RES_0_a;
-        cb_codes[0x38] = SRL_B;
-        cb_codes[0x39] = SRL_C;
-        cb_codes[0x3A] = SRL_D;
-        cb_codes[0x3B] = SRL_E;
-        cb_codes[0x3C] = SRL_H;
-        cb_codes[0x3D] = SRL_L;
-        cb_codes[0x3E] = SRL_HL;
-        cb_codes[0x3F] = SRL_A;
-        cb_codes[0x1F] = CB_RR_A;
-        cb_codes[0x18] = RR_B;
-        cb_codes[0x19] = RR_C;
-        cb_codes[0x1A] = RR_D;
-        cb_codes[0x1B] = RR_E;
-        cb_codes[0x1C] = RR_H;
-        cb_codes[0x1D] = RR_L;
-        cb_codes[0x1E] = RR_HL;
-    }
+    this->set_c(carry);
+    this->set_z(this->AF.hi == 0);
+    this->set_h(false);
+
+    this->cycles = 4;
+}
+
+u8 GB_CPU::RRC_generic(u8 val) {
+    bool bit0 = val & 1;
+    u8 newVal = (val >> 1) + (bit0 << 7);
+    this->set_z(newVal == 0);
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(bit0);
+    return newVal;
+}
+
+void GB_CPU::RRC_A() {
+    this->AF.hi = RRC_generic(this->AF.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_B() {
+    this->BC.hi = RRC_generic(this->BC.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_C() {
+    this->BC.lo = RRC_generic(this->BC.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_D() {
+    this->DE.hi = RRC_generic(this->DE.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_E() {
+    this->DE.lo = RRC_generic(this->DE.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_H() {
+    this->HL.hi = RRC_generic(this->HL.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_L() {
+    this->HL.lo = RRC_generic(this->HL.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::RRC_HL() {
+    u8 readVal = RAM::readAt(this->HL.val());
+    RAM::write(RRC_generic(readVal), this->HL.val());
+    this->cycles = 16;
+}
+
+u8 GB_CPU::SLA_generic(u8 val) {
+    u8 bit7 = val & 0b10000000;
+    u8 newVal = val << 1;
+    this->set_z(newVal == 0);
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(bit7 == 0b10000000);
+    return newVal;
+}
+
+void GB_CPU::SLA_A() {
+    this->AF.hi = this->SLA_generic(this->AF.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_B() {
+    this->BC.hi = this->SLA_generic(this->BC.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_C() {
+    this->BC.lo = this->SLA_generic(this->BC.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_D() {
+    this->DE.hi = this->SLA_generic(this->DE.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_E() {
+    this->DE.lo = this->SLA_generic(this->DE.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_H() {
+    this->HL.hi = this->SLA_generic(this->HL.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_L() {
+    this->HL.lo = this->SLA_generic(this->HL.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SLA_HL() {
+    u8 readVal = RAM::readAt(this->HL.val());
+    RAM::write(this->SLA_generic(readVal), this->HL.val());
+    this->cycles = 16;
+}
+
+u8 GB_CPU::SRA_generic(u8 val) {
+    bool bit0 = val & 1;
+    u8 bit7 = val & 0b10000000;
+    u8 newVal = (val >> 1) + bit7;
+    this->set_z(newVal == 0);
+    this->set_n(false);
+    this->set_h(false);
+    this->set_c(bit0);
+    return newVal;
+}
+
+void GB_CPU::SRA_A() {
+    this->AF.hi = SRA_generic(this->AF.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_B() {
+    this->BC.hi = SRA_generic(this->BC.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_C() {
+    this->BC.lo = SRA_generic(this->BC.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_D() {
+    this->DE.hi = SRA_generic(this->DE.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_E() {
+    this->DE.lo = SRA_generic(this->DE.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_H() {
+    this->HL.hi = SRA_generic(this->HL.hi);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_L() {
+    this->HL.lo = SRA_generic(this->HL.lo);
+    this->cycles = 8;
+}
+
+void GB_CPU::SRA_HL() {
+    u8 readVal = RAM::readAt(this->HL.val());
+    RAM::write(SRA_generic(readVal), this->HL.val());
+    this->cycles = 16;
 }
