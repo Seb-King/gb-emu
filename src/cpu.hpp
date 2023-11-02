@@ -64,8 +64,6 @@ public:
     void op_not_imp();
     void STAT();
 
-    void run_cb(u8);
-
     void inc(int amount);
     void update();
     void overflow();
