@@ -3,6 +3,7 @@
 #include "typedefs.hpp"
 #include <vector>
 #include "functional"
+#include "ram.hpp"
 
 extern u16 LCDC;
 extern u16 STAT;
@@ -22,7 +23,7 @@ public:
 
 class GB_CPU {
 public:
-    GB_CPU();
+    GB_CPU(RAM ram);
 
     u8 IF;
     u8 IE;
@@ -71,6 +72,7 @@ public:
     void v_blank();
     bool handle_interrupts();
 
+    RAM ram;
 private:
     typedef std::function<void(GB_CPU*)> operation;
     std::vector<std::string> decoder;

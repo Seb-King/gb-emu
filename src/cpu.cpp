@@ -4,7 +4,6 @@
 #include "typedefs.hpp"
 #include <vector>
 #include "cpu.hpp"
-#include "ram.hpp"
 #include "functional"
 
 const int clockrate = 4194304;
@@ -28,22 +27,22 @@ u16 BGP = 0xFF47;
 
 
 void GB_CPU::inc(int amount) {
-    u8 t = RAM::readAt(0xFF05);
+    u8 t = ram.readAt(0xFF05);
     TIMA = t + amount;
     if (TIMA < t) {
-        u8 mod = RAM::readAt(0xFF06);
+        u8 mod = ram.readAt(0xFF06);
         TIMA = mod;
         this->write(mod, 0xFF05);
-        this->write(RAM::readAt(0xFF0F) | 0b00000100, 0xFF0F);
+        this->write(ram.readAt(0xFF0F) | 0b00000100, 0xFF0F);
     } else {
-        RAM::write(t + amount, 0xFF05);
+        ram.write(t + amount, 0xFF05);
     }
 }
 
 void GB_CPU::update() {
-    RAM::DIV++;
+    ram.DIV++;
 
-    u8 TAC = RAM::readAt(0xFF07);
+    u8 TAC = ram.readAt(0xFF07);
     if (((TAC & 0b00000100) == 0b00000100)) {
         counter += this->cycles;
         int rate = 0;
@@ -71,7 +70,7 @@ void GB_CPU::overflow() {
     this->write(this->PC & 0x00FF, this->SP);
     this->PC = 0x0050;
 
-    this->IF = RAM::readAt(0xFF0F);
+    this->IF = ram.readAt(0xFF0F);
     this->IF &= 0b11111011;
     this->write(this->IF, 0xFF0F);
 }
@@ -81,13 +80,13 @@ void GB_CPU::joypadInterrupt() {
     this->push_onto_stack(this->PC);
     this->PC = 0x0060;
 
-    this->IF = RAM::readAt(0xFF0F);
+    this->IF = ram.readAt(0xFF0F);
     this->IF &= 0b11101111;
     this->write(this->IF, 0xFF0F);
 }
 
 void GB_CPU::v_blank() {
-    u8 STAT = RAM::readAt(0xFF41);
+    u8 STAT = ram.readAt(0xFF41);
     STAT |= 0b00000001;
     STAT &= 0b11111101;
     this->write(STAT, 0xFF41);
@@ -95,14 +94,14 @@ void GB_CPU::v_blank() {
     this->push_onto_stack(this->PC);
     this->PC = 0x0040;
 
-    this->IF = RAM::readAt(0xFF0F);
+    this->IF = ram.readAt(0xFF0F);
     this->IF &= 0b11111110;
     this->write(this->IF, 0xFF0F);
 }
 
 bool GB_CPU::handle_interrupts() {
-    this->IF = RAM::readAt(0xFF0F);
-    this->IE = RAM::readAt(0xFFFF);
+    this->IF = ram.readAt(0xFF0F);
+    this->IE = ram.readAt(0xFFFF);
 
     if ((this->IF & 1) == 1 && (this->IE & 1) == 1) {
         if (this->halt) {
@@ -145,7 +144,7 @@ bool GB_CPU::handle_interrupts() {
     return true;
 }
 
-GB_CPU::GB_CPU() {
+GB_CPU::GB_CPU(RAM ram) {
     this->halt = false;
     this->halt_bug = false;
     this->IME = 0;
@@ -157,6 +156,7 @@ GB_CPU::GB_CPU() {
     this->counter = 0;
     this->IF = 0;
     this->IE = 0;
+    this->ram = ram;
 };
 
 int GB_CPU::get_cycles() {
@@ -187,7 +187,7 @@ void GB_CPU::init_decoder() {
 }
 
 void GB_CPU::disable_boot_rom() {
-    RAM::write(0x01, 0xFF50);
+    ram.write(0x01, 0xFF50);
 }
 
 void GB_CPU::init_registers_to_skip_boot() {
@@ -214,7 +214,7 @@ void GB_CPU::push_onto_stack(u16 val) {
 }
 
 u8 GB_CPU::pop_byte_from_stack() {
-    u8 value = RAM::readAt(this->SP);
+    u8 value = ram.readAt(this->SP);
     this->SP++;
     return value;
 }
@@ -224,7 +224,7 @@ u16 GB_CPU::pop_from_stack() {
 }
 
 void GB_CPU::write(u8 val, u16 addr) {
-    RAM::write(val, addr);
+    ram.write(val, addr);
 
     if (addr == DMA) {
         this->DMA_routine();
@@ -232,16 +232,16 @@ void GB_CPU::write(u8 val, u16 addr) {
 }
 
 u8 GB_CPU::read() {
-    u8 byte = RAM::readAt(this->PC);
+    u8 byte = ram.readAt(this->PC);
     ++this->PC;
     return byte;
 }
 
 void GB_CPU::DMA_routine() {
-    u16 source = (RAM::readAt(DMA) << 8);
+    u16 source = (ram.readAt(DMA) << 8);
     u8 data;
     for (int idx = 0; idx < 0xF1; idx++) {
-        data = RAM::readAt(source + idx);
+        data = ram.readAt(source + idx);
 
         this->write(data, 0xFE00 + idx);
     }
@@ -298,10 +298,10 @@ void GB_CPU::print_registers() {
     std::cout << " PC:" << std::hex << std::setfill('0') << std::setw(4) << std::uppercase << int(this->PC);
 
     std::cout << " PCMEM:";
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC));
-    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC + 1));
-    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC + 2));
-    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(RAM::readAt(this->PC + 3));
+    std::cout << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(ram.readAt(this->PC));
+    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(ram.readAt(this->PC + 1));
+    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(ram.readAt(this->PC + 2));
+    std::cout << "," << std::hex << std::setfill('0') << std::setw(2) << std::uppercase << int(ram.readAt(this->PC + 3));
 
     std::cout << std::endl;
 }
@@ -310,20 +310,20 @@ void GB_CPU::STAT() {
     this->push_onto_stack(this->PC);
     this->PC = 0x0048;
 
-    this->IF = RAM::readAt(0xFF0F);
+    this->IF = ram.readAt(0xFF0F);
     this->IF &= 0b11111101;
     this->write(this->IF, 0xFF0F);
 }
 
 void GB_CPU::op_not_imp() {
-    u8 opcode = RAM::readAt(this->PC - 1);
+    u8 opcode = ram.readAt(this->PC - 1);
     std::cout << "Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
     std::cout << "PC:" << std::hex << unsigned(this->PC) << std::endl;
     exit(0);
 }
 
 void GB_CPU::cb_not_imp() {
-    u8 opcode = RAM::readAt(this->PC - 1);
+    u8 opcode = ram.readAt(this->PC - 1);
     std::cout << "CB Opcode not implemented : OP = " << std::hex << unsigned(opcode) << std::endl;
     exit(0);
 }
@@ -958,9 +958,9 @@ void GB_CPU::SRL_L() {
 }
 
 void GB_CPU::SRL_HL() {
-    u8 oldValue = RAM::readAt(this->HL.val());
+    u8 oldValue = ram.readAt(this->HL.val());
     u8 newValue = oldValue >> 1;
-    RAM::write(newValue, this->HL.val());
+    ram.write(newValue, this->HL.val());
 
     this->set_c(oldValue & 0b00000001);
     this->set_z(newValue == 0);
@@ -1082,12 +1082,12 @@ void GB_CPU::RR_L() {
 }
 
 void GB_CPU::RR_HL() {
-    u8 oldValue = RAM::readAt(this->HL.val());
+    u8 oldValue = ram.readAt(this->HL.val());
     u8 newValue = (oldValue >> 1);
     if (this->get_c()) {
         newValue |= 0b10000000;
     }
-    RAM::write(newValue, this->HL.val());
+    ram.write(newValue, this->HL.val());
 
     this->set_c(oldValue & 0b00000001);
     this->set_z(newValue == 0);
@@ -1116,9 +1116,9 @@ void GB_CPU::NOP() {
 }
 
 void GB_CPU::RET() {
-    u8 n1 = RAM::readAt(SP);
+    u8 n1 = ram.readAt(SP);
     ++this->SP;
-    u16 n2 = RAM::readAt(SP);
+    u16 n2 = ram.readAt(SP);
     ++this->SP;
     u16 addr = n1 + (n2 << 8);
     this->PC = addr;
@@ -1129,9 +1129,9 @@ void GB_CPU::RET_NZ() {
     this->cycles = 8;
     if (!this->get_z()) {
         this->cycles = 20;
-        u8 n1 = RAM::readAt(SP);
+        u8 n1 = ram.readAt(SP);
         ++this->SP;
-        u16 n2 = RAM::readAt(SP);
+        u16 n2 = ram.readAt(SP);
         ++this->SP;
         u16 addr = n1 + (n2 << 8);
         this->PC = addr;
@@ -1142,9 +1142,9 @@ void GB_CPU::RET_Z() {
     this->cycles = 8;
     if (this->get_z()) {
         this->cycles = 20;
-        u8 n1 = RAM::readAt(SP);
+        u8 n1 = ram.readAt(SP);
         ++this->SP;
-        u16 n2 = RAM::readAt(SP);
+        u16 n2 = ram.readAt(SP);
         ++this->SP;
         u16 addr = n1 + (n2 << 8);
         this->PC = addr;
@@ -1154,9 +1154,9 @@ void GB_CPU::RET_NC() {
     this->cycles = 8;
     if (!this->get_c()) {
         this->cycles = 20;
-        u8 n1 = RAM::readAt(SP);
+        u8 n1 = ram.readAt(SP);
         ++this->SP;
-        u16 n2 = RAM::readAt(SP);
+        u16 n2 = ram.readAt(SP);
         ++this->SP;
         u16 addr = n1 + (n2 << 8);
         this->PC = addr;
@@ -1166,9 +1166,9 @@ void GB_CPU::RET_C() {
     this->cycles = 8;
     if (this->get_c()) {
         this->cycles = 20;
-        u8 n1 = RAM::readAt(SP);
+        u8 n1 = ram.readAt(SP);
         ++this->SP;
-        u16 n2 = RAM::readAt(SP);
+        u16 n2 = ram.readAt(SP);
         ++this->SP;
         u16 addr = n1 + (n2 << 8);
         this->PC = addr;
@@ -1176,9 +1176,9 @@ void GB_CPU::RET_C() {
 }
 
 void GB_CPU::RETI() {
-    u8 n1 = RAM::readAt(SP);
+    u8 n1 = ram.readAt(SP);
     ++this->SP;
-    u16 n2 = RAM::readAt(SP);
+    u16 n2 = ram.readAt(SP);
     ++this->SP;
     u16 addr = n1 + (n2 << 8);
     this->PC = addr;
@@ -1258,14 +1258,14 @@ void GB_CPU::BIT_5L() { this->BIT(0b00100000, this->HL.lo); }
 void GB_CPU::BIT_6L() { this->BIT(0b01000000, this->HL.lo); }
 void GB_CPU::BIT_7L() { this->BIT(0b10000000, this->HL.lo); }
 
-void GB_CPU::BIT_0HL() { this->BIT(1, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_1HL() { this->BIT(0b00000010, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_2HL() { this->BIT(0b00000100, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_3HL() { this->BIT(0b00001000, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_4HL() { this->BIT(0b00010000, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_5HL() { this->BIT(0b00100000, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_6HL() { this->BIT(0b01000000, RAM::readAt(this->HL.val())); this->cycles = 12; }
-void GB_CPU::BIT_7HL() { this->BIT(0b10000000, RAM::readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_0HL() { this->BIT(1, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_1HL() { this->BIT(0b00000010, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_2HL() { this->BIT(0b00000100, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_3HL() { this->BIT(0b00001000, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_4HL() { this->BIT(0b00010000, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_5HL() { this->BIT(0b00100000, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_6HL() { this->BIT(0b01000000, ram.readAt(this->HL.val())); this->cycles = 12; }
+void GB_CPU::BIT_7HL() { this->BIT(0b10000000, ram.readAt(this->HL.val())); this->cycles = 12; }
 
 u8 GB_CPU::AssignReg(u8 mask, u8 reg_, bool val) {
     if (val) {
@@ -1343,14 +1343,14 @@ void GB_CPU::RES_5L() { this->HL.lo = this->RES(0b00100000, this->HL.lo); }
 void GB_CPU::RES_6L() { this->HL.lo = this->RES(0b01000000, this->HL.lo); }
 void GB_CPU::RES_7L() { this->HL.lo = this->RES(0b10000000, this->HL.lo); }
 
-void GB_CPU::RES_0HL() { RAM::write(this->RES(1, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_1HL() { RAM::write(this->RES(0b00000010, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_2HL() { RAM::write(this->RES(0b00000100, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_3HL() { RAM::write(this->RES(0b00001000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_4HL() { RAM::write(this->RES(0b00010000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_5HL() { RAM::write(this->RES(0b00100000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_6HL() { RAM::write(this->RES(0b01000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::RES_7HL() { RAM::write(this->RES(0b10000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_0HL() { ram.write(this->RES(1, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_1HL() { ram.write(this->RES(0b00000010, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_2HL() { ram.write(this->RES(0b00000100, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_3HL() { ram.write(this->RES(0b00001000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_4HL() { ram.write(this->RES(0b00010000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_5HL() { ram.write(this->RES(0b00100000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_6HL() { ram.write(this->RES(0b01000000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::RES_7HL() { ram.write(this->RES(0b10000000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
 
 u8 GB_CPU::SET(u8 bit, u8 reg_) {
     this->cycles = 8;
@@ -1420,14 +1420,14 @@ void GB_CPU::SET_5L() { this->HL.lo = this->SET(0b00100000, this->HL.lo); }
 void GB_CPU::SET_6L() { this->HL.lo = this->SET(0b01000000, this->HL.lo); }
 void GB_CPU::SET_7L() { this->HL.lo = this->SET(0b10000000, this->HL.lo); }
 
-void GB_CPU::SET_0HL() { RAM::write(this->SET(1, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_1HL() { RAM::write(this->SET(0b00000010, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_2HL() { RAM::write(this->SET(0b00000100, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_3HL() { RAM::write(this->SET(0b00001000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_4HL() { RAM::write(this->SET(0b00010000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_5HL() { RAM::write(this->SET(0b00100000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_6HL() { RAM::write(this->SET(0b01000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
-void GB_CPU::SET_7HL() { RAM::write(this->SET(0b10000000, RAM::readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_0HL() { ram.write(this->SET(1, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_1HL() { ram.write(this->SET(0b00000010, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_2HL() { ram.write(this->SET(0b00000100, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_3HL() { ram.write(this->SET(0b00001000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_4HL() { ram.write(this->SET(0b00010000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_5HL() { ram.write(this->SET(0b00100000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_6HL() { ram.write(this->SET(0b01000000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
+void GB_CPU::SET_7HL() { ram.write(this->SET(0b10000000, ram.readAt(this->HL.val())), this->HL.val()); this->cycles = 16; }
 
 void GB_CPU::RRA() {
     u8 carry = (this->AF.lo & 0b00010000) << 3;
@@ -1568,12 +1568,12 @@ void GB_CPU::RL_L() {
     this->cycles = 8;
 }
 void GB_CPU::RL_addr_HL() {
-    u8 readVal = RAM::readAt(this->HL.val());
-    RAM::write(this->RL_generic(readVal), this->HL.val());
+    u8 readVal = ram.readAt(this->HL.val());
+    ram.write(this->RL_generic(readVal), this->HL.val());
     this->cycles = 16;
 }
 void GB_CPU::RLC_HL() {
-    u8 x = RAM::readAt(this->HL.val());
+    u8 x = ram.readAt(this->HL.val());
     u8 carry = (x & 0b10000000) >> 7;
     this->AF.lo = (x & 0b10000000) >> 3;
     this->AF.lo &= 0b10010000;
@@ -1828,7 +1828,7 @@ void GB_CPU::LD_nn_a() {
 
 void GB_CPU::LDH_a_ffn() {
     u8 n = this->read();
-    this->AF.hi = RAM::readAt(0xFF00 + n);
+    this->AF.hi = ram.readAt(0xFF00 + n);
     this->cycles = 12;
 }
 
@@ -1839,9 +1839,9 @@ void GB_CPU::LDrr_ad() { this->AF.hi = this->DE.hi; this->cycles = 4; }
 void GB_CPU::LDrr_ae() { this->AF.hi = this->DE.lo; this->cycles = 4; }
 void GB_CPU::LDrr_ah() { this->AF.hi = this->HL.hi; this->cycles = 4; }
 void GB_CPU::LDrr_al() { this->AF.hi = this->HL.lo; this->cycles = 4; }
-void GB_CPU::LDrr_aBC() { this->AF.hi = RAM::readAt(this->BC.val()); }
-void GB_CPU::LDrr_aDE() { this->AF.hi = RAM::readAt(this->DE.val()); }
-void GB_CPU::LDrr_aHL() { this->AF.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_aBC() { this->AF.hi = ram.readAt(this->BC.val()); }
+void GB_CPU::LDrr_aDE() { this->AF.hi = ram.readAt(this->DE.val()); }
+void GB_CPU::LDrr_aHL() { this->AF.hi = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_bb() { this->cycles = 4; }
 void GB_CPU::LDrr_ba() { this->BC.hi = this->AF.hi; this->cycles = 4; }
 void GB_CPU::LDrr_bc() { this->BC.hi = this->BC.lo; this->cycles = 4; }
@@ -1849,7 +1849,7 @@ void GB_CPU::LDrr_bd() { this->BC.hi = this->DE.hi; this->cycles = 4; }
 void GB_CPU::LDrr_be() { this->BC.hi = this->DE.lo; this->cycles = 4; }
 void GB_CPU::LDrr_bh() { this->BC.hi = this->HL.hi; this->cycles = 4; }
 void GB_CPU::LDrr_bl() { this->BC.hi = this->HL.lo; this->cycles = 4; }
-void GB_CPU::LDrr_bHL() { this->BC.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_bHL() { this->BC.hi = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_cc() { this->cycles = 4; }
 void GB_CPU::LDrr_ca() { this->BC.lo = this->AF.hi; this->cycles = 4; }
 void GB_CPU::LDrr_cb() { this->BC.lo = this->BC.hi; this->cycles = 4; }
@@ -1857,7 +1857,7 @@ void GB_CPU::LDrr_cd() { this->BC.lo = this->DE.hi; this->cycles = 4; }
 void GB_CPU::LDrr_ce() { this->BC.lo = this->DE.lo; this->cycles = 4; }
 void GB_CPU::LDrr_ch() { this->BC.lo = this->HL.hi; this->cycles = 4; }
 void GB_CPU::LDrr_cl() { this->BC.lo = this->HL.lo; this->cycles = 4; }
-void GB_CPU::LDrr_cHL() { this->BC.lo = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_cHL() { this->BC.lo = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_dd() { this->cycles = 4; }
 void GB_CPU::LDrr_da() { this->DE.hi = this->AF.hi; this->cycles = 4; }
 void GB_CPU::LDrr_db() { this->DE.hi = this->BC.hi; this->cycles = 4; }
@@ -1865,7 +1865,7 @@ void GB_CPU::LDrr_dc() { this->DE.hi = this->BC.lo; this->cycles = 4; }
 void GB_CPU::LDrr_de() { this->DE.hi = this->DE.lo; this->cycles = 4; }
 void GB_CPU::LDrr_dh() { this->DE.hi = this->HL.hi; this->cycles = 4; }
 void GB_CPU::LDrr_dl() { this->DE.hi = this->HL.lo; this->cycles = 4; }
-void GB_CPU::LDrr_dHL() { this->DE.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_dHL() { this->DE.hi = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_ee() { this->cycles = 4; }
 void GB_CPU::LDrr_ea() { this->DE.lo = this->AF.hi; this->cycles = 4; }
 void GB_CPU::LDrr_eb() { this->DE.lo = this->BC.hi; this->cycles = 4; }
@@ -1873,7 +1873,7 @@ void GB_CPU::LDrr_ec() { this->DE.lo = this->BC.lo; this->cycles = 4; }
 void GB_CPU::LDrr_ed() { this->DE.lo = this->DE.hi; this->cycles = 4; }
 void GB_CPU::LDrr_eh() { this->DE.lo = this->HL.hi; this->cycles = 4; }
 void GB_CPU::LDrr_el() { this->DE.lo = this->HL.lo; this->cycles = 4; }
-void GB_CPU::LDrr_eHL() { this->DE.lo = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_eHL() { this->DE.lo = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_hh() { this->cycles = 4; }
 void GB_CPU::LDrr_ha() { this->HL.hi = this->AF.hi; this->cycles = 4; }
 void GB_CPU::LDrr_hb() { this->HL.hi = this->BC.hi; this->cycles = 4; }
@@ -1881,7 +1881,7 @@ void GB_CPU::LDrr_hc() { this->HL.hi = this->BC.lo; this->cycles = 4; }
 void GB_CPU::LDrr_hd() { this->HL.hi = this->DE.hi; this->cycles = 4; }
 void GB_CPU::LDrr_he() { this->HL.hi = this->DE.lo; this->cycles = 4; }
 void GB_CPU::LDrr_hl() { this->HL.hi = this->HL.lo; this->cycles = 4; }
-void GB_CPU::LDrr_hHL() { this->HL.hi = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_hHL() { this->HL.hi = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_ll() { this->cycles = 4; }
 void GB_CPU::LDrr_la() { this->HL.lo = this->AF.hi; this->cycles = 4; }
 void GB_CPU::LDrr_lb() { this->HL.lo = this->BC.hi; this->cycles = 4; }
@@ -1889,7 +1889,7 @@ void GB_CPU::LDrr_lc() { this->HL.lo = this->BC.lo; this->cycles = 4; }
 void GB_CPU::LDrr_ld() { this->HL.lo = this->DE.hi; this->cycles = 4; }
 void GB_CPU::LDrr_le() { this->HL.lo = this->DE.lo; this->cycles = 4; }
 void GB_CPU::LDrr_lh() { this->HL.lo = this->HL.hi; this->cycles = 4; }
-void GB_CPU::LDrr_lHL() { this->HL.lo = RAM::readAt(this->HL.val()); }
+void GB_CPU::LDrr_lHL() { this->HL.lo = ram.readAt(this->HL.val()); }
 void GB_CPU::LDrr_HLb() { this->write(this->BC.hi, this->HL.val()); this->cycles = 8; }
 void GB_CPU::LDrr_HLc() { this->write(this->BC.lo, this->HL.val()); this->cycles = 8; }
 void GB_CPU::LDrr_HLd() { this->write(this->DE.hi, this->HL.val()); this->cycles = 8; }
@@ -1900,14 +1900,14 @@ void GB_CPU::LDrr_HLn() { this->write(read(), this->HL.val()); this->cycles = 12
 void GB_CPU::LDrr_ann() {
     u8 n1 = this->read(), n2 = this->read();
     u16 addr = n1 + (n2 << 8);
-    this->AF.hi = RAM::readAt(addr);
+    this->AF.hi = ram.readAt(addr);
     this->cycles = 16;
 }
 
-void GB_CPU::LDa_c() { this->AF.hi = RAM::readAt(0xFF00 + this->BC.lo); }
+void GB_CPU::LDa_c() { this->AF.hi = ram.readAt(0xFF00 + this->BC.lo); }
 void GB_CPU::LDc_a() { this->write(this->AF.hi, 0xFF00 + this->BC.lo); }
 
-void GB_CPU::LDDaHL() { this->AF.hi = RAM::readAt(this->HL.val()); this->HL.set(this->HL.val() - 1); }
+void GB_CPU::LDDaHL() { this->AF.hi = ram.readAt(this->HL.val()); this->HL.set(this->HL.val() - 1); }
 void GB_CPU::LDDHLa() { this->write(this->AF.hi, this->HL.val()); this->HL.set(this->HL.val() - 1); }
 
 void GB_CPU::LD_nn_BC() {
@@ -1939,8 +1939,8 @@ void GB_CPU::LD_nnSP() {
     u8 n1 = this->read();
     u8 n2 = this->read();
     u16 nn = n1 + (n2 << 8);
-    RAM::write(SP & 0x00FF, nn);
-    RAM::write((SP & 0xFF00) >> 8, nn + 1);
+    ram.write(SP & 0x00FF, nn);
+    ram.write((SP & 0xFF00) >> 8, nn + 1);
 
 
     this->cycles = 20;
@@ -1958,18 +1958,18 @@ void GB_CPU::PUSH_DE() { this->SP--; this->write(this->DE.hi, this->SP); this->S
 void GB_CPU::PUSH_HL() { this->SP--; this->write(this->HL.hi, this->SP); this->SP--; this->write(this->HL.lo, this->SP); this->cycles = 16; }
 
 void GB_CPU::POP_AF() {
-    u8 n = RAM::readAt(SP);
+    u8 n = ram.readAt(SP);
     this->AF.lo = n & 0xF0;
     ++this->SP;
-    u8 m = RAM::readAt(SP);
+    u8 m = ram.readAt(SP);
     this->AF.hi = m;
     ++this->SP;
 
     this->cycles = 12;
 }
-void GB_CPU::POP_BC() { u8 n = RAM::readAt(SP); this->BC.lo = n; ++this->SP; u8 m = RAM::readAt(SP); this->BC.hi = m; ++this->SP; this->cycles = 12; }
-void GB_CPU::POP_DE() { u8 n = RAM::readAt(SP); this->DE.lo = n; ++this->SP; u8 m = RAM::readAt(SP); this->DE.hi = m; ++this->SP; this->cycles = 12; }
-void GB_CPU::POP_HL() { u8 n = RAM::readAt(SP); this->HL.lo = n; ++this->SP; u8 m = RAM::readAt(SP); this->HL.hi = m; ++this->SP; this->cycles = 12; }
+void GB_CPU::POP_BC() { u8 n = ram.readAt(SP); this->BC.lo = n; ++this->SP; u8 m = ram.readAt(SP); this->BC.hi = m; ++this->SP; this->cycles = 12; }
+void GB_CPU::POP_DE() { u8 n = ram.readAt(SP); this->DE.lo = n; ++this->SP; u8 m = ram.readAt(SP); this->DE.hi = m; ++this->SP; this->cycles = 12; }
+void GB_CPU::POP_HL() { u8 n = ram.readAt(SP); this->HL.lo = n; ++this->SP; u8 m = ram.readAt(SP); this->HL.hi = m; ++this->SP; this->cycles = 12; }
 
 
 
@@ -2047,7 +2047,7 @@ void GB_CPU::ADD_al() {
 void GB_CPU::ADD_aH() {
     u8 x = this->AF.hi;
     u8 loNib = this->AF.hi & 0x0F;
-    this->AF.hi += RAM::readAt(this->HL.val());
+    this->AF.hi += ram.readAt(this->HL.val());
     if (this->AF.hi == 0) { this->AF.lo = this->AF.lo | 0x80; } else { this->AF.lo = 0; }
     this->set_n(false);
     this->set_h((this->AF.hi & 0x0F) < loNib);
@@ -2131,7 +2131,7 @@ void GB_CPU::ADC_al() {
 
 }
 void GB_CPU::ADC_aHL() {
-    u8 readValue = RAM::readAt(this->HL.val());
+    u8 readValue = ram.readAt(this->HL.val());
     ADC_generic(readValue);
 
     this->cycles = 8;
@@ -2220,7 +2220,7 @@ void GB_CPU::SUB_l() {
     this->cycles = 4;
 }
 void GB_CPU::SUB_HL() {
-    u8 x = RAM::readAt(this->HL.val());
+    u8 x = ram.readAt(this->HL.val());
     u8 oldValue = this->AF.hi;
 
     this->AF.hi -= x;
@@ -2295,7 +2295,7 @@ void GB_CPU::SBC_l() {
     this->cycles = 4;
 }
 void GB_CPU::SBC_HL() {
-    SBC_generic(RAM::readAt(this->HL.val()));
+    SBC_generic(ram.readAt(this->HL.val()));
     this->cycles = 8;
 }
 
@@ -2330,7 +2330,7 @@ void GB_CPU::AND_d() { this->AF.hi = this->AF.hi & this->DE.hi; if (this->AF.hi 
 void GB_CPU::AND_e() { this->AF.hi = this->AF.hi & this->DE.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
 void GB_CPU::AND_h() { this->AF.hi = this->AF.hi & this->HL.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
 void GB_CPU::AND_l() { this->AF.hi = this->AF.hi & this->HL.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 4; }
-void GB_CPU::AND_HL() { this->AF.hi = this->AF.hi & RAM::readAt(this->HL.val()); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 8; }
+void GB_CPU::AND_HL() { this->AF.hi = this->AF.hi & ram.readAt(this->HL.val()); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 8; }
 void GB_CPU::AND_hash() { this->AF.hi = this->AF.hi & this->read(); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10100000;  this->AF.lo |= 0b00100000; this->cycles = 8; }
 
 void GB_CPU::OR_a() {
@@ -2390,7 +2390,7 @@ void GB_CPU::OR_l() {
     this->cycles = 4;
 }
 void GB_CPU::OR_HL() {
-    this->AF.hi = this->AF.hi | RAM::readAt(this->HL.val());
+    this->AF.hi = this->AF.hi | ram.readAt(this->HL.val());
     this->set_n(false);
     this->set_h(false);
     this->set_c(false);
@@ -2414,7 +2414,7 @@ void GB_CPU::XOR_d() { this->AF.hi ^= this->DE.hi; if (this->AF.hi == 0) { this-
 void GB_CPU::XOR_e() { this->AF.hi ^= this->DE.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
 void GB_CPU::XOR_h() { this->AF.hi ^= this->HL.hi; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
 void GB_CPU::XOR_l() { this->AF.hi ^= this->HL.lo; if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 4; }
-void GB_CPU::XOR_HL() { this->AF.hi ^= (RAM::readAt(this->HL.val())); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 8; }
+void GB_CPU::XOR_HL() { this->AF.hi ^= (ram.readAt(this->HL.val())); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 8; }
 void GB_CPU::XOR_hash() { this->AF.hi ^= this->read(); if (this->AF.hi == 0) { this->AF.lo |= 0b10000000; } else { this->AF.lo &= 0b01111111; }  this->AF.lo &= 0b10000000; this->cycles = 8; }
 
 void GB_CPU::CP_a() {
@@ -2498,7 +2498,7 @@ void GB_CPU::CP_l() {
     this->cycles = 4;
 }
 void GB_CPU::CP_HL() {
-    u8 x = RAM::readAt(this->HL.val());
+    u8 x = ram.readAt(this->HL.val());
     u8 oldValue = this->AF.hi;
     u8 comparison = this->AF.hi - x;
 
@@ -2577,7 +2577,7 @@ void GB_CPU::INC_l() {
     this->cycles = 4;
 }
 void GB_CPU::INC_HLad() {
-    u8 x = RAM::readAt(this->HL.val());
+    u8 x = ram.readAt(this->HL.val());
     u8 loNib = x & 0x0F;
     ++x;
     this->write(x, this->HL.val());
@@ -2644,7 +2644,7 @@ void GB_CPU::DEC_l() {
     this->cycles = 4;
 }
 void GB_CPU::DEC_HLad() {
-    u8 x = RAM::readAt(this->HL.val());
+    u8 x = ram.readAt(this->HL.val());
     u8 lowerNib = x & 0x0F;
     u8 newValue = --x;
     this->write(x, this->HL.val());
@@ -2750,7 +2750,7 @@ void GB_CPU::RST_38() {
 }
 
 void GB_CPU::LDI_aHL() {
-    this->AF.hi = RAM::readAt(this->HL.val());
+    this->AF.hi = ram.readAt(this->HL.val());
     this->HL.set(this->HL.val() + 1);
     this->cycles = 8;
 }
@@ -2907,7 +2907,7 @@ void GB_CPU::SWAP_l() {
     this->cycles = 8;
 }
 void GB_CPU::SWAP_HL() {
-    u8 value = RAM::readAt(this->HL.val());
+    u8 value = ram.readAt(this->HL.val());
     this->write(SWAP_gen(value), this->HL.val());
     this->cycles = 16;
 }
@@ -2991,8 +2991,8 @@ void GB_CPU::RRC_L() {
 }
 
 void GB_CPU::RRC_HL() {
-    u8 readVal = RAM::readAt(this->HL.val());
-    RAM::write(RRC_generic(readVal), this->HL.val());
+    u8 readVal = ram.readAt(this->HL.val());
+    ram.write(RRC_generic(readVal), this->HL.val());
     this->cycles = 16;
 }
 
@@ -3042,8 +3042,8 @@ void GB_CPU::SLA_L() {
 }
 
 void GB_CPU::SLA_HL() {
-    u8 readVal = RAM::readAt(this->HL.val());
-    RAM::write(this->SLA_generic(readVal), this->HL.val());
+    u8 readVal = ram.readAt(this->HL.val());
+    ram.write(this->SLA_generic(readVal), this->HL.val());
     this->cycles = 16;
 }
 
@@ -3094,7 +3094,7 @@ void GB_CPU::SRA_L() {
 }
 
 void GB_CPU::SRA_HL() {
-    u8 readVal = RAM::readAt(this->HL.val());
-    RAM::write(SRA_generic(readVal), this->HL.val());
+    u8 readVal = ram.readAt(this->HL.val());
+    ram.write(SRA_generic(readVal), this->HL.val());
     this->cycles = 16;
 }

@@ -4,9 +4,9 @@
 #include "cpu.hpp"
 #include "sprite_renderer.hpp"
 
-Emulator::Emulator(RunOptions options, GB_CPU cpu) : input_handler(cpu) {
+Emulator::Emulator(RunOptions options, GB_CPU* cpu) : input_handler(cpu) {
   this->cpu = cpu;
-  this->ppu = buildPPU(cpu);
+  this->ppu = buildPPU(cpu, &cpu->ram);
   this->options = options;
 }
 
@@ -31,7 +31,7 @@ void Emulator::game_loop() {
     tick();
 
     if (!options.NO_DISPLAY) {
-      u8 y_line = RAM::readAt(LY);
+      u8 y_line = cpu->ram.readAt(LY);
       if (y_line == 144 && render_next_vblank) {
         render_next_vblank = false;
 
@@ -56,27 +56,27 @@ void Emulator::initialise_state() {
     }
   }
 
-  RAM::init_ram(options.romPath);
+  cpu->ram.init_ram(options.romPath);
 
   if (!options.NO_DISPLAY) {
     RENDER::drawFrame();
   }
 
   if (options.SKIP_BOOT) {
-    this->cpu.init_registers_to_skip_boot();
+    cpu->init_registers_to_skip_boot();
   }
 }
 
 void Emulator::tick() {
   if (options.LOG_STATE || this->input_handler.toggle_logging) {
-    this->cpu.print_registers();
+    cpu->print_registers();
   }
 
-  this->cpu.execute_next_operation();
+  cpu->execute_next_operation();
 
-  ppu->update(this->cpu.get_cycles());
-  this->cpu.update();
-  this->cpu.handle_interrupts();
+  ppu->update(cpu->get_cycles());
+  cpu->update();
+  cpu->handle_interrupts();
 }
 
 void Emulator::handle_inputs() {

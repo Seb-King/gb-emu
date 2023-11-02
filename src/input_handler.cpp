@@ -4,8 +4,9 @@
 #include "ram.hpp"
 #include "cpu.hpp"
 
-InputHandler::InputHandler(GB_CPU cpu) {
+InputHandler::InputHandler(GB_CPU* cpu) {
   this->cpu = cpu;
+  this->ram = &cpu->ram;
 }
 
 bool InputHandler::get_quit() {
@@ -13,17 +14,17 @@ bool InputHandler::get_quit() {
 }
 
 bool InputHandler::actions_enabled() {
-  u8 val = RAM::readAt(0xFF00);
+  u8 val = ram->readAt(0xFF00);
   return ((val >> 5) & 1) == 0;
 }
 
 bool InputHandler::directions_enabled() {
-  u8 val = RAM::readAt(0xFF00);
+  u8 val = ram->readAt(0xFF00);
   return ((val >> 4) & 1) == 0;
 }
 
 void InputHandler::request_joypad_interrupt() {
-  this->cpu.write(RAM::readAt(0xFF0F) | 0b00010000, 0xFF0F);
+  this->cpu->write(ram->readAt(0xFF0F) | 0b00010000, 0xFF0F);
 }
 
 std::string InputHandler::listen_for_dropped_file() {
@@ -68,47 +69,47 @@ void InputHandler::read_and_handle_inputs() {
       } else if (e.key.keysym.scancode == SDL_SCANCODE_TAB) {
         switch_display = true;
       } else if (e.key.keysym.scancode == SDL_SCANCODE_Z) {
-        RAM::SELECT = 0;
+        ram->SELECT = 0;
         if (this->actions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_A) {
-        RAM::A = 0;
+        ram->A = 0;
 
         if (this->actions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_S) {
-        RAM::B = 0;
+        ram->B = 0;
 
         if (this->actions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_X) {
-        RAM::START = 0;
+        ram->START = 0;
         if (this->actions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
-        RAM::LEFT = 0;
+        ram->LEFT = 0;
 
         if (this->directions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
-        RAM::RIGHT = 0;
+        ram->RIGHT = 0;
 
         if (this->directions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
-        RAM::DOWN = 0;
+        ram->DOWN = 0;
 
         if (this->directions_enabled()) {
           this->request_joypad_interrupt();
         }
       } else if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
-        RAM::UP = 0;
+        ram->UP = 0;
 
         if (this->directions_enabled()) {
           this->request_joypad_interrupt();
@@ -121,25 +122,25 @@ void InputHandler::read_and_handle_inputs() {
 
     if (e.type == SDL_KEYUP) {
       if (e.key.keysym.scancode == SDL_SCANCODE_Z) {
-        RAM::SELECT = 1;
+        ram->SELECT = 1;
       } else if (e.key.keysym.scancode == SDL_SCANCODE_X) {
-        RAM::START = 1;
+        ram->START = 1;
       } else if (e.key.keysym.scancode == SDL_SCANCODE_A) {
-        RAM::A = 1;
+        ram->A = 1;
       } else if (e.key.keysym.scancode == SDL_SCANCODE_S) {
-        RAM::B = 1;
+        ram->B = 1;
       }
       if (e.key.keysym.scancode == SDL_SCANCODE_LEFT) {
-        RAM::LEFT = 1;
+        ram->LEFT = 1;
       }
       if (e.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
-        RAM::RIGHT = 1;
+        ram->RIGHT = 1;
       }
       if (e.key.keysym.scancode == SDL_SCANCODE_DOWN) {
-        RAM::DOWN = 1;
+        ram->DOWN = 1;
       }
       if (e.key.keysym.scancode == SDL_SCANCODE_UP) {
-        RAM::UP = 1;
+        ram->UP = 1;
       }
     }
   }
