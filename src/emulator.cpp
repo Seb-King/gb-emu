@@ -6,11 +6,14 @@
 #include "interrupts.hpp"
 
 Emulator::Emulator(RunOptions options) {
+  GB_CPU cpu;
+  this->cpu = cpu;
+  this->ppu = buildPPU(cpu);
+
   this->options = options;
-  InputHandler input_handler;
+  InputHandler input_handler(cpu);
   this->input_handler = input_handler;
 
-  this->ppu = buildPPU();
 }
 
 void Emulator::run() {
@@ -59,7 +62,6 @@ void Emulator::initialise_state() {
     }
   }
 
-  CPU::init();
   RAM::init_ram(options.romPath);
 
   if (!options.NO_DISPLAY) {
@@ -67,21 +69,22 @@ void Emulator::initialise_state() {
   }
 
   if (options.SKIP_BOOT) {
-    CPU::init_registers_to_skip_boot();
+    this->cpu.init_registers_to_skip_boot();
   }
 }
 
 void Emulator::tick() {
   if (options.LOG_STATE || this->input_handler.toggle_logging) {
-    CPU::print_registers();
+    this->cpu.print_registers();
   }
 
-  CPU::executeNextOperation();
+  this->cpu.execute_next_operation();
 
-  ppu->update(CPU::getCyles());
+  ppu->update(this->cpu.get_cycles());
   TIMER::update();
   handle_interrupts();
 }
+
 void Emulator::handle_inputs() {
   for (int i = 0; i < 50; i++) {
     this->input_handler.read_and_handle_inputs();

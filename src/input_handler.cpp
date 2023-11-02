@@ -4,7 +4,9 @@
 #include "ram.hpp"
 #include "cpu.hpp"
 
-InputHandler::InputHandler() {}
+InputHandler::InputHandler(GB_CPU cpu) {
+  this->cpu = cpu;
+}
 
 bool InputHandler::get_quit() {
   return this->quit;
@@ -21,7 +23,7 @@ bool InputHandler::directions_enabled() {
 }
 
 void InputHandler::request_joypad_interrupt() {
-  CPU::write(RAM::readAt(0xFF0F) | 0b00010000, 0xFF0F);
+  this->cpu.write(RAM::readAt(0xFF0F) | 0b00010000, 0xFF0F);
 }
 
 std::string InputHandler::listen_for_dropped_file() {

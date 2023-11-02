@@ -255,6 +255,10 @@ class DmgPPU : public PPU {
   }
 
 public:
+  DmgPPU(GB_CPU cpu) {
+    this->cpu = cpu;
+  }
+
   vector<vector<Colour>> getBuffer() {
     return this->buffer;
   }
@@ -286,11 +290,11 @@ public:
       scanline_count = 700;
       set_mode_to(0);
 
-      CPU::write(l + 1, LY);
+      this->cpu.write(l + 1, LY);
       u8 line = RAM::readAt(LY);
 
       if (line == 144) {
-        CPU::write(RAM::readAt(0xFF0F) | 0x01, 0xFF0F);
+        this->cpu.write(RAM::readAt(0xFF0F) | 0x01, 0xFF0F);
 
         u8 LCDC_ = RAM::readAt(LCDC);
 
@@ -307,18 +311,18 @@ public:
           }
         }
       } else if (line > 153) {
-        CPU::write(0, 0xFF44);
+        this->cpu.write(0, 0xFF44);
       }
     }
 
-    if (CPU::IME == 1 && ((IF & 0x02) >> 1) == 1) {
+    if (this->cpu.IME == 1 && ((IF & 0x02) >> 1) == 1) {
       if (RAM::readAt(0xFF44) == RAM::readAt(0xFF45)) {
-        CPU::write(RAM::readAt(0xFF0F) | 0b00000010, 0xFF0F);
+        this->cpu.write(RAM::readAt(0xFF0F) | 0b00000010, 0xFF0F);
       }
     }
   }
 };
 
-PPU* buildPPU() {
-  return new DmgPPU();
+PPU* buildPPU(GB_CPU cpu) {
+  return new DmgPPU(cpu);
 }
