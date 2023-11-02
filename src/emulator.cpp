@@ -8,6 +8,7 @@ Emulator::Emulator(RunOptions options, GB_CPU* cpu) : input_handler(cpu) {
   this->cpu = cpu;
   this->ppu = buildPPU(cpu, &cpu->ram);
   this->options = options;
+  this->sprite_renderer = new SpriteRenderer(&cpu->ram);
 }
 
 void Emulator::run() {
@@ -37,8 +38,8 @@ void Emulator::game_loop() {
 
         RENDER::drawFromPPUBuffer(this->ppu->getBuffer());
         RENDER::drawFrame();
-        display_sprites();
-        displayObjects();
+        sprite_renderer->display_sprites();
+        sprite_renderer->displayObjects();
       }
 
       if (y_line != 144 && !render_next_vblank) {
