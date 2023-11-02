@@ -9,7 +9,7 @@ class Emulator {
   PPU* ppu;
   GB_CPU cpu;
 public:
-  Emulator(RunOptions options);
+  Emulator(RunOptions options, GB_CPU cpu);
   void run();
   void game_loop();
   void initialise_state();

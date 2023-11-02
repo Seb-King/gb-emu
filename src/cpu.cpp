@@ -11,11 +11,6 @@ const int clockrate = 4194304;
 
 u16 reg::val() { return lo + (hi << 8); }
 
-namespace RUPS {
-    u8 IF = 0;
-    u8 IE = 0;
-}
-
 void reg::set(u16 x) {
     hi = x >> 8;
     lo = (x & 0x00FF);
@@ -31,6 +26,125 @@ u16 LYC = 0xFF45;
 u16 DMA = 0xFF46;
 u16 BGP = 0xFF47;
 
+
+void GB_CPU::inc(int amount) {
+    u8 t = RAM::readAt(0xFF05);
+    TIMA = t + amount;
+    if (TIMA < t) {
+        u8 mod = RAM::readAt(0xFF06);
+        TIMA = mod;
+        this->write(mod, 0xFF05);
+        this->write(RAM::readAt(0xFF0F) | 0b00000100, 0xFF0F);
+    } else {
+        RAM::write(t + amount, 0xFF05);
+    }
+}
+
+void GB_CPU::update() {
+    RAM::DIV++;
+
+    u8 TAC = RAM::readAt(0xFF07);
+    if (((TAC & 0b00000100) == 0b00000100)) {
+        counter += this->cycles;
+        int rate = 0;
+        if ((TAC & 0b00000011) == 0) {
+            rate = 1024;
+        } else if ((TAC & 0b00000011) == 1) {
+            rate = 16;
+        } else if ((TAC & 0b00000011) == 2) {
+            rate = 64;
+        } else if ((TAC & 0b00000011) == 3) {
+            rate = 256;
+        }
+        int amount = counter / rate;
+        if (amount != 0) {
+            counter = counter % rate;
+            this->inc(amount);
+        }
+    }
+}
+
+void GB_CPU::overflow() {
+    this->SP--;
+    this->write((this->PC & 0xFF00) >> 8, this->SP);
+    this->SP--;
+    this->write(this->PC & 0x00FF, this->SP);
+    this->PC = 0x0050;
+
+    this->IF = RAM::readAt(0xFF0F);
+    this->IF &= 0b11111011;
+    this->write(this->IF, 0xFF0F);
+}
+
+
+void GB_CPU::joypadInterrupt() {
+    this->push_onto_stack(this->PC);
+    this->PC = 0x0060;
+
+    this->IF = RAM::readAt(0xFF0F);
+    this->IF &= 0b11101111;
+    this->write(this->IF, 0xFF0F);
+}
+
+void GB_CPU::v_blank() {
+    u8 STAT = RAM::readAt(0xFF41);
+    STAT |= 0b00000001;
+    STAT &= 0b11111101;
+    this->write(STAT, 0xFF41);
+
+    this->push_onto_stack(this->PC);
+    this->PC = 0x0040;
+
+    this->IF = RAM::readAt(0xFF0F);
+    this->IF &= 0b11111110;
+    this->write(this->IF, 0xFF0F);
+}
+
+bool GB_CPU::handle_interrupts() {
+    this->IF = RAM::readAt(0xFF0F);
+    this->IE = RAM::readAt(0xFFFF);
+
+    if ((this->IF & 1) == 1 && (this->IE & 1) == 1) {
+        if (this->halt) {
+            this->halt = false;
+            this->halt_bug = true;
+        }
+
+        if (this->IME == 0) {
+            return false;
+        }
+
+        v_blank();
+    }
+
+    if ((this->IF & 0x04) == 0x04 && (this->IE & 0x04) == 0x04) {
+        if (this->halt) {
+            this->halt = false;
+            this->halt_bug = true;
+        }
+
+        if (this->IME == 0) {
+            return false;
+        }
+        this->overflow();
+
+    }
+
+    if ((this->IF & 0x10) == 0x10 && (this->IE & 0x10) == 0x10) {
+        if (this->halt) {
+            this->halt = false;
+            this->halt_bug = true;
+        }
+
+        if (this->IME == 0) {
+            return false;
+        }
+
+        joypadInterrupt();
+    }
+    return true;
+}
+
 GB_CPU::GB_CPU() {
     this->halt = false;
     this->halt_bug = false;
@@ -40,6 +154,9 @@ GB_CPU::GB_CPU() {
     this->count = 1;
     this->cycles = 4;
     this->timing = 0;
+    this->counter = 0;
+    this->IF = 0;
+    this->IE = 0;
 
     std::vector<std::string> decoder(256);
 

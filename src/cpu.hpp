@@ -37,6 +37,10 @@ public:
     int timing;
     int count;
     int interrupt_mode;
+    int counter;
+
+    u8 TIMA;
+    u8 TMA;
 
     void execute_next_operation();
     void run_opcode(u8 op_code);
@@ -61,6 +65,13 @@ public:
     void STAT();
 
     void run_cb(u8);
+
+    void inc(int amount);
+    void update();
+    void overflow();
+    void joypadInterrupt();
+    void v_blank();
+    bool handle_interrupts();
 
 private:
     typedef std::function<void(GB_CPU*)> operation;

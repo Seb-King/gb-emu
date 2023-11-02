@@ -27,7 +27,6 @@ add_library(
   render.cpp
   sprite_renderer.cpp
   utils.cpp
-  interrupts.cpp
   cartridge.cpp
   emulator.cpp
   run_options.cpp

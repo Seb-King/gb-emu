@@ -3,17 +3,11 @@
 #include "render.hpp"
 #include "cpu.hpp"
 #include "sprite_renderer.hpp"
-#include "interrupts.hpp"
 
-Emulator::Emulator(RunOptions options) {
-  GB_CPU cpu;
+Emulator::Emulator(RunOptions options, GB_CPU cpu) : input_handler(cpu) {
   this->cpu = cpu;
   this->ppu = buildPPU(cpu);
-
   this->options = options;
-  InputHandler input_handler(cpu);
-  this->input_handler = input_handler;
-
 }
 
 void Emulator::run() {
@@ -81,8 +75,8 @@ void Emulator::tick() {
   this->cpu.execute_next_operation();
 
   ppu->update(this->cpu.get_cycles());
-  TIMER::update();
-  handle_interrupts();
+  this->cpu.update();
+  this->cpu.handle_interrupts();
 }
 
 void Emulator::handle_inputs() {
