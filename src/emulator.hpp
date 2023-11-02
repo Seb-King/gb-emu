@@ -11,6 +11,8 @@ class Emulator {
   PPU* ppu;
   GB_CPU* cpu;
   SpriteRenderer* sprite_renderer;
+  int input_time;
+  bool render_next_vblank;
 public:
   Emulator(RunOptions options, GB_CPU* cpu);
   void run();
@@ -18,4 +20,5 @@ public:
   void initialise_state();
   void tick();
   void handle_inputs();
+  void single_step();
 };

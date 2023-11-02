@@ -9,6 +9,8 @@ Emulator::Emulator(RunOptions options, GB_CPU* cpu) : input_handler(cpu) {
   this->ppu = buildPPU(cpu, &cpu->ram);
   this->options = options;
   this->sprite_renderer = new SpriteRenderer(&cpu->ram);
+  this->input_time = 0;
+  this->render_next_vblank = true;
 }
 
 void Emulator::run() {
@@ -18,34 +20,10 @@ void Emulator::run() {
 void Emulator::game_loop() {
   this->initialise_state();
 
-  int input_time = 0;
-
   bool render_next_vblank = true;
 
   while (!this->input_handler.get_quit()) {
-    input_time++;
-
-    if (input_time == 1000) {
-      input_time = 0;
-      handle_inputs();
-    }
-    tick();
-
-    if (!options.NO_DISPLAY) {
-      u8 y_line = cpu->ram.readAt(LY);
-      if (y_line == 144 && render_next_vblank) {
-        render_next_vblank = false;
-
-        RENDER::drawFromPPUBuffer(this->ppu->getBuffer());
-        RENDER::drawFrame();
-        sprite_renderer->display_sprites();
-        sprite_renderer->displayObjects();
-      }
-
-      if (y_line != 144 && !render_next_vblank) {
-        render_next_vblank = true;
-      }
-    }
+    single_step();
   }
 }
 void Emulator::initialise_state() {
@@ -91,6 +69,36 @@ void Emulator::handle_inputs() {
       RENDER::setDisplay(SPRITE);;
     } else if (RENDER::display_mode == SPRITE) {
       RENDER::setDisplay(GB);
+    }
+  }
+}
+
+void Emulator::single_step() {
+  if (this->input_handler.get_quit()) {
+    return;
+  }
+
+  input_time++;
+
+  if (input_time == 1000) {
+    input_time = 0;
+    handle_inputs();
+  }
+  tick();
+
+  if (!options.NO_DISPLAY) {
+    u8 y_line = cpu->ram.readAt(LY);
+    if (y_line == 144 && render_next_vblank) {
+      render_next_vblank = false;
+
+      RENDER::drawFromPPUBuffer(this->ppu->getBuffer());
+      RENDER::drawFrame();
+      sprite_renderer->display_sprites();
+      sprite_renderer->displayObjects();
+    }
+
+    if (y_line != 144 && !render_next_vblank) {
+      render_next_vblank = true;
     }
   }
 }
