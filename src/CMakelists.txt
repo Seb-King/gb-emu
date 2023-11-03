@@ -55,6 +55,15 @@ set_property(TARGET emulator PROPERTY CXX_STANDARD 17)
 set_property(TARGET emulator_core PROPERTY CXX_STANDARD 17)
 set_property(TARGET tests PROPERTY CXX_STANDARD 17)
 
+if("${CMAKE_CXX_COMPILER}" MATCHES "em\\+\\+")
+  message("Emscripten is being used")
+  set_target_properties(emulator PROPERTIES SUFFIX ".html")
+  set_target_properties(emulator PROPERTIES LINK_FLAGS "--preload-file ./tetris.gb")
+else()
+  message("Not using emscripten")
+endif()
+
+
 target_link_libraries(
   tests
   GTest::gtest_main
@@ -70,7 +79,6 @@ target_link_libraries(
   emulator 
   emulator_core
 )
-
 
 enable_testing()
 include(GoogleTest)

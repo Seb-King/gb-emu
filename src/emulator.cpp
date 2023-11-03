@@ -31,7 +31,11 @@ void Emulator::initialise_state() {
     RENDER::init();
 
     if (this->options.romPath == "") {
-      this->options.romPath = this->input_handler.listen_for_dropped_file();
+#ifdef __EMSCRIPTEN__
+      this->options.romPath = "./tetris.gb";
+#else
+      this->options.romPath = input_handler.listen_for_dropped_file();
+#endif
     }
   }
 
@@ -75,6 +79,7 @@ void Emulator::handle_inputs() {
 
 void Emulator::single_step() {
   if (this->input_handler.get_quit()) {
+    std::cout << "returning empty input get quit" << std::endl;
     return;
   }
 
