@@ -32,7 +32,7 @@ void Emulator::initialise_state() {
 
     if (this->options.romPath == "") {
 #ifdef __EMSCRIPTEN__
-      this->options.romPath = "./tetris.gb";
+      this->options.romPath = "../web-roms/tetris.gb";
 #else
       this->options.romPath = input_handler.listen_for_dropped_file();
 #endif
