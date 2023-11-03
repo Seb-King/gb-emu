@@ -18,6 +18,18 @@ Point the executable to the path of a gameboy game to play it e.g.
 > ./build/emulator -r your-game.gb
 ```
 
+To build for the web using emscripten run
+
+```sh
+emcmake cmake . && emmake make
+```
+
+Then to serve the game over network locally using
+
+```sh
+emrun src/emulator.html
+```
+
 ## Tests
 
 To run tests first build them with cmake

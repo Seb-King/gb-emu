@@ -1,10 +1,9 @@
 #include <vector>
 #include "typedefs.hpp"
-#include "ram.hpp"
 #include "utils.hpp"
-#include "ram.hpp"
 #include "cpu.hpp"
 #include "ppu.hpp"
+#include "ram.hpp"
 
 using namespace std;
 
@@ -46,8 +45,8 @@ class DmgPPU : public PPU {
 
     for (int j = 0; j < 8; j++) {
       y = (j + 8 * (tile_num / 32) - scrollY) % 256;
-      line1 = RAM::readAt(addr);
-      line2 = RAM::readAt(addr + 1);
+      line1 = ram->readAt(addr);
+      line2 = ram->readAt(addr + 1);
       addr += 2;
 
       for (int k = 0; k < 8; k++) {
@@ -71,7 +70,7 @@ class DmgPPU : public PPU {
   }
 
   void draw_BG() {
-    u8 LCDC_ = RAM::readAt(LCDC);
+    u8 LCDC_ = ram->readAt(LCDC);
     u16 addr, tile_addr;
 
     if (((LCDC_ & 0b00001000) >> 3) == 0) {
@@ -89,14 +88,14 @@ class DmgPPU : public PPU {
     u8 charcode;
     u8 scrollX, scrollY;
 
-    scrollY = RAM::readAt(0xFF42);
-    scrollX = RAM::readAt(0xFF43);
+    scrollY = ram->readAt(0xFF42);
+    scrollX = ram->readAt(0xFF43);
 
-    u8 palette = RAM::readAt(0xFF47);
+    u8 palette = ram->readAt(0xFF47);
 
     u16 x;
     for (int j = 0; j < 32 * 32; j++) {
-      charcode = RAM::readAt(addr);
+      charcode = ram->readAt(addr);
       x = tile_addr;
 
       if (x == 0x9000) {
@@ -115,7 +114,7 @@ class DmgPPU : public PPU {
 
 
   void draw_Window() {
-    u8  LCDC_ = RAM::readAt(0xFF40);
+    u8  LCDC_ = ram->readAt(0xFF40);
     u16 addr, tile_addr;
 
     if (((LCDC_ & 0b01000000) >> 6) == 0) {
@@ -133,14 +132,14 @@ class DmgPPU : public PPU {
     u8 charcode;
     u8 WindowX, WindowY;
 
-    WindowY = RAM::readAt(0xFF4A);
-    WindowX = RAM::readAt(0xFF4B) - 7;
+    WindowY = ram->readAt(0xFF4A);
+    WindowX = ram->readAt(0xFF4B) - 7;
 
-    u8 palette = RAM::readAt(0xFF48);
+    u8 palette = ram->readAt(0xFF48);
 
     u16 x;
     for (int j = 0; j < 32 * 32; j++) {
-      charcode = RAM::readAt(addr);
+      charcode = ram->readAt(addr);
       x = tile_addr;
 
       if (x == 0x9000) {
@@ -158,7 +157,7 @@ class DmgPPU : public PPU {
   }
 
   ObjSize getSpriteSize() {
-    u8 LCDC_ = RAM::readAt(0xFF40);
+    u8 LCDC_ = ram->readAt(0xFF40);
     if ((LCDC_ >> 2) & 1) {
       return BIG;
     } else {
@@ -192,8 +191,8 @@ class DmgPPU : public PPU {
         y = (tile_y - 16 + i) % 256;
       }
 
-      line1 = RAM::readAt(addr);
-      line2 = RAM::readAt(addr + 1);
+      line1 = ram->readAt(addr);
+      line2 = ram->readAt(addr + 1);
 
       addr += 2;
 
@@ -229,16 +228,16 @@ class DmgPPU : public PPU {
     u8 palette;
 
     for (int i = 0; i < 40; i++) {
-      u8 y = RAM::readAt(addr);
-      u8 x = RAM::readAt(addr + 1);
-      u8 charcode = RAM::readAt(addr + 2);
+      u8 y = ram->readAt(addr);
+      u8 x = ram->readAt(addr + 1);
+      u8 charcode = ram->readAt(addr + 2);
 
-      u8 attrib = RAM::readAt(addr + 3);
+      u8 attrib = ram->readAt(addr + 3);
 
       if ((attrib & 0b00010000) == 0) {
-        palette = RAM::readAt(0xFF48);
+        palette = ram->readAt(0xFF48);
       } else {
-        palette = RAM::readAt(0xFF49);
+        palette = ram->readAt(0xFF49);
       }
 
       if (y > 0 && y < 160 && x > 0 && x < 168) {
@@ -249,24 +248,29 @@ class DmgPPU : public PPU {
   }
 
   void set_mode_to(u8 mode) {
-    u8 stat = RAM::readAt(0xFF41);
+    u8 stat = ram->readAt(0xFF41);
     stat = (stat & 0b11111100) + mode;
-    RAM::write(stat, 0xFF41);
+    ram->write(stat, 0xFF41);
   }
 
 public:
+  DmgPPU(GB_CPU* cpu, RAM* ram) {
+    this->cpu = cpu;
+    this->ram = ram;
+  }
+
   vector<vector<Colour>> getBuffer() {
     return this->buffer;
   }
 
   void update(int ticks) {
-    u8 IF = RAM::readAt(0xFFFF);
+    u8 IF = ram->readAt(0xFFFF);
 
-    if ((RAM::readAt(LCDC) >> 7) == 1) {
+    if ((ram->readAt(LCDC) >> 7) == 1) {
       scanline_count -= ticks;
     }
 
-    u8 l = RAM::readAt(LY);
+    u8 l = ram->readAt(LY);
 
     if (l < 144) {
       if (scanline_count < 456) {
@@ -286,13 +290,13 @@ public:
       scanline_count = 700;
       set_mode_to(0);
 
-      CPU::write(l + 1, LY);
-      u8 line = RAM::readAt(LY);
+      this->cpu->write(l + 1, LY);
+      u8 line = ram->readAt(LY);
 
       if (line == 144) {
-        CPU::write(RAM::readAt(0xFF0F) | 0x01, 0xFF0F);
+        this->cpu->write(ram->readAt(0xFF0F) | 0x01, 0xFF0F);
 
-        u8 LCDC_ = RAM::readAt(LCDC);
+        u8 LCDC_ = ram->readAt(LCDC);
 
         if (getBit(LCDC_, 7)) {
           if (getBit(LCDC_, 0)) {
@@ -307,18 +311,21 @@ public:
           }
         }
       } else if (line > 153) {
-        CPU::write(0, 0xFF44);
+        this->cpu->write(0, 0xFF44);
       }
     }
 
-    if (CPU::IME == 1 && ((IF & 0x02) >> 1) == 1) {
-      if (RAM::readAt(0xFF44) == RAM::readAt(0xFF45)) {
-        CPU::write(RAM::readAt(0xFF0F) | 0b00000010, 0xFF0F);
+    if (this->cpu->IME == 1 && ((IF & 0x02) >> 1) == 1) {
+      if (ram->readAt(0xFF44) == ram->readAt(0xFF45)) {
+        this->cpu->write(ram->readAt(0xFF0F) | 0b00000010, 0xFF0F);
       }
     }
   }
 };
 
-PPU* buildPPU() {
-  return new DmgPPU();
+PPU* buildPPU(GB_CPU* cpu, RAM* ram) {
+  DmgPPU* ppu = new DmgPPU(cpu, ram);
+  ppu->cpu = cpu;
+  ppu->ram = ram;
+  return ppu;
 }
