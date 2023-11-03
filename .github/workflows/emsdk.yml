@@ -1,9 +1,9 @@
 name: emsdk
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
@@ -19,4 +19,5 @@ jobs:
       - uses: mymindstorm/setup-emsdk@v11
       - name: Verify
         run: emcc -v
-    
+      - name: web build
+        run: emcmake cmake . && emmake make
