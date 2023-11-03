@@ -1,0 +1,22 @@
+name: emsdk
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: mymindstorm/setup-emsdk@v11
+      - name: Verify
+        run: emcc -v
+    
