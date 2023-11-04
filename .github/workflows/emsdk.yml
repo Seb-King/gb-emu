@@ -21,19 +21,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Setup cache
-        id: cache-system-libraries
-        uses: actions/cache@v2
-        with:
-          path: ${{env.EM_CACHE_FOLDER}}
-          key: ${{ runner.os }}
 
       - uses: mymindstorm/setup-emsdk@v11
-        with:
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
       - name: Build
         run: |
           mkdir build
           emcmake cmake .
           emmake make
+
+      - name: Tests
+        run: node ./tests.js
