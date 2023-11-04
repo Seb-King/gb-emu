@@ -13,11 +13,23 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, windows-latest]
 
     steps:
       - uses: mymindstorm/setup-emsdk@v11
-      - name: Verify
-        run: emcc -v
-      - name: web build
-        run: emcmake cmake . && emmake make
+
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          mkdir build
+          emcmake cmake .
+          emmake make
+
+      - name: Upload Artifacts
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: build
