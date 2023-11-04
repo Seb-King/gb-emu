@@ -27,9 +27,10 @@ jobs:
           emcmake cmake .
           emmake make
 
-      - name: Upload Artifacts
-        if: success()
-        uses: actions/upload-artifact@v2
+      - name: setup node
+        uses: actions/setup-node@v3
         with:
-          name: build-artifacts
-          path: build
+          node-version: "20.x"
+
+      - name: Tests
+        run: node ./build/tests.js
