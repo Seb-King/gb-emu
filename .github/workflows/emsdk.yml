@@ -6,7 +6,7 @@ on:
     branches: ["master"]
 
 env:
-  EM_VERSION: 1.39.18
+  EM_VERSION: 3.1.47
   EM_CACHE_FOLDER: "emsdk-cache"
 
 jobs:
@@ -38,8 +38,3 @@ jobs:
           mkdir build
           emcmake cmake .
           emmake make
-
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20.x"
