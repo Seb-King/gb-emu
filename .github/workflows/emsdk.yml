@@ -5,9 +5,6 @@ on:
   pull_request:
     branches: ["master"]
 
-env:
-  EM_CACHE_FOLDER: "emsdk-cache"
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -20,16 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Setup build cache
-        id: cache-system-libraries
-        uses: actions/cache@v2
-        with:
-          path: ${{env.EM_CACHE_FOLDER}}
-          key: ${{ runner.os }}
 
       - uses: mymindstorm/setup-emsdk@v11
-        with:
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
       - name: Build
         run: |
