@@ -32,5 +32,4 @@ jobs:
 
       - name: Tests
         run: |
-          find ./ -type f -name "*tests.js"
-          node ./tests.js
+          node ./src/tests.js
