@@ -31,4 +31,6 @@ jobs:
           emmake make
 
       - name: Tests
-        run: node ./tests.js
+        run: |
+          find ./ -type f -name "*tests.js"
+          node ./tests.js
