@@ -16,10 +16,9 @@ jobs:
         os: [macos-latest, windows-latest]
 
     steps:
-      - uses: mymindstorm/setup-emsdk@v11
+      - uses: actions/checkout@v2
 
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - uses: mymindstorm/setup-emsdk@v11
 
       - name: Build
         run: |
@@ -27,9 +26,6 @@ jobs:
           emcmake cmake .
           emmake make
 
-      - name: Upload Artifacts
-        if: success()
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-artifacts
-          path: build
+      - name: Tests
+        run: |
+          node ./src/tests.js
