@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <iostream> 
 #include "input_handler.hpp"
 #include "utils.hpp"
 #include "ram.hpp"

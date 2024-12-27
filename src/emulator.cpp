@@ -26,6 +26,7 @@ void Emulator::game_loop() {
     single_step();
   }
 }
+
 void Emulator::initialise_state() {
   if (!this->options.NO_DISPLAY) {
     RENDER::init();

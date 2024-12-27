@@ -1,4 +1,5 @@
 #include "emulator.hpp"
+#include "ram.hpp"
 #include "run_options.hpp"
 #include "cpu.hpp"
 
@@ -13,9 +14,9 @@ void main_loop() {
 }
 
 int main(int argc, char* argv[]) {
-	RAM ram;
+  RAM ram;
 	GB_CPU cpu(ram);
-	Emulator* emu = new Emulator(parseOptions(argc, argv), &cpu);
+	auto emu = new Emulator(parseOptions(argc, argv), &cpu);
 
 #ifdef __EMSCRIPTEN__
 	emu->initialise_state();
@@ -30,3 +31,4 @@ int main(int argc, char* argv[]) {
 	emu->run();
 #endif
 }
+
