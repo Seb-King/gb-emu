@@ -345,21 +345,22 @@ void GB_CPU::execute_next_operation() {
 
 void GB_CPU::run_opcode(u8 op_code) {
     this->op_code_switch(op_code);
+    if (this->interrupt_mode <= 0) {
+      return;
+    }
 
-    if (this->interrupt_mode > 0) {
-        if (this->interrupt_mode == 1) {
-            this->IME = 0;
-            this->interrupt_mode = 0;
-        } else if (this->interrupt_mode == 2) {
-            this->interrupt_mode--;
-        }
+    if (this->interrupt_mode == 1) {
+        this->IME = 0;
+        this->interrupt_mode = 0;
+    } else if (this->interrupt_mode == 2) {
+        this->interrupt_mode--;
+    }
 
-        if (this->interrupt_mode == 3) {
-            this->IME = 1;
-            this->interrupt_mode = 0;
-        } else if (this->interrupt_mode == 4) {
-            this->interrupt_mode--;
-        }
+    if (this->interrupt_mode == 3) {
+        this->IME = 1;
+        this->interrupt_mode = 0;
+    } else if (this->interrupt_mode == 4) {
+        this->interrupt_mode--;
     }
 }
 
